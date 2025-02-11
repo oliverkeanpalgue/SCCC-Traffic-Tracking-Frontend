@@ -4,6 +4,7 @@ import GuestLayout from "../components/GuestLayout.vue";
 import { ref } from "vue";
 import axiosClient from "../axios.js";
 import router from "../router.js";
+import logo from "../assets/baguio-logo.png";
 
 const data = ref({
   name: '',
@@ -34,72 +35,77 @@ function submit() {
 </script>
 
 <template>
-  <GuestLayout>
-    <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Create new Account</h2>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+  
+  <!-- Main Container -->
+  <div class="flex flex-col sm:flex-row items-center gap-8 z-10">
+    <!-- City Logo and Title -->
+    <div class="text-center">
+      <img  :src="logo" alt="City of Baguio Logo" class="w-70 mx-auto mb-4" />
+      <h1 class="text-white text-2xl font-bold leading-tight">
+        Smart City Command<br />
+        and Control Center<br />
+        Inventory System
+      </h1>
+    </div>
 
-    <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-      <form @submit.prevent="submit" class="space-y-4">
+    <!-- Login Form -->
+    <div class="bg-white p-6 rounded-xl shadow-lg max-w-lg">
+      <h2 class="text-gray-800 text-lg font-semibold mb-4">Account Registration</h2>
+
+      <form @submit.prevent="submit" class="flex grid grid-cols-3 gap-4">
         <div>
-          <label for="name" class="block text-sm/6 font-medium text-gray-900">Full Name</label>
-          <div class="mt-2">
-            <input name="name" id="name" v-model="data.name"
-              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
+          <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+          <input type="text" name="name" id="name" v-model="data.name" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <p class="text-sm mt-1 text-red-600">
             {{ errors.name ? errors.name[0] : '' }}
           </p>
         </div>
         <div>
-          <label for="email" class="block text-sm/6 font-medium text-gray-900">Email address</label>
-          <div class="mt-2">
-            <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
-              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
+          <label for="middleName" class="block text-sm font-medium text-gray-700">Middle Name</label>
+          <input type="text" v-model="middleName" id="middleName" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+          <input type="text" v-model="lastName" id="lastName" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div class="col-span-3">
+          <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+          <input type="email" name="email" id="email" autocomplete="email" v-model="data.email" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <p class="text-sm mt-1 text-red-600">
             {{ errors.email ? errors.email[0] : '' }}
           </p>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between">
-            <label for="password" class="block text-sm/6 font-medium text-gray-900">Password</label>
-          </div>
-          <div class="mt-2">
-            <input type="password" name="password" id="password" v-model="data.password"
-              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
+        <div class="col-span-3">
+          <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <input type="password" name="password" id="password" v-model="data.password" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           <p class="text-sm mt-1 text-red-600">
             {{ errors.password ? errors.password[0] : '' }}
           </p>
         </div>
 
-        <div>
-          <div class="flex items-center justify-between">
-            <label for="passwordConfirmation" class="block text-sm/6 font-medium text-gray-900">Repeat Password</label>
-          </div>
-          <div class="mt-2">
-            <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
-              class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
+        <div class="col-span-3">
+          <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+          <input  type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
 
+        <button type="submit" class=" col-span-3 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">Sign Up</button>
+        
         <div>
           <button type="submit"
-            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
-            Create an Account
+            class="col-span-3 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">
+            Sign Up
           </button>
         </div>
       </form>
 
-      <p class="mt-10 text-center text-sm/6 text-gray-500">
-        Already have an account?
-        {{ ' ' }}
-        <RouterLink :to="{ name: 'Login' }" class="font-semibold text-indigo-600 hover:text-indigo-500">
-          Login from here
-        </RouterLink>
-      </p>
+      <div class="text-sm text-center mt-4">
+        <router-link :to="{ name: 'Login' }" class="text-blue-600 hover:underline">Already have an account? Sign in</router-link>
+      </div>
     </div>
-  </GuestLayout>
+  </div>
+</div>
 </template>
 
 <style scoped></style>

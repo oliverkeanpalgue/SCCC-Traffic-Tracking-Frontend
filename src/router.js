@@ -5,7 +5,7 @@ import MyImages from "./pages/MyImages.vue";
 import Login from "./pages/Login.vue";
 import Signup from "./pages/Signup.vue";
 import NotFound from "./pages/NotFound.vue";
-import useUserStore from "./store/user.js";
+import useUserStore from "./stores/user.js";
 
 const routes = [
   {

@@ -2,8 +2,9 @@
 
 import GuestLayout from "../components/GuestLayout.vue";
 import axiosClient from "../axios.js";
-import {ref} from "vue";
+import { ref } from "vue";
 import router from "../router.js";
+import logo from '../assets/baguio-logo.png';
 
 const data = ref({
   email: '',
@@ -14,72 +15,65 @@ const errorMessage = ref('')
 function submit() {
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/login", data.value)
-        .then(response => {
-          router.push({name: 'Home'})
-        })
-        .catch(error => {
-          console.log(error.response)
-          errorMessage.value = error.response.data.message;
-        })
+      .then(response => {
+        router.push({ name: 'Home' })
+      })
+      .catch(error => {
+        console.log(error.response)
+        errorMessage.value = error.response.data.message;
+      })
   });
 }
 
 </script>
 
 <template>
-  <GuestLayout>
-    <h2 class="mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900">Sign in to your account</h2>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
 
-    <div v-if="errorMessage" class="mt-4 py-2 px-3 rounded text-white bg-red-400">
-      {{errorMessage}}
+    <!-- Main Container -->
+    <div class="flex flex-col sm:flex-row items-center gap-8 z-10">
+      <!-- City Logo and Title -->
+      <div class="text-center">
+        <img :src="logo" alt="City of Baguio Logo" class="w-70 mx-auto mb-4" />
+        <h1 class="text-white text-2xl font-bold leading-tight">
+          Smart City Command<br />
+          and Control Center<br />
+          Inventory System
+        </h1>
+      </div>
+
+      <!-- Login Form -->
+      <div class="bg-white p-6 rounded-xl shadow-lg w-80">
+        <h2 class="text-gray-800 text-lg text-center font-semibold mb-4">Sign in to your account</h2>
+
+        <form @submit.prevent="submit" class="flex flex-col gap-4">
+          <div v-if="errorMessage" class="mt-4 py-2 px-3 rounded text-white bg-red-400">
+            {{ errorMessage }}
+          </div>
+          <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+            <input type="email" name="email" id="email" autocomplete="email" required="" v-model="data.email"
+              class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input type="password" name="password" id="password" autocomplete="current-password" required="" v-model="data.password" class="mt-1 w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+
+          <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700">Sign In</button>
+        </form>
+
+        <div class="text-sm text-center mt-4">
+          <RouterLink :to="{ name: 'Signup' }" class="text-blue-600 hover:underline">Don't have an account? Sign up</RouterLink>
+        </div>
+
+        <div class="text-sm text-center mt-2">
+          <button @click="handleForgotPassword" class="text-blue-600 hover:underline">Forgot Password?</button>
+        </div>
+      </div>
     </div>
-
-    <div class="mt-4 sm:mx-auto sm:w-full sm:max-w-sm">
-      <form @submit.prevent="submit" class="space-y-6">
-        <div>
-          <label for="email" class="block text-sm/6 font-medium text-gray-900">Email address</label>
-          <div class="mt-2">
-            <input type="email"
-                   name="email"
-                   id="email"
-                   autocomplete="email"
-                   required=""
-                   v-model="data.email"
-                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between">
-            <label for="  password" class="block text-sm/6 font-medium text-gray-900">Password</label>
-          </div>
-          <div class="mt-2">
-            <input type="password"
-                   name="password"
-                   id="password"
-                   autocomplete="current-password"
-                   required=""
-                   v-model="data.password"
-                   class="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6" />
-          </div>
-        </div>
-
-        <div>
-          <button type="submit" class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Sign in</button>
-        </div>
-      </form>
-
-      <p class="mt-10 text-center text-sm/6 text-gray-500">
-        Not a member?
-        {{ ' ' }}
-        <RouterLink :to="{name: 'Signup'}" class="font-semibold text-indigo-600 hover:text-indigo-500">
-          Create an account
-        </RouterLink>
-      </p>
-    </div>
-  </GuestLayout>
+  </div>
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

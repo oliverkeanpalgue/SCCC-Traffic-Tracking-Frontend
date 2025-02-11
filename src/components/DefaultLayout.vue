@@ -114,7 +114,7 @@ import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuIt
 import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
 import axiosClient from "../axios.js";
 import router from "../router.js";
-import useUserStore from "../store/user.js";
+import useUserStore from "../stores/user.js";
 import { computed } from "vue";
 import { useThemeStore } from '../stores/themeStore';
 
