@@ -1,139 +1,162 @@
 <template>
-  <!--
-    This example requires updating your template:
-
-    ```
-    <html class="h-full bg-gray-100">
-    <body class="h-full">
-    ```
-  -->
-  <div class="min-h-full">
-    <Disclosure as="nav" class="bg-gray-800" v-slot="{ open }">
-      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="flex h-16 items-center justify-between">
-          <div class="flex items-center">
-            <div class="shrink-0">
-              <img class="mx-auto h-10 w-auto"
-                src="https://tailwindui.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600" alt="Your Company">
-            </div>
-            <div class="hidden md:block">
-              <div class="ml-10 flex items-baseline space-x-4">
-                <RouterLink v-for="item in navigation" :key="item.name" :to="item.to" :class="[
-                  $route.name === item.to.name ?
-                    'bg-gray-900 text-white' :
-                    'text-gray-300 hover:bg-gray-700 hover:text-white',
-                  'rounded-md px-3 py-2 text-sm font-medium'
-                ]" :aria-current="$route.name === item.to.name ? 'page' : undefined">
-                  {{ item.name }}
-                </RouterLink>
-              </div>
-            </div>
-          </div>
-          <div class="hidden md:block">
-            <div class="ml-4 flex items-center md:ml-6">
-              <!-- Profile dropdown -->
-              <Menu as="div" class="relative ml-3">
-                <div>
-                  <MenuButton
-                    class="relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                    <span class="absolute -inset-1.5" />
-                    <span class="sr-only">Open user menu</span>
-                    <img class="size-8 rounded-full" src="https://randomuser.me/api/portraits/men/81.jpg" alt="" />
-                    <span class="text-white ml-3">{{ user.name }}</span>
-                  </MenuButton>
-                </div>
-                <transition enter-active-class="transition ease-out duration-100"
-                  enter-from-class="transform opacity-0 scale-95" enter-to-class="transform opacity-100 scale-100"
-                  leave-active-class="transition ease-in duration-75" leave-from-class="transform opacity-100 scale-100"
-                  leave-to-class="transform opacity-0 scale-95">
-                  <MenuItems
-                    class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none">
-                    <MenuItem>
-                    <button @click="logout" :class="[
-                      'block px-4 py-2 text-sm text-gray-700']">
-                      Sign out
-                    </button>
-                    </MenuItem>
-                  </MenuItems>
-                </transition>
-              </Menu>
-              <button @click="themeStore.toggleTheme" class="ml-4 px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
-                Toggle Theme
-              </button>
-            </div>
-          </div>
-          <div class="-mr-2 flex md:hidden">
-            <!-- Mobile menu button -->
-            <DisclosureButton
-              class="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-              <span class="absolute -inset-0.5" />
-              <span class="sr-only">Open main menu</span>
-              <Bars3Icon v-if="!open" class="block size-6" aria-hidden="true" />
-              <XMarkIcon v-else class="block size-6" aria-hidden="true" />
-            </DisclosureButton>
-          </div>
-        </div>
+  <div class="flex flex-row min-h-screen relative">
+    <!-- Sidebar -->
+    <aside :class="[
+      is_expanded ? 'w-full md:w-64' : 'w-16',
+      'flex flex-col bg-gray-900 text-white p-4 transition-all duration-200 ease-in-out overflow-hidden',
+      is_expanded && isMobileOrTablet ? 'fixed inset-0 z-50' : 'relative'
+    ]">
+      <!-- Logo Section -->
+      <div class="mb-4 flex items-center">
+        <img :src="logoURL" alt="Logo" class="w-8 h-8" />
+        <span class="ml-4 transition-opacity duration-300 ease-in-out"
+          :class="{ 'opacity-100': is_expanded, 'opacity-0': !is_expanded }">Home</span>
       </div>
 
-      <DisclosurePanel class="md:hidden">
-        <div class="space-y-1 px-2 pb-3 pt-2 sm:px-3">
-          <RouterLink v-for="item in navigation" :key="item.name" :to="item.to" :class="[
-            $route.name === item.to.name ?
-              'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-            'block rounded-md px-3 py-2 text-base font-medium'
-          ]" :aria-current="$route.name === item.to.name ? 'page' : undefined">{{ item.name }}
-          </RouterLink>
-        </div>
-        <div class="border-t border-gray-700 pb-3 pt-4">
-          <div class="flex items-center px-5">
-            <div class="shrink-0">
-              <img class="size-10 rounded-full" src="https://randomuser.me/api/portraits/men/81.jpg" alt="" />
-            </div>
-            <div class="ml-3">
-              <div class="text-base/5 font-medium text-white">{{ user.name }}</div>
-              <div class="text-sm font-medium text-gray-400">{{ user.email }}</div>
-            </div>
-          </div>
-          <div class="mt-3 space-y-1 px-2">
-            <DisclosureButton @click="logout"
-              class="block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white">
-              Sign out
-            </DisclosureButton>
-          </div>
-        </div>
-      </DisclosurePanel>
-    </Disclosure>
+      <!-- Toggle Button -->
+      <div class="flex justify-end mb-4 transition-all duration-200 ease-in-out" :class="{ '-top-12': is_expanded }">
+        <button @click="ToggleMenu" class="transition-transform duration-200 ease-in-out transform"
+          :class="{ 'rotate-180': is_expanded }">
+          <span
+            class="material-icons text-2xl text-white hover:text-indigo-500 transition-transform duration-200 ease-out hover:translate-x-2">
+            keyboard_double_arrow_right
+          </span>
+        </button>
+      </div>
 
-    <RouterView />
+      <!-- Menu -->
+      <h3 class="text-gray-400 text-sm uppercase mb-2 transition-opacity duration-300 ease-in-out"
+        :class="{ 'opacity-100': is_expanded, 'opacity-0': !is_expanded }">
+        Menu
+      </h3>
 
+      <div class="-mx-4">
+        <RouterLink v-for='item in navigation' :to="item.to" :key="item.name"
+          :class="[$route.name === item.to.name ? 'bg-gray-800 border-r-4 border-indigo-500' : ' hover:bg-gray-800', 'flex items-center p-2 pl-4 transition duration-200 ease-in-out']">
+          <span class="material-icons text-2xl text-white">{{ item.icon }}</span>
+          <span class="ml-4" :class="{ 'opacity-100': is_expanded, 'opacity-0': !is_expanded }">Home</span>
+        </RouterLink>
+      </div>
+
+      <div class="flex-1"></div>
+
+      <div class="-mx-4">
+        <router-link to="/settings"
+          class="flex items-center p-2 pl-4 hover:bg-gray-800 transition duration-200 ease-in-out"
+          :class="{ 'bg-gray-800 border-r-4 border-indigo-500': route.path === '/settings' }">
+          <span class="material-icons text-2xl text-white">settings</span>
+          <span class="ml-4" :class="{ 'opacity-100': is_expanded, 'opacity-0': !is_expanded }">Settings</span>
+        </router-link>
+
+        <button @click="themeStore.toggleTheme"
+          class="ml-4 px-3 py-2 rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700">
+          Toggle Theme
+        </button>
+
+       <!-- Profile Section -->
+<div class="relative border-t border-gray-700 pb-3 pt-4">
+  <!-- Profile Button -->
+  <button @click="toggleProfileDropdown" class="flex items-center px-5 w-full hover:bg-gray-800 rounded-md transition duration-200">
+    <img class="size-10 rounded-full" src="https://randomuser.me/api/portraits/men/81.jpg" alt="Profile" />
+    <div class="ml-3 text-left">
+      <div class="text-base font-medium text-white">{{ user?.name || 'Guest' }}</div>
+      <div class="text-sm font-medium text-gray-400">{{ user?.email || 'No email' }}</div>
+    </div>
+    <span class="material-icons ml-auto text-gray-400 transition-transform" :class="{ 'rotate-180': isProfileDropdownOpen }">
+      expand_more
+    </span>
+  </button>
+
+  <!-- Dropdown Menu -->
+  <div v-if="isProfileDropdownOpen" class="absolute right-4 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50">
+    <button @click="editProfile" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white">
+      Edit Profile
+    </button>
+    <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white">
+      Sign Out
+    </button>
+  </div>
+</div>
+
+      </div>
+    </aside>
+
+
+
+    <!-- Backdrop for Mobile/Tablet -->
+    <div v-if="is_expanded && isMobileOrTablet" class="fixed inset-0 bg-black bg-opacity-50 z-40" @click="ToggleMenu">
+    </div>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 transition-all duration-300 ease-in-out">
+      <router-view />
+    </main>
   </div>
 </template>
 
 <script setup>
-import { Disclosure, DisclosureButton, DisclosurePanel, Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/vue'
-import { Bars3Icon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
+import logoURL from '../assets/baguio-logo.png';
 import axiosClient from "../axios.js";
 import router from "../router.js";
 import useUserStore from "../stores/user.js";
-import { computed } from "vue";
 import { useThemeStore } from '../stores/themeStore';
+import { DisclosureButton, Disclosure, DisclosurePanel } from '@headlessui/vue'
 
-const userStore = useUserStore()
+const is_expanded = ref(localStorage.getItem("is_expanded") === "true");
+
+const ToggleMenu = () => {
+  is_expanded.value = !is_expanded.value;
+  localStorage.setItem("is_expanded", is_expanded.value);
+};
+
+const route = useRoute();
+const userStore = useUserStore();
 const themeStore = useThemeStore();
+const user = computed(() => userStore.user);
 
-const user = computed(() => userStore.user)
+const isMobileOrTablet = ref(window.innerWidth < 1024);
+const handleResize = () => {
+  isMobileOrTablet.value = window.innerWidth < 1024;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
 
 const navigation = [
-  { name: 'Upload', to: { name: 'Home' } },
-  { name: 'My Images', to: { name: 'MyImages' } },
+  { name: 'Upload', to: { name: 'Home' }, icon: 'home' },
+  { name: 'My Images', to: { name: 'MyImages' }, icon: 'collections' },
 ]
 
+const isProfileDropdownOpen = ref(false);
+
+// Toggle dropdown visibility
+const toggleProfileDropdown = () => {
+  isProfileDropdownOpen.value = !isProfileDropdownOpen.value;
+};
+
+// Dummy edit profile function (replace with actual navigation)
+const editProfile = () => {
+  router.push({ name: 'EditProfile' }); // Make sure this route exists
+};
+
 function logout() {
-  axiosClient.post('/logout')
-    .then((response) => {
-      router.push({ name: 'Login' })
-    })
+  axiosClient.post('/logout').then(() => {
+    router.push({ name: 'Login' });
+  });
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+@media (max-width: 1024px) {
+  aside {
+    height: 100vh;
+  }
+}
+</style>
