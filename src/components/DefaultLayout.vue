@@ -12,7 +12,8 @@
             <img :src="logoURL" alt="Logo" class="w-8 h-8" />
           </div>
           <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
-            :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">Inventory System</span>
+            :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">Inventory
+            System</span>
         </div>
 
         <!-- Toggle Button -->
@@ -34,10 +35,11 @@
           <RouterLink v-for='item in navigation' :to="item.to" :key="item.name"
             :class="[$route.name === item.to.name ? 'bg-gray-800 border-r-4 border-indigo-500' : ' hover:bg-gray-800', 'flex items-center p-2 pl-4 transition duration-200 ease-in-out']">
             <div class="w-8 flex-shrink-0">
-              <span class="material-icons text-2xl text-white">{{ item.icon }}</span>
+              <i class="pi" :class="item.icon" style="font-size: 1.5rem"></i>
             </div>
             <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
-              :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">{{ item.name }}</span>
+              :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">{{ item.name
+              }}</span>
           </RouterLink>
         </div>
 
@@ -50,19 +52,17 @@
         </h3>
 
         <!-- Theme Toggle Button -->
-      <button @click="themeStore.toggleTheme" class="min-w-full text-left -mx-4">
-        <div class="flex items-center p-2 pl-4 transition duration-200 ease-in-out hover:bg-gray-800">
-          <div class="w-8 flex-shrink-0">
-            <span class="material-icons text-2xl text-white">
-              {{ themeIcon }}
+        <button @click="themeStore.toggleTheme" class="min-w-full text-left -mx-4">
+          <div class="flex items-center p-2 pl-5 transition duration-200 ease-in-out hover:bg-gray-800">
+            <div class="w-8 flex-shrink-0">
+              <i class="pi" :class="themeIcon" style="font-size: 1.5rem"></i>
+            </div>
+            <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
+              :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">
+              {{ themeLabel }}
             </span>
           </div>
-          <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
-            :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">
-            {{ themeLabel }}
-          </span>
-        </div>
-      </button>
+        </button>
 
 
         <div class="relative -mx-4">
@@ -75,7 +75,8 @@
               <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
                 :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">
 
-                <div class="ml-3 text-left transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
+                <div
+                  class="ml-3 text-left transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
                   :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">
                   <div class="text-base font-medium text-white">{{ user?.name || 'Guest' }}</div>
                   <div class="text-sm font-medium text-gray-400">{{ user?.email || 'No email' }}</div>
@@ -113,91 +114,98 @@
         <router-view />
 
         <Dialog :visible="signout_visible" modal header="Sign out" :style="{ width: '25rem' }">
-            <span class="text-surface-500 dark:text-surface-400 block mb-8">Are you sure you want to sign out?</span>
-            <div class="flex justify-end gap-2">
-                <Button type="button" label="Cancel" severity="secondary" @click="signout_visible = false"></Button>
-                <Button type="button" label="Sign out" @click="logout"></Button>
-            </div>
+          <span class="text-surface-500 dark:text-surface-400 block mb-8">Are you sure you want to sign out?</span>
+          <div class="flex justify-end gap-2">
+            <Button type="button" label="Cancel" severity="secondary" @click="signout_visible = false"></Button>
+            <Button type="button" label="Sign out" @click="logout"></Button>
+          </div>
         </Dialog>
       </main>
     </div>
   </template>
 
-  <script setup>
-  import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-  import { useRoute } from 'vue-router';
-  import logoURL from '../assets/baguio-logo.png';
-  import axiosClient from "../axios.js";
-  import router from "../router.js";
-  import useUserStore from "../stores/user.js";
-  import { useThemeStore } from '../stores/themeStore';
-  import { DisclosureButton, Disclosure, DisclosurePanel } from '@headlessui/vue'
-  import Dialog from 'primevue/dialog';
-  import Button from 'primevue/button';
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { useRoute } from 'vue-router';
+import logoURL from '../assets/baguio-logo.png';
+import axiosClient from "../axios.js";
+import router from "../router.js";
+import useUserStore from "../stores/user.js";
+import { useThemeStore } from '../stores/themeStore';
+import { DisclosureButton, Disclosure, DisclosurePanel } from '@headlessui/vue'
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
 
 const signout_visible = ref(false);
 
-  const is_expanded = ref(localStorage.getItem("is_expanded") === "true");
+const isProfileDropdownOpen = ref(false);
 
-  const ToggleMenu = () => {
-    is_expanded.value = !is_expanded.value;
-    localStorage.setItem("is_expanded", is_expanded.value);
-  };
+const is_expanded = ref(localStorage.getItem("is_expanded") === "true");
 
-  const route = useRoute();
-  const userStore = useUserStore();
-  const themeStore = useThemeStore();
-  const user = computed(() => userStore.user);
-
-  const isMobileOrTablet = ref(window.innerWidth < 1024);
-  const handleResize = () => {
-    isMobileOrTablet.value = window.innerWidth < 1024;
-  };
-
-  onMounted(() => {
-    window.addEventListener('resize', handleResize);
-  });
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', handleResize);
-  });
-
-  const navigation = [
-    { name: 'Upload', to: { name: 'Home' }, icon: 'home' },
-    { name: 'My Images', to: { name: 'MyImages' }, icon: 'collections' },
-  ]
-
-  const isProfileDropdownOpen = ref(false);
-
-  // Toggle dropdown visibility
-  const toggleProfileDropdown = () => {
-  isProfileDropdownOpen.value = !isProfileDropdownOpen.value;
-    is_expanded.value = "true";
-    localStorage.setItem("is_expanded", is_expanded.value);
+const ToggleMenu = () => {
+  is_expanded.value = !is_expanded.value;
+  localStorage.setItem("is_expanded", is_expanded.value);
+  isProfileDropdownOpen.value = false;
 };
 
-  // Dummy edit profile function (replace with actual navigation)
-  const editProfile = () => {
-    router.push({ name: 'EditProfile' }); // Make sure this route exists
-  };
+const route = useRoute();
+const userStore = useUserStore();
+const themeStore = useThemeStore();
+const user = computed(() => userStore.user);
 
-  function logout() {
-    axiosClient.post('/logout').then(() => {
-      router.push({ name: 'Login' });
-    });
-  }
+const isMobileOrTablet = ref(window.innerWidth < 767);
+
+const handleResize = () => {
+  isMobileOrTablet.value = window.innerWidth < 767;
+};
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', handleResize);
+});
+
+const navigation = [
+  { name: 'Upload', to: { name: 'Home' }, icon: 'pi-upload' },
+  { name: 'My Images', to: { name: 'MyImages' }, icon: 'pi-images' },
+  { name: 'Dashboard', to: { name: 'MyImages' }, icon: 'pi-home' },
+  { name: 'Inventory', to: { name: 'MyImages' }, icon: 'pi-warehouse' },
+  { name: 'Reports', to: { name: 'MyImages' }, icon: 'pi-chart-bar' },
+  { name: 'Borrowed', to: { name: 'MyImages' }, icon: 'pi-box' },
+]
+
+
+// Toggle dropdown visibility
+const toggleProfileDropdown = () => {
+  isProfileDropdownOpen.value = !isProfileDropdownOpen.value;
+  is_expanded.value = "true";
+  localStorage.setItem("is_expanded", is_expanded.value);
+};
+
+// Dummy edit profile function (replace with actual navigation)
+const editProfile = () => {
+  router.push({ name: 'EditProfile' }); // Make sure this route exists
+};
+
+function logout() {
+  axiosClient.post('/logout').then(() => {
+    router.push({ name: 'Login' });
+  });
+}
 
 
 // Theme Computed Properties
-const themeIcon = computed(() => themeStore.isDarkMode ? 'dark_mode': 'light_mode' );
+const themeIcon = computed(() => themeStore.isDarkMode ? 'pi-moon' : 'pi-sun');
 const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light Mode');
 
-  </script>
+</script>
 
-  <style scoped>
-  @media (max-width: 1024px) {
-    aside {
-      height: 100vh;
-    }
+<style scoped>
+@media (max-width: 1024px) {
+  aside {
+    height: 100vh;
   }
-  </style>
+}
+</style>
