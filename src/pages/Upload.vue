@@ -3,7 +3,8 @@ import { PhotoIcon } from '@heroicons/vue/24/solid'
 import { ref, computed } from "vue";
 import axiosClient from "../axios.js";
 import router from "../router.js";
-import { useThemeStore } from '../stores/themeStore';
+import { useThemeStore } from '../stores/themeStore.js';
+import PrimaryButton from '../components/PrimaryButton.vue';
 
 const themeStore = useThemeStore();
 
@@ -89,13 +90,15 @@ function submit() {
               />
             </div>
           </div>
-          
-          <button 
+
+          <PrimaryButton type_prop="submit" name_prop="Upload" class_prop="w-full"/>
+
+          <!-- <button 
             type="submit"
             class="rounded-md bg-indigo-600 text-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
             Upload
-          </button>
+          </button> -->
         </form>
       </div>
     </main>

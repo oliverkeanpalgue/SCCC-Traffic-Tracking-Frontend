@@ -84,7 +84,7 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
 <template>
   <div class="flex flex-row min-h-screen relative">
     <!-- Sidebar -->
-    <aside :class="[
+    <aside class="h-screen sticky top-0" :class="[
       is_expanded ? 'w-full md:w-64' : 'w-16',
       'flex flex-col bg-gray-900 text-white p-4 transition-all duration-200 ease-in-out overflow-hidden',
       is_expanded && isMobileOrTablet ? 'fixed inset-0 z-50' : 'relative',
@@ -193,7 +193,7 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
     </div>
 
     <!-- Main Content Area -->
-    <main class="flex-1 transition-all duration-300 ease-in-out">
+    <main class="flex-1 transition-all duration-300 ease-in-out overflow-auto">
       <router-view class="h-screen" :class="bgClass"/>
 
       <Dialog :visible="signout_visible" modal header="Sign out" :style="{ width: '25rem' }">
