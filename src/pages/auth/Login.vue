@@ -1,10 +1,10 @@
 <script setup>
 
-import GuestLayout from "../components/GuestLayout.vue";
-import axiosClient from "../axios.js";
+import GuestLayout from "../../components/GuestLayout.vue";
+import axiosClient from "../../axios.js";
 import { ref } from "vue";
-import router from "../router.js";
-import logo from '../assets/baguio-logo.png';
+import router from "../../router.js";
+import logo from '../../assets/baguio-logo.png';
 
 const data = ref({
   email: '',
@@ -31,7 +31,7 @@ function submit() {
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
 
     <!-- Main Container -->
-    <div class="flex flex-col md:flex-row items-center gap-8 z-10">
+    <div class="flex flex-col md:flex-row items-center gap-2 z-10">
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
