@@ -10,11 +10,12 @@ import Dashboard from "./pages/Dashboard.vue";
 import Reports from "./pages/Reports.vue";
 import Inventory from "./pages/Inventory.vue";
 import Borrowed from "./pages/Borrowed.vue";
+import MainLayout from "./components/MainLayout.vue";
 
 const routes = [
   {
     path: "/",
-    component: DefaultLayout,
+    component: MainLayout,
     children: [
       {path: '/', name: 'Home', component: Home},
       {path: '/images', name: 'MyImages', component: MyImages},
@@ -48,6 +49,7 @@ const routes = [
     name: 'NotFound',
     component: NotFound
   },
+  {path: '/main', name: 'Main', component: MainLayout},
 ];
 
 const router = createRouter({

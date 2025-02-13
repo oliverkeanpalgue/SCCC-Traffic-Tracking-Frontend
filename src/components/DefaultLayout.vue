@@ -7,8 +7,6 @@ import router from "../router.js";
 import useUserStore from "../stores/user.js";
 import { useThemeStore } from '../stores/themeStore';
 import { DisclosureButton, Disclosure, DisclosurePanel } from '@headlessui/vue'
-import Dialog from 'primevue/dialog';
-import Button from 'primevue/button';
 
 const signout_visible = ref(false);
 
@@ -75,12 +73,13 @@ function logout() {
   });
 }
 
-
 // Theme Computed Properties
 const themeIcon = computed(() => themeStore.isDarkMode ? 'pi-moon' : 'pi-sun');
 const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light Mode');
 
 </script>
+
+
 <template>
   <div class="flex flex-row min-h-screen relative">
     <!-- Sidebar -->
