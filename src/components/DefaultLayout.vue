@@ -22,6 +22,12 @@ const ToggleMenu = () => {
   isProfileDropdownOpen.value = false;
 };
 
+const bgClass = computed(() => 
+  themeStore.isDarkMode 
+    ? 'bg-gray-800 text-gray-100' 
+    : 'bg-gray-100 text-gray-900'
+)
+
 const route = useRoute();
 const userStore = useUserStore();
 const themeStore = useThemeStore();
@@ -44,10 +50,10 @@ onBeforeUnmount(() => {
 const navigation = [
   { name: 'Upload', to: { name: 'Home' }, icon: 'pi-upload' },
   { name: 'My Images', to: { name: 'MyImages' }, icon: 'pi-images' },
-  { name: 'Dashboard', to: { name: 'MyImages' }, icon: 'pi-home' },
-  { name: 'Inventory', to: { name: 'MyImages' }, icon: 'pi-warehouse' },
-  { name: 'Reports', to: { name: 'MyImages' }, icon: 'pi-chart-bar' },
-  { name: 'Borrowed', to: { name: 'MyImages' }, icon: 'pi-box' },
+  { name: 'Dashboard', to: { name: 'Dashboard' }, icon: 'pi-home' },
+  { name: 'Inventory', to: { name: 'Inventory' }, icon: 'pi-warehouse' },
+  { name: 'Reports', to: { name: 'Reports' }, icon: 'pi-chart-bar' },
+  { name: 'Borrowed', to: { name: 'Borrowed' }, icon: 'pi-box' },
 ]
 
 
@@ -188,7 +194,7 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
 
     <!-- Main Content Area -->
     <main class="flex-1 transition-all duration-300 ease-in-out">
-      <router-view class="h-screen"/>
+      <router-view class="h-screen" :class="bgClass"/>
 
       <Dialog :visible="signout_visible" modal header="Sign out" :style="{ width: '25rem' }">
         <span class="text-surface-500 dark:text-surface-400 block mb-8">Are you sure you want to sign out?</span>

@@ -6,6 +6,10 @@ import Login from "./pages/auth/Login.vue";
 import Signup from "./pages/auth/Signup.vue";
 import NotFound from "./pages/auth/NotFound.vue";
 import useUserStore from "./stores/user.js";
+import Dashboard from "./pages/Dashboard.vue";
+import Reports from "./pages/Reports.vue";
+import Inventory from "./pages/Inventory.vue";
+import Borrowed from "./pages/Borrowed.vue";
 
 const routes = [
   {
@@ -14,6 +18,10 @@ const routes = [
     children: [
       {path: '/', name: 'Home', component: Home},
       {path: '/images', name: 'MyImages', component: MyImages},
+      {path: '/dashboard', name: 'Dashboard', component: Dashboard},
+      {path: '/reports', name: 'Reports', component: Reports},
+      {path: '/inventory', name: 'Inventory', component: Inventory},
+      {path: '/borrowed', name: 'Borrowed', component: Borrowed},
     ],
     beforeEnter: async (to, from, next) => {
       try {
