@@ -1,6 +1,6 @@
 <script setup>
 import { PhotoIcon } from '@heroicons/vue/24/solid'
-import { ref, computed, onMounted, onUnmounted, watch} from "vue";
+import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import axiosClient from "../axios.js";
 import router from "../router.js";
 import ApexCharts from 'apexcharts';
@@ -13,21 +13,39 @@ const selectedPeriod = ref('Last week');
 const selectedStartDate = ref('');
 const selectedEndDate = ref('');
 
-const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
+// Helper function to format date to 'yyyy-MM-dd'
+const formatDate = (date) => {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // 'yyyy-MM-dd' format
 };
 
 // Watch for date changes and update the chart accordingly
 watch([selectedStartDate, selectedEndDate], ([start, end]) => {
-    console.log("Watcher triggered:", start, end);
     if (start && end) {
+        console.log("🚀 Fetching chart data for date range:", start, "to", end);
         fetchChartData(start, end);
     }
 });
+
+const handleDateChange = (dateRef) => {
+    const regex = /^\d{4}-\d{2}-\d{2}$/; // regex for yyyy-MM-dd format
+    if (!regex.test(dateRef.value)) {
+        alert("Please enter a valid date in the format yyyy-MM-dd");
+        dateRef.value = ''; // Optionally clear the field if it's invalid
+    }
+};
+
+// Apply date range when both dates are selected
+const applyDateRange = () => {
+    if (selectedStartDate.value && selectedEndDate.value) {
+        console.log("🚀 Applying Selected Date Range:");
+        console.log("Start Date:", selectedStartDate.value);
+        console.log("End Date:", selectedEndDate.value);
+        // fetchChartData(selectedStartDate.value, selectedEndDate.value);
+    } else {
+        console.log("🚨 Please select both start and end dates.");
+    }
+};
 
 // Function to fetch new data based on selected date range
 const fetchChartData = (start, end) => {
@@ -172,31 +190,8 @@ onMounted(() => {
         chart = new ApexCharts(lineChart.value, options.value);
         chart.render();
     }
-
-    // Ensure elements exist before adding event listeners
-    const startDateInput = document.getElementById("datepicker-range-start");
-    const endDateInput = document.getElementById("datepicker-range-end");
-
-    if (startDateInput) {
-        startDateInput.addEventListener("change", (event) => {
-    selectedStartDate.value = formatDate(event.target.value);
-    console.log("Start Date Selected:", selectedStartDate.value);
 });
 
-    } else {
-        console.warn("Start date input not found!");
-    }
-
-    if (endDateInput) {
-        
-endDateInput.addEventListener("change", (event) => {
-    selectedEndDate.value = formatDate(event.target.value);
-    console.log("End Date Selected:", selectedEndDate.value);
-});
-    } else {
-        console.warn("End date input not found!");
-    }
-});
 
 
 // Optional: Clean up chart on unmount
@@ -221,7 +216,6 @@ onUnmounted(() => {
             <!-- BAR GRAPH -->
             <div class="w-1/2">
                 <div class="card border">
-                    <Chart type="bar" :data="barChartData" :options="barChartOptions" class="h-[30rem]" />
                 </div>
             </div>
 
@@ -242,6 +236,23 @@ onUnmounted(() => {
                                         class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
                                         Returned</h5>
                                     <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">399</p>
+                                </div>
+
+                                <div v-if="selectedStartDate">
+                                    <h5
+                                        class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
+                                        Start Date</h5>
+                                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">
+                                        {{ formatDisplayDate(selectedStartDate) }}
+                                    </p>
+                                </div>
+                                <div v-if="selectedEndDate">
+                                    <h5
+                                        class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
+                                        End Date</h5>
+                                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">
+                                        {{ formatDisplayDate(selectedEndDate) }}
+                                    </p>
                                 </div>
                             </div>
 
@@ -305,36 +316,54 @@ onUnmounted(() => {
                             </div>
                         </div>
                         <div class="flex items-center gap-4">
-    <label for="datepicker-range-start" class="text-sm font-medium text-gray-700 dark:text-gray-400">Select Date Range:</label>
-    <div id="date-range-picker" date-rangepicker class="flex items-center">
-        <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
-                </svg>
-            </div>
-            <input id="datepicker-range-start" v-model="selectedStartDate" type="date"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="Start date">
-        </div>
-        <span class="mx-4 text-gray-500">to</span>
-        <div class="relative">
-            <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
-                <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
-                </svg>
-            </div>
-            <input id="datepicker-range-end" v-model="selectedEndDate" type="date"
-                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                placeholder="End date">
-        </div>
-    </div>
-</div>
+                            <label for="datepicker-range-start"
+                                class="text-sm font-medium text-gray-700 dark:text-gray-400">Select Date Range:</label>
+                            <div id="date-range-picker" date-rangepicker class="flex items-center">
+                                <!-- Date Range Inputs -->
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" 
+    id="datepicker-range-start" 
+    v-model="selectedStartDate" 
+    @blur="handleDateChange(selectedStartDate)"
+    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    placeholder="Start date (yyyy-MM-dd)"
+    data-date-format="yyyy-MM-dd" >
 
+                                </div>
+                                <span class="mx-4 text-gray-500">to</span>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                                        <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+                                            xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                            <path
+                                                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z" />
+                                        </svg>
+                                    </div>
+                                    <input type="text" 
+    id="datepicker-range-end" 
+    v-model="selectedEndDate" 
+    @blur="handleDateChange(selectedEndDate)"
+    class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+    placeholder="End date (yyyy-MM-dd)"
+    data-date-format="yyyy-MM-dd" >
+
+                                </div>
+                                <div class="flex items-center gap-4 mt-4">
+                                    <button @click="applyDateRange"
+                                        class="px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:ring-4 focus:ring-blue-300 dark:bg-blue-500 dark:hover:bg-blue-600 dark:focus:ring-blue-800">
+                                        Apply
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-
                 </div>
             </div>
         </div>
