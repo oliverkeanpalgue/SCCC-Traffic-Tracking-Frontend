@@ -20,9 +20,9 @@ const ToggleMenu = () => {
   isProfileDropdownOpen.value = false;
 };
 
-const bgClass = computed(() => 
-  themeStore.isDarkMode 
-    ? 'bg-gray-800 text-gray-100' 
+const bgClass = computed(() =>
+  themeStore.isDarkMode
+    ? 'bg-gray-800 text-gray-100'
     : 'bg-gray-100 text-gray-900'
 )
 
@@ -121,8 +121,7 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
             <i class="pi" :class="item.icon" style="font-size: 1.5rem"></i>
           </div>
           <span class="ml-4 transition-opacity duration-300 ease-in-out whitespace-nowrap overflow-hidden"
-            :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">{{ item.name
-            }}</span>
+            :class="{ 'opacity-100 max-w-full': is_expanded, 'opacity-0 max-w-0': !is_expanded }">{{ item.name }}</span>
         </RouterLink>
       </div>
 
@@ -193,7 +192,7 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
 
     <!-- Main Content Area -->
     <main class="flex-1 transition-all duration-300 ease-in-out overflow-auto">
-      <router-view class="h-screen" :class="bgClass"/>
+      <router-view class="h-screen" :class="bgClass" />
 
       <Dialog :visible="signout_visible" modal header="Sign out" :style="{ width: '25rem' }">
         <span class="text-surface-500 dark:text-surface-400 block mb-8">Are you sure you want to sign out?</span>

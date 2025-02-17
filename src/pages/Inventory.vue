@@ -1,107 +1,83 @@
 <script setup>
-import { PhotoIcon } from '@heroicons/vue/24/solid'
-import { ref, computed } from "vue";
-import axiosClient from "../axios.js";
-import router from "../router.js";
-import { useThemeStore } from '../stores/themeStore';
+import { ref, onMounted } from "vue";
+import 'flowbite';
+import { Datepicker } from 'flowbite-datepicker';
 
-const themeStore = useThemeStore();
+const startDate = ref("");
+const endDate = ref("");
 
-const data = ref({
-  image: null,
-  label: ''
-})
+onMounted(() => {
+  const startDatePicker = new Datepicker(document.getElementById('datepicker-range-start'), {
+    format: 'yyyy-mm-dd',
+    autohide: true,
+    maxDate: new Date(),
+    todayHighlight: true,
+    orientation: 'bottom'
+  });
 
-function submit() {
-  const formData = new FormData()
-  formData.append('image', data.value.image)
-  formData.append('label', data.value.label)
-  axiosClient.post('/api/image', formData)
-    .then(res => {
-      router.push({ name: 'MyImages' })
-    })
-}
+  const endDatePicker = new Datepicker(document.getElementById('datepicker-range-end'), {
+    format: 'yyyy-mm-dd',
+    autohide: true,
+    maxDate: new Date(),
+    todayHighlight: true,
+    orientation: 'bottom'
+  });
+
+  startDatePicker.setDate(new Date());
+  endDatePicker.setDate(new Date());
+
+  document.getElementById('datepicker-range-start').addEventListener('changeDate', (event) => {
+    startDate.value = event.detail.date;
+    console.log(`Start Date: ${startDate.value}`);
+  });
+
+  document.getElementById('datepicker-range-end').addEventListener('changeDate', (event) => {
+    endDate.value = event.detail.date;
+    console.log(`End Date: ${endDate.value}`);
+  });
+});
 </script>
 
 <template>
   <div>
     <header class="shadow">
       <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <h1 class="text-3xl font-bold tracking-tight">
+        <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">
           Inventory
         </h1>
       </div>
     </header>
-    
+
     <main class="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
-      <div class="p-6 rounded-lg shadow border-2 border-gray-500">
-        <form @submit.prevent="submit">
-          <div class="mb-4">
-            <label 
-              for="cover-photo" 
-              class="block text-sm/6 font-medium"
-            >
-              Image
-            </label>
-            <div class="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 dark:border-gray-600/50 px-6 py-10">
-              <div class="text-center">
-                <PhotoIcon 
-                  class="mx-auto size-12"
-                  aria-hidden="true" 
-                />
-                <div class="mt-4 flex text-sm/6">
-                  <label 
-                    for="file-upload"
-                    class="relative cursor-pointer rounded-md font-semibold focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 hover:text-indigo-500 text-indigo-600"
-                  >
-                    <span>Upload a file</span>
-                    <input 
-                      id="file-upload" 
-                      name="file-upload" 
-                      type="file" 
-                      @change="data.image = $event.target.files[0]"
-                      class="sr-only" 
-                    />
-                  </label>
-                  <p class="pl-1">or drag and drop</p>
-                </div>
-                <p class="text-xs/5 ">
-                  PNG, JPG, GIF up to 10MB
-                </p>
-              </div>
-            </div>
+      <div class="flex items-center space-x-4">
+        <div class="relative">
+          <label for="datepicker-range-start" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Start Date</label>
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+            </svg>
           </div>
-          
-          <div class="mb-4">
-            <label 
-              for="label" 
-              class="block text-sm/6 font-medium"
-            >
-              Label
-            </label>
-            <div class="mt-2">
-              <input 
-                type="text" 
-                name="label" 
-                id="label" 
-                v-model="data.label"
-                class="block w-full rounded-md px-3 py-1.5 text-base outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-gray-600 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
-              />
-            </div>
+          <input id="datepicker-range-start" type="text"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Select start date">
+        </div>
+        <span class="text-gray-500 mt-6">to</span>
+        <div class="relative">
+          <label for="datepicker-range-end" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">End Date</label>
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none z-10">
+            <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
+              xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                d="M20 4a2 2 0 0 0-2-2h-2V1a1 1 0 0 0-2 0v1h-3V1a1 1 0 0 0-2 0v1H6V1a1 1 0 0 0-2 0v1H2a2 2 0 0 0-2 2v2h20V4ZM0 18a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8H0v10Zm5-8h10a1 1 0 0 1 0 2H5a1 1 0 0 1 0-2Z"/>
+            </svg>
           </div>
-          
-          <button 
-            type="submit"
-            class="rounded-md bg-indigo-600 text-white px-3 py-2 text-sm font-semibold shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-          >
-            Upload
-          </button>
-        </form>
+          <input id="datepicker-range-end" type="text"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Select end date">
+        </div>
       </div>
     </main>
   </div>
 </template>
-
-<style scoped>
-/* Optional: Add any additional dark mode specific styles if needed */
-</style>
