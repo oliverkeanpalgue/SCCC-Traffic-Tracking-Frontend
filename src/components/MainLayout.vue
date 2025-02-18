@@ -8,6 +8,8 @@ const theme = ref(localStorage.getItem("theme") || "light");
 
 const signout_visible = ref(false);
 
+const sidebarVisible = ref(false);
+
 const toggleTheme = () => {
     if (theme.value === "light") {
         document.documentElement.classList.add("dark");
@@ -18,6 +20,14 @@ const toggleTheme = () => {
         localStorage.setItem("theme", "light");
         theme.value = "light";
     }
+};
+
+const toggleSidebar = () => {
+    sidebarVisible.value = !sidebarVisible.value;
+}
+
+const closeSidebar = () => {
+    sidebarVisible.value = false;
 };
 
 onMounted(() => {
@@ -44,7 +54,6 @@ function logout() {
         window.location.reload();
     });
 }
-
 </script>
 
 <template>
@@ -53,7 +62,7 @@ function logout() {
             <div class="px-3 py-3 lg:px-5 lg:pl-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
-                        <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar"
+                        <button @click="toggleSidebar" 
                             aria-controls="logo-sidebar" type="button"
                             class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
@@ -66,9 +75,7 @@ function logout() {
                         </button>
                         <a href="#" class="flex ms-2 md:me-24">
                             <img src="../assets/baguio-logo.png" class="h-10 me-3" alt="Smart City Baguio" />
-                            <span
-                                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">SCCC-Inventory
-                                System</span>
+                            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">SCCC-Inventory System</span>
                         </a>
                     </div>
 
@@ -121,13 +128,15 @@ function logout() {
         </nav>
 
         <aside id="logo-sidebar"
-            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 lg:translate-x-0 dark:bg-black dark:border-black"
+            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform  bg-white border-r border-gray-200 lg:translate-x-0 dark:bg-black dark:border-black"
+            :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'"
             aria-label="Sidebar">
             <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-black">
                 <ul class="space-y-2 font-medium">
                     <li>
                         <RouterLink v-for='item in navigation' :to="item.to" :key="item.name"
-                            :class="[$route.name === item.to.name ? 'text-gray-700 bg-gray-300 hover:text-gray-700 hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']">
+                            :class="[$route.name === item.to.name ? 'text-gray-700 bg-gray-300 hover:text-gray-700 hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()">
                             <span
                                 :class="[$route.name === item.to.name ? 'text-gray-700 group-hover:text-gray-700 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
                                 {{ item.icon }}
@@ -139,19 +148,9 @@ function logout() {
             </div>
         </aside>
 
-        <div class="h-screen pt-14 p-4 lg:ml-64 dark:bg-gray-900">
+        <div class="h-full pt-14 p-4 lg:ml-64 dark:bg-gray-900 dark:text-gray-200">
             <!-- MAIN CONTENT -->
-            <router-view />
-
-            <Dialog :visible="signout_visible" modal header="Sign out" :style="{ width: '25rem' }">
-                <span class="text-surface-500 dark:text-surface-400 block mb-8">Are you sure you want to sign
-                    out?</span>
-                <div class="flex justify-end gap-2">
-                    <Button type="button" label="Cancel" severity="secondary"
-                        @click="signout_visible = false">Cancel</Button>
-                    <Button type="button" label="Sign out" @click="logout">Sign out</Button>
-                </div>
-            </Dialog>
+            <router-view/>
 
             <!-- SIGN OUT modal -->
             <div id="popup-modal" tabindex="-1"

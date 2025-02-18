@@ -23,7 +23,6 @@ function deleteImage(id) {
 onMounted(() => {
   axiosClient.get('/api/image')
     .then((response) => {
-      console.log(response.data);
       images.value = response.data;
     })
 })
