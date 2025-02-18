@@ -94,5 +94,8 @@ const showCalendar = (picker) => {
 
 
 <style scoped>
-/* Optional: Add any additional dark mode specific styles if needed */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none;
+  -webkit-appearance: none;
+}
 </style>
