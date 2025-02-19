@@ -148,9 +148,9 @@ function logout() {
             </div>
         </aside>
 
-        <div class="h-full pt-14 p-4 lg:ml-64 dark:bg-gray-900 dark:text-gray-200">
+        <div class="min-h-screen max-h-full pt-14 p-4 lg:ml-64 dark:bg-gray-900 dark:text-gray-200">
             <!-- MAIN CONTENT -->
-            <router-view/>
+            <router-view class=""/>
 
             <!-- SIGN OUT modal -->
             <div id="popup-modal" tabindex="-1"
