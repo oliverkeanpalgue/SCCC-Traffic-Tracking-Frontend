@@ -8,30 +8,6 @@ const props = defineProps({
 
 const emit = defineEmits(['periodChange']);
 
-// Function to fetch data based on selected date range
-// const fetchData = async (start, end) => {
-//     console.log("Fetching data for:", start, end);
-
-//     try {
-//         // Example API call - Replace with your actual API
-//         const response = await fetch(`/api/data?start=${start}&end=${end}`);
-//         const data = await response.json();
-
-//         return {
-//             borrowed: data.borrowed || [],
-//             returned: data.returned || [],
-//             categories: data.categories || []
-//         };
-//     } catch (error) {
-//         console.error("Error fetching data:", error);
-//         return {
-//             borrowed: [65, 72, 58, 80, 74, 69],
-//             returned: [60, 68, 58, 78, 70, 65],
-//             categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-//         };
-//     }
-// };
-
 // Function to generate sample data based on date range
 const generateSampleData = (start, end) => {
     const startDate = new Date(start);
@@ -65,7 +41,7 @@ const generateSampleData = (start, end) => {
 const options = ref({
     chart: {
         height: "100%",
-        maxWidth: "90%",
+        maxWidth: "100%",
         type: "area",
         fontFamily: "Inter, sans-serif",
         dropShadow: {
@@ -199,21 +175,9 @@ onUnmounted(() => {
 <template>
     <div class="">
         <div class="grid grid-cols-3 ">
-            <div class="grid grid-cols-2 items-center text-start">
-                <div>
-                    <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
-                        Borrowed</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">418</p>
-                </div>
-                <div>
-                    <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
-                        Returned</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">399</p>
-                </div>
-            </div>
         </div>
 
-        <div class="items-center bg-white rounded-lg shadow-sm dark:bg-gray-800 p-2">
+        <div class="h-full p-4 md:p-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-800">
             <div ref="lineChart" id="line-chart" class="h-80 w-full"></div>
         </div>
     </div>

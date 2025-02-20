@@ -51,7 +51,7 @@ const options = ref({
   ],
   chart: {
     type: "bar",
-    height: "320px",
+    height: "100%",
     fontFamily: "Inter, sans-serif",
     toolbar: {
       show: true,
@@ -178,20 +178,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6">
-    <div class="grid grid-cols-2 items-center text-start">
-      <div>
-        <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
-          Borrowed</h5>
-        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">418</p>
-      </div>
-      <div>
-        <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
-          Returned</h5>
-        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">399</p>
-      </div>
-    </div>
-    
+  <div class="w-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6">    
     <!-- BAR CHART -->
     <div ref="barChart"></div>
   </div>
