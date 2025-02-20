@@ -1,8 +1,8 @@
 <template>
 
     <div class="">
-        <label class="mb-[10px] block text-base font-medium text-dark dark:text-white">
-            Set date range
+        <label class="mb-[10px] block text-base font-medium text-dark dark:text-gray-200">
+            Select Date Range:
         </label>
 
         <div class="relative" ref="datepickerRef">

@@ -178,7 +178,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6">    
+  <div class="w-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:px-6">    
     <!-- BAR CHART -->
     <div ref="barChart"></div>
   </div>

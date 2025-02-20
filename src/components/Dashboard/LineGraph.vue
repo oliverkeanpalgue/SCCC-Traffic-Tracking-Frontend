@@ -36,7 +36,6 @@ const generateSampleData = (start, end) => {
     return { borrowed, returned, categories: days };
 };
 
-
 // Reactive chart options
 const options = ref({
     chart: {
@@ -173,14 +172,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="">
-        <div class="grid grid-cols-3 ">
+    <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-800">
+            <div ref="lineChart" id="line-chart"></div>
         </div>
-
-        <div class="h-full p-4 md:p-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-800">
-            <div ref="lineChart" id="line-chart" class="h-80 w-full"></div>
-        </div>
-    </div>
 </template>
 
 <style scoped>
