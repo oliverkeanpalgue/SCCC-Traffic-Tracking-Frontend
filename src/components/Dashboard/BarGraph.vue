@@ -2,46 +2,36 @@
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import ApexCharts from 'apexcharts';
 
-// Props to make the component configurable
+const props = defineProps({
+    dateRange: Object // Expecting { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
+});
+
 const emit = defineEmits(['periodChange']);
 
 // Reactive date range
 const startDate = ref(null);
 const endDate = ref(null);
 
-// Dummy data generation function with date range support
-const generateDateRangeData = (start, end) => {
-  // If no dates are selected, use default last week data
-  if (!start || !end) {
-    return {
-      organic: [231, 122, 63, 421, 122, 323],
-      social: [232, 113, 341, 224, 522, 411],
-      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    };
-  }
+// Function to generate sample data based on date range
+const generateSampleData = (start, end) => {
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    const days = [];
+    const organic = [];
+    const social = [];
 
-  // Calculate the number of days between start and end dates
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    while (startDate <= endDate) {
+        const currentDate = new Date(startDate);
+        const formattedDate = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
+        days.push(formattedDate);
 
-  // Generate data based on the date range
-  const organic = Array.from({ length: diffDays }, () => Math.floor(Math.random() * 500));
-  const social = Array.from({ length: diffDays }, () => Math.floor(Math.random() * 500));
+        organic.push(Math.floor(Math.random() * 500));
+        social.push(Math.floor(Math.random() * 500));
 
-  // Generate categories (dates)
-  const categories = Array.from({ length: diffDays }, (_, i) => {
-    const currentDate = new Date(start);
-    currentDate.setDate(start.getDate() + i);
+        startDate.setDate(startDate.getDate() + 1);
+    }
 
-    // Ensure proper formatting and no extra characters
-    return `${currentDate.toLocaleString('en-US', { month: 'short' })} ${currentDate.getDate()}`;
-  });
-
-  return {
-    organic,
-    social,
-    categories
-  };
+    return { organic, social, categories: days };
 };
 
 // Reactive chart options
@@ -142,43 +132,19 @@ const barChart = ref(null);
 let chart = null;
 
 // Update chart based on date range
-const updateChart = (start = null, end = null) => {
-  let chartData;
+const updateChart = () => {
+    if (props.dateRange?.start && props.dateRange?.end) {
+        const chartData = generateSampleData(props.dateRange.start, props.dateRange.end);
+        options.value.series[0].data = chartData.organic;
+        options.value.series[1].data = chartData.social;
+        options.value.xaxis.categories = chartData.categories;
 
-  // Prioritize date range if available
-  if (start && end) {
-    chartData = generateDateRangeData(start, end);
-  } else {
-    // Fallback to default data
-    chartData = {
-      organic: [231, 122, 63, 421, 122, 323],
-      social: [232, 113, 341, 224, 522, 411],
-      categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-    };
-  }
+        emit('periodChange', props.dateRange);
 
-  // Update series and categories
-  options.value.series = [
-    {
-      name: "Organic",
-      color: "#1A56DB",
-      data: chartData.organic,
-    },
-    {
-      name: "Social media",
-      color: "#FDBA8C",
-      data: chartData.social,
+        if (chart) {
+            chart.updateOptions(options.value);
+        }
     }
-  ];
-  options.value.xaxis.categories = chartData.categories;
-
-  // Emit the date range change to parent
-  emit('periodChange', { start, end });
-
-  // Re-render chart if it exists
-  if (chart) {
-    chart.updateOptions(options.value);
-  }
 };
 
 // Watch for date range changes
@@ -195,30 +161,20 @@ const onDateRangeChange = (event) => {
   updateChart(start, end);
 };
 
+// Watch for date range changes
+watch(() => props.dateRange, updateChart, { deep: true });
+
 onMounted(() => {
-  if (barChart.value) {
-    chart = new ApexCharts(barChart.value, options.value);
-    chart.render();
-  }
-
-  // Add event listener to date range picker
-  const dateRangePicker = document.getElementById('date-range-picker');
-  if (dateRangePicker) {
-    dateRangePicker.addEventListener('change', onDateRangeChange);
-  }
+    if (barChart.value) {
+        chart = new ApexCharts(barChart.value, options.value);
+        chart.render();
+    }
 });
 
-// Optional: Clean up chart and event listeners on unmount
 onUnmounted(() => {
-  if (chart) {
-    chart.destroy();
-  }
-
-  const dateRangePicker = document.getElementById('date-range-picker');
-  if (dateRangePicker) {
-    dateRangePicker.removeEventListener('change', onDateRangeChange);
-  }
+    if (chart) chart.destroy();
 });
+
 </script>
 
 <template>

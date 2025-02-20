@@ -1,6 +1,5 @@
 <script setup>
 import { ref, onMounted } from "vue";
-import { initFlowbite } from 'flowbite'
 import LineGraph from '../components/Dashboard/LineGraph.vue';
 import BarGraph from "../components/Dashboard/BarGraph.vue";
 import TransactionHistoryTable from "../components/Dashboard/TransactionHistoryTable.vue";
@@ -9,9 +8,11 @@ import DateRangePicker from "../components/Dashboard/DateRangePicker.vue";
 // Reactive reference for the chart
 const selectedPeriod = ref('Last week');
 
-onMounted(() => {
-    initFlowbite();
-});
+const selectedDateRange = ref({ start: null, end: null })
+
+const updateDateRange = (range) => {
+  selectedDateRange.value = range
+}
 
 </script>
 
@@ -24,12 +25,16 @@ onMounted(() => {
                 </h1>
             </div>
         </header>
+
+        <!-- Date Range Picker -->
+        <DateRangePicker @dateRangeSelected="updateDateRange" />
+
         <div class="flex gap-3 p-4 h-120">
             <!-- BAR GRAPH -->
             <div class=" w-1/2">
                 <div class="card w-full h-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6 flex justify-between mb-5 ">
                     <BarGraph 
-                        :selectedPeriod="selectedPeriod"
+                        :dateRange="selectedDateRange"
                         class="w-full "
                     />
                 </div>
@@ -39,7 +44,7 @@ onMounted(() => {
             <div class=" w-1/2">
                 <div class="card w-full h-full bg-white rounded-lg shadow-sm dark:bg-gray-800 p-4 md:p-6 flex justify-between mb-5 ">
                     <LineGraph 
-                        :selectedPeriod="selectedPeriod"
+                        :dateRange="selectedDateRange"
                         class="w-full "
                     />
                 </div>

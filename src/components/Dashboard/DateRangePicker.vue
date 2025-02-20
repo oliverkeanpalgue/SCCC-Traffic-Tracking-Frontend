@@ -96,7 +96,7 @@
                 <div
                   v-if="isOpen"
                   id="datepicker-container"
-                  class="shadow-datepicker absolute mt-2 rounded-xl border border-stroke bg-white pt-5 dark:border-gray-700 dark:bg-gray-800"
+                  class="shadow-datepicker absolute z-50 mt-2 rounded-xl border border-stroke bg-white pt-5 dark:border-gray-700 dark:bg-gray-800"
                 >
                   <div class="flex items-center justify-between px-5">
                     <button
@@ -194,6 +194,8 @@
   
   const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   
+const emit = defineEmits(['dateRangeSelected']);
+  
   const renderCalendar = () => {
     const year = currentDate.value.getFullYear()
     const month = currentDate.value.getMonth()
@@ -261,10 +263,18 @@
     isOpen.value = !isOpen.value
   }
   
+//   const handleApply = () => {
+//     console.log('Applied:', selectedStartDate.value, selectedEndDate.value)
+//     isOpen.value = false
+//   }
+
   const handleApply = () => {
+  if (selectedStartDate.value && selectedEndDate.value) {
+    emit('dateRangeSelected', { start: selectedStartDate.value, end: selectedEndDate.value })
     console.log('Applied:', selectedStartDate.value, selectedEndDate.value)
     isOpen.value = false
   }
+}
   
   const handleCancel = () => {
     selectedStartDate.value = null
