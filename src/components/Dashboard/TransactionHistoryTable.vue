@@ -1,24 +1,45 @@
 <script setup>
-import {ref, onMounted} from "vue"
-import axiosClient from "../../axios"
+import { ref, onMounted } from "vue";
+import axiosClient from "../../axios";
 
-const transactionHistories = ref([])
+const transactionHistories = ref([]);
+
+const openDropdownId = ref(null);
+
+const dropdownRefs = ref([]);
+
+const closeDropdown = () => {
+    openDropdownId.value = null;
+};
 
 onMounted(() => {
-  axiosClient.get('/api/transaction_history', {
-    headers: {
-      'x-api-key': '$m@rtC!ty'
-    }
-  })
-  .then((response) => {
-    transactionHistories.value = response.data;
-    console.log('Transaction histories:', transactionHistories.value);
-  })
-  .catch((error) => {
-    console.error("Error fetching transactions:", error);
-  });
+    document.addEventListener("click", (event) => {
+        if (
+            openDropdownId.value !== null &&
+            !dropdownRefs.value[openDropdownId.value]?.contains(event.target)
+        ) {
+            closeDropdown();
+        }
+    });
+
+    axiosClient
+        .get("/api/transaction_history", {
+            headers: {
+                "x-api-key": "$m@rtC!ty",
+            },
+        })
+        .then((response) => {
+            transactionHistories.value = response.data;
+            console.log("Transaction histories:", transactionHistories.value);
+        })
+        .catch((error) => {
+            console.error("Error fetching transactions:", error);
+        });
 });
 
+const toggleDropdown = (transactionId) => {
+    openDropdownId.value = openDropdownId.value === transactionId ? null : transactionId;
+};
 </script>
 
 
@@ -146,7 +167,7 @@ onMounted(() => {
                             </div>
                         </div>
                     </div>
-                    <div class="overflow-x-auto">
+                    <div class="">
                         <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
                             <thead
                                 class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
@@ -154,54 +175,55 @@ onMounted(() => {
                                     <th scope="col" class="px-4 py-3">Transaction ID</th>
                                     <th scope="col" class="px-4 py-3">Borrower</th>
                                     <th scope="col" class="px-4 py-3">Lender</th>
-                                    <th scope="col" class="px-4 py-3">Return Date  & Time</th>
+                                    <th scope="col" class="px-4 py-3">Return Date & Time</th>
                                     <th scope="col" class="px-4 py-3">Borrow Date & Time</th>
                                     <th scope="col" class="px-4 py-3">Actions</th>
-                                    <th scope="col" class="px-4 py-3">   
+                                    <th scope="col" class="px-4 py-3">
                                         <span class="sr-only">Actions</span>
                                     </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="border-b dark:border-gray-700" v-for="transactionHistory in transactionHistories.borrow_transactions" :key="transactionHistory.id">
+                                <tr class="border-b dark:border-gray-700"
+                                    v-for="transactionHistory in transactionHistories.borrow_transactions"
+                                    :key="transactionHistory.id">
                                     <th scope="row"
                                         class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         {{ transactionHistory.id }}
-                                        </th>
+                                    </th>
                                     <td class="px-4 py-3">{{ transactionHistory.borrowers.borrowers_name }}</td>
-                                    <td class="px-4 py-3">{{ transactionHistories.users.find(users => users.id === transactionHistory.lender_id)?.firstName }}</td>
+                                    <td class="px-4 py-3">{{transactionHistories.users.find(users => users.id ===
+                                        transactionHistory.lender_id)?.firstName}}</td>
                                     <td class="px-4 py-3">{{ transactionHistory.return_date }}</td>
                                     <td class="px-4 py-3">{{ transactionHistory.borrow_date }}</td>
-                                    <td class="px-4 py-3 flex items-center justify-end">
-                                        <button id="apple-imac-27-dropdown-button"
-                                            data-dropdown-toggle="apple-imac-27-dropdown"
-                                            class="inline-flex items-center p-0.5 text-sm font-medium text-center text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                    <td class="px-4 py-3 flex items-center justify-end relative">
+                                        <!-- Dropdown Button -->
+                                        <button @click.stop="toggleDropdown(transactionHistory.id)"
+                                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                                             type="button">
                                             <svg class="w-5 h-5" aria-hidden="true" fill="currentColor"
-                                                viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                                viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
                                             </svg>
                                         </button>
-                                        <div id="apple-imac-27-dropdown"
-                                            class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                                            <ul class="py-1 text-sm text-gray-700 dark:text-gray-200"
-                                                aria-labelledby="apple-imac-27-dropdown-button">
+
+                                        <!-- Dropdown Menu -->
+                                        <div v-if="openDropdownId === transactionHistory.id" ref="dropdownRefs"
+                                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-10 = mt-2">
+                                            <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
                                                 <li>
                                                     <a href="#"
-                                                        class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Show</a>
+                                                        class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit</a>
                                                 </li>
                                                 <li>
                                                     <a href="#"
-                                                        class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Edit</a>
+                                                        class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Delete</a>
                                                 </li>
                                             </ul>
-                                            <div class="py-1">
-                                                <a href="#"
-                                                    class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Delete</a>
-                                            </div>
                                         </div>
                                     </td>
+
                                 </tr>
                             </tbody>
                         </table>
