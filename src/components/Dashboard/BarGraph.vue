@@ -118,7 +118,7 @@ const options = ref({
     },
   },
   yaxis: {
-    show: false,
+    show: true,
   },
   fill: {
     opacity: 1,
@@ -145,20 +145,6 @@ const updateChart = () => {
             chart.updateOptions(options.value);
         }
     }
-};
-
-// Watch for date range changes
-const onDateRangeChange = (event) => {
-  const inputs = event.target.closest('[date-rangepicker]').querySelectorAll('input');
-  const start = new Date(inputs[0].value);
-  const end = new Date(inputs[1].value);
-
-  // Ensure date is set correctly without time
-  startDate.value = start.toISOString().split("T")[0]; // YYYY-MM-DD format
-  endDate.value = end.toISOString().split("T")[0];
-
-  // Update chart with new date range
-  updateChart(start, end);
 };
 
 // Watch for date range changes

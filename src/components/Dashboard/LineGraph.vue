@@ -104,7 +104,7 @@ const options = ref({
         },
     },
     yaxis: {
-        show: false,
+        show: true,
     },
 });
 
@@ -173,7 +173,7 @@ onUnmounted(() => {
 
 <template>
     <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-800">
-            <div ref="lineChart" id="line-chart"></div>
+            <div ref="lineChart" id="line-chart" ></div>
         </div>
 </template>
 
