@@ -54,7 +54,10 @@ onMounted(() => {
 
 
 const allInventory = computed(() => {
-  return [...officeEquipments.value, ...officeSupplies.value];
+  return [...officeEquipments.value, ...officeSupplies.value].map((item, index) => ({
+    ...item,
+    newId: `INV-${index + 1}`, // Generate a unique ID
+  }));
 });
 
 watch(allInventory, (newVal) => {
@@ -62,7 +65,7 @@ watch(allInventory, (newVal) => {
 });
 
 const selectImage = (image) => {
-  selectedImage.value = selectedImage.value?.id === image.id ? null : image;
+  selectedImage.value = selectedImage.value?.newId === image.newId ? null : image;
 };
 
 // Function to close image details
@@ -93,7 +96,7 @@ const closeDetails = () => {
             :key="item.id"
             @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition"
-            :class="selectedImage && selectedImage.id === item.id ? 'bg-blue-200' : ''"
+            :class="selectedImage && selectedImage.newId === item.newId ? 'bg-blue-200' : ''"
           >
             <img
               :src="item.image_url || image"
