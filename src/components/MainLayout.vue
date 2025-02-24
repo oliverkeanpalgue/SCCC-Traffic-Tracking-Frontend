@@ -45,7 +45,7 @@ const navigation = [
     { name: 'Inventory', to: { name: 'Inventory' }, icon: 'inventory' },
     { name: 'Reports', to: { name: 'Reports' }, icon: 'analytics' },
     { name: 'Borrowed', to: { name: 'Borrowed' }, icon: 'transfer_within_a_station' },
-    { name: 'Upload', to: { name: 'Home' }, icon: 'upload' },
+    { name: 'Upload', to: { name: 'Upload' }, icon: 'upload' },
     { name: 'My Images', to: { name: 'MyImages' }, icon: 'photo_library' },
 ]
 

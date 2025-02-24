@@ -1,7 +1,8 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed } from "vue";
 import axiosClient from "../../axios";
-import UpdateModal from "../Dashboard/UpdateTransactionModal.vue";
+import UpdateModal from "./Modal/UpdateTransactionModal.vue";
+import DeleteModal from "./Modal/DeleteTransactionModal.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -9,11 +10,29 @@ const transactionHistories = ref([]);
 
 const searchQuery = ref("");
 
+const selectedTransaction = ref(null);
+
 const isUpdateModalOpen = ref(false)
 
 const openUpdateModal = () => {
    isUpdateModalOpen.value = !isUpdateModalOpen.value
 }
+
+const isDeleteModalOpen = ref(false)
+
+const openDeleteModal = (transaction) => {
+   const lender = transactionHistories.value.users?.find(
+      user => user.id === transaction.lender_id
+   )?.firstName || 'Unknown';
+
+   selectedTransaction.value = {
+      ...transaction,
+      lenderName: lender, // Add lender name
+   };
+
+   isDeleteModalOpen.value = true;
+   console.log("🚀 ~ openDeleteModal ~ isDeleteModalOpen:", isDeleteModalOpen.value)
+};
 
 const filteredTransactions = computed(() => {
    if (!transactionHistories.value.borrow_transactions) return [];
@@ -279,21 +298,21 @@ onUnmounted(() => {
                               <div v-if="openDropdownId === transaction.id" ref="dropdownRefs"
                                  class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-10 mt-2">
                                  <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
-                                    <li>
-                                       <div class="container mx-auto py-20">
-                                          <button @click.stop="openUpdateModal()"
-   class="rounded-full bg-primary px-6 py-3 text-base font-medium text-white">
-   Update
-</button>
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                       <button @click.stop="openUpdateModal()" class="w-full text-start px-4 py-2 ">
+                                          Update
+                                       </button>
 
-
-                                          <!-- Use the modal component and bind the v-model -->
-                                          <UpdateModal v-model="isUpdateModalOpen" @click.stop/>
-                                       </div>
+                                       <!-- Use the modal component and bind the v-model -->
+                                       <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen" @click.stop />
                                     </li>
-                                    <li>
-                                       <a href="#"
-                                          class="block px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Delete</a>
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                       <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2 ">
+                                          Delete
+                                       </button>
+
+                                       <!-- Use the modal component and bind the v-model -->
+                                       <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen" :transaction="selectedTransaction" @click.stop />
                                     </li>
                                  </ul>
                               </div>

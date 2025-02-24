@@ -41,7 +41,7 @@ onUnmounted(() => {
   >
     <div
       ref="modalContainer"
-      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-12 text-center dark:bg-dark-2 md:px-[70px] md:py-[60px]"
+      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-12 text-center dark:bg-dark-2 md:px-[70px] md:py-[60px] border dark:bg-gray-700 "
     >
       <h3 class="pb-[18px] text-xl font-semibold text-dark dark:text-white sm:text-2xl">
         Your Message Sent Successfully

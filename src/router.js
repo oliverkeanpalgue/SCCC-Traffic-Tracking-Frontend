@@ -1,6 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
 import DefaultLayout from "./components/DefaultLayout.vue";
-import Home from "./pages/Upload.vue";
+import Upload from "./pages/Upload.vue";
 import MyImages from "./pages/MyImages.vue";
 import Login from "./pages/auth/Login.vue";
 import Signup from "./pages/auth/Signup.vue";
@@ -17,9 +17,9 @@ const routes = [
     path: "/",
     component: MainLayout,
     children: [
-      {path: '/', name: 'Home', component: Home},
+      {path: '/', name: 'Dashboard', component: Dashboard},
+      {path: '/upload', name: 'Upload', component: Upload},
       {path: '/images', name: 'MyImages', component: MyImages},
-      {path: '/dashboard', name: 'Dashboard', component: Dashboard},
       {path: '/reports', name: 'Reports', component: Reports},
       {path: '/inventory', name: 'Inventory', component: Inventory},
       {path: '/borrowed', name: 'Borrowed', component: Borrowed},
