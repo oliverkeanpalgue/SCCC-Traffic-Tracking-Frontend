@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { MdDeleteForever } from '@kalimahapps/vue-icons';
+import axiosClient from '../../../axios';
+
+const API_KEY = import.meta.env.VITE_API_KEY;
+
+const isLoading = ref(false)
 
 const props = defineProps({
   modelValue: Boolean, // v-model binding for modal open state
@@ -16,9 +21,41 @@ const closeModal = () => {
   emit('update:modelValue', false) // Notify parent to close modal
 }
 
-const confirmDelete = () => {
-  console.log("DELETE")
-  closeModal()
+const confirmDelete = async () => {
+  try {
+    isLoading.value = true;
+    
+    const updateData = {
+      borrow_date: props.transaction.borrow_date,
+      return_date: props.transaction.return_date,
+      lender_id: props.transaction.lender_id,
+      borrowers_id: props.transaction.borrowers.id,
+      remarks: props.transaction.remarks,
+      is_deleted: true,
+      borrow_transaction_items: props.transaction.borrow_transaction_items || []
+    };
+
+    const response = await axiosClient.put(
+      `/api/transaction_history/${props.transaction.id}`,
+      updateData,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+
+    if (response.data.success) {
+      emit('confirmDelete', response.data.data)
+      closeModal()
+      alert('Transaction deleted successfully')
+    }
+  } catch (error) {
+    console.error('Error deleting transaction:', error)
+    alert('Error deleting transaction. Please try again.')
+  } finally {
+    isLoading.value = false
+  }
 }
 
 const handleClickOutside = (event) => {
