@@ -3,10 +3,18 @@ import { onMounted, onUnmounted, ref, computed } from "vue";
 import axiosClient from "../../axios";
 import UpdateModal from "./Modal/UpdateTransactionModal.vue";
 import DeleteModal from "./Modal/DeleteTransactionModal.vue";
+import { ClListOrdered } from '@kalimahapps/vue-icons';
+import { ChMenuMeatball } from '@kalimahapps/vue-icons';
+import { FlFilledClipboardBulletList } from '@kalimahapps/vue-icons';
+import { CaDotMark } from '@kalimahapps/vue-icons';
+import { GlQuestion } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const transactionHistories = ref([]);
+const officeSupplies = ref([]);
+const officeEquipments = ref([]);
+const equipmentCopies = ref([]);
 
 const searchQuery = ref("");
 
@@ -86,6 +94,48 @@ onMounted(() => {
       })
       .catch((error) => {
          console.error("Error fetching transactions:", error);
+      });
+
+   axiosClient
+      .get("/api/office_supplies", {
+         headers: {
+            "x-api-key": API_KEY,
+         },
+      })
+      .then((response) => {
+         officeSupplies.value = response.data;
+         console.log("Office Supplies:", officeSupplies.value);
+      })
+      .catch((error) => {
+         console.error("Error fetching office supplies:", error);
+      });
+      
+   axiosClient
+      .get("/api/office_equipments", {
+         headers: {
+            "x-api-key": API_KEY,
+         },
+      })
+      .then((response) => {
+         officeEquipments.value = response.data;
+         console.log("Office Equipments:", officeEquipments.value);
+      })
+      .catch((error) => {
+         console.error("Error fetching office equipments:", error);
+      });
+      
+   axiosClient
+      .get("/api/equipment_copies", {
+         headers: {
+            "x-api-key": API_KEY,
+         },
+      })
+      .then((response) => {
+         equipmentCopies.value = response.data;
+         console.log("Equipment Copies:", equipmentCopies.value);
+      })
+      .catch((error) => {
+         console.error("Error fetching equipment copies:", error);
       });
 });
 
@@ -254,15 +304,16 @@ onUnmounted(() => {
                   </div>
                </div>
                <div class="">
-                  <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                  <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
                      <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                         <tr>
-                           <th scope="col" class="px-4 py-3">Transaction ID</th>
-                           <th scope="col" class="px-4 py-3">Borrower</th>
-                           <th scope="col" class="px-4 py-3">Lender</th>
-                           <th scope="col" class="px-4 py-3">Return Date & Time</th>
-                           <th scope="col" class="px-4 py-3">Borrow Date & Time</th>
-                           <th scope="col" class="px-4 py-3">Actions</th>
+                           <th scope="col" class="">Transaction ID</th>
+                           <th scope="col" class="py-3">Borrower</th>
+                           <th scope="col" class="py-3">Lender</th>
+                           <th scope="col" class="py-3">Items</th>
+                           <th scope="col" class="py-3">Return Date & Time</th>
+                           <th scope="col" class="py-3">Borrow Date & Time</th>
+                           <th scope="col" class="py-3">Actions</th>
                         </tr>
                      </thead>
                      <tbody>
@@ -282,17 +333,35 @@ onUnmounted(() => {
                                  )?.firstName
                               }}
                            </td>
-                           <td class="px-4 py-3">{{ transaction.return_date }}</td>
+                           <td>
+                              <ul v-if="transaction.borrow_transaction_items.length">
+                                 <li v-for="item in transaction.borrow_transaction_items" :key="item.id" class="flex flex-row justify-start items-center">
+                                    <div class="mr-1">
+                                       <CaDotMark/>
+                                    </div>
+                                    <span v-if="item.item_type === 'Office Supply'"  class="col-span-2">
+                                       {{officeSupplies.find(supply => Number(supply.id) === Number(item.item_copy_id))?.supply_name || 'Unknown Supply' }}
+                                    </span>
+                                    <span
+                                       v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
+                                       {{ officeEquipments.find(equipment => Number(equipment.id) === Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) === Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment' }}
+                                       #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) === Number(item.item_copy_id))?.item_id || 'Unknown Equipment' }}
+                                    </span>
+                                 </li>
+                              </ul>
+                              <span v-else class="flex flex-row justify-start items-center text-yellow-600">
+                                 <GlQuestion class="mr-1"/>
+                                 No items found
+                              </span>
+                           </td>
+
+                           <td class="px-4 py-3">{{ transaction.return_date ? transaction.return_date : 'Not yet returned' }}</td>
                            <td class="px-4 py-3">{{ transaction.borrow_date }}</td>
-                           <td class="px-4 py-3 flex items-center justify-end relative">
+                           <td class="px-4 py-3 flex items-center justify-center relative">
                               <button @click.stop="toggleDropdown(transaction.id)"
                                  class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                                  type="button">
-                                 <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                       d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                                 </svg>
+                                 <ChMenuMeatball class="w-5 h-5" />
                               </button>
 
                               <div v-if="openDropdownId === transaction.id" ref="dropdownRefs"
@@ -307,12 +376,14 @@ onUnmounted(() => {
                                        <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen" @click.stop />
                                     </li>
                                     <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                       <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2 ">
+                                       <button @click.stop="openDeleteModal(transaction)"
+                                          class="w-full text-start px-4 py-2 ">
                                           Delete
                                        </button>
 
                                        <!-- Use the modal component and bind the v-model -->
-                                       <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen" :transaction="selectedTransaction" @click.stop />
+                                       <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen"
+                                          :transaction="selectedTransaction" @click.stop />
                                     </li>
                                  </ul>
                               </div>
