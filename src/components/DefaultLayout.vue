@@ -79,7 +79,6 @@ const themeLabel = computed(() => themeStore.isDarkMode ? 'Dark Mode' : 'Light M
 
 </script>
 
-
 <template>
   <div class="flex flex-row min-h-screen relative">
     <!-- Sidebar -->

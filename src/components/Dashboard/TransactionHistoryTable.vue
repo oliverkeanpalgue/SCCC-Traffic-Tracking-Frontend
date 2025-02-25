@@ -15,6 +15,7 @@ const transactionHistories = ref([]);
 const officeSupplies = ref([]);
 const officeEquipments = ref([]);
 const equipmentCopies = ref([]);
+const officeList = ref([]);
 
 const searchQuery = ref("");
 
@@ -156,6 +157,20 @@ onMounted(() => {
       })
       .catch((error) => {
          console.error("Error fetching equipment copies:", error);
+      });
+
+   axiosClient
+      .get("/api/offices", {
+         headers: {
+            "x-api-key": API_KEY,
+         },
+      })
+      .then((response) => {
+         officeList.value = response.data;
+         console.log("Office Names:", officeList.value);
+      })
+      .catch((error) => {
+         console.error("Error fetching office names:", error);
       });
 });
 
@@ -397,7 +412,7 @@ onUnmounted(() => {
                                        </button>
 
                                        <!-- Use the modal component and bind the v-model -->
-                                       <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen" :transaction="selectedTransaction" @click.stop />
+                                       <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen" :transaction="selectedTransaction" :officeEquipments="officeEquipments" :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList" @click.stop />
                                     </li>
                                     <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                                        <button @click.stop="openDeleteModal(transaction)"
