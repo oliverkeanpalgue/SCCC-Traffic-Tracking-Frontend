@@ -13,6 +13,7 @@ const props = defineProps({
   transaction: Object,
 });
 
+
 const emit = defineEmits(["update:modelValue", "confirmDelete"]);
 
 const modalContainer = ref(null);
