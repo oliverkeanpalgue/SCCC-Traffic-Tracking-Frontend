@@ -1,7 +1,7 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
-import { MdDeleteForever } from '@kalimahapps/vue-icons';
-import axiosClient from '../../../axios';
+import { ref, onMounted, onUnmounted, defineEmits, defineProps } from "vue";
+import { MdDeleteForever } from "@kalimahapps/vue-icons";
+import axiosClient from "../../../axios";
 import { FlCheckboxChecked } from '@kalimahapps/vue-icons';
 import { FlCheckboxUnchecked } from '@kalimahapps/vue-icons';
 import { AkCheck } from '@kalimahapps/vue-icons';
@@ -9,7 +9,7 @@ import { RaCross2 } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-const isLoading = ref(false)
+const isLoading = ref(false);
 
 const props = defineProps({
   modelValue: Boolean, // v-model binding for modal open state
@@ -23,23 +23,23 @@ const props = defineProps({
 
 const transactionItems = ref([]);
 
-const emit = defineEmits(['update:modelValue', 'confirmDelete'])
+const emit = defineEmits(["update:modelValue", "confirmDelete"]);
 
-const modalContainer = ref(null)
+const modalContainer = ref(null);
 
 const closeModal = () => {
-  emit('update:modelValue', false)
-}
+  emit("update:modelValue", false);
+};
 
 const confirmUpdate = async () => {
-  console.log("confirm Update")
-}
+  console.log("confirm Update");
+};
 
 const handleClickOutside = (event) => {
   if (modalContainer.value && !modalContainer.value.contains(event.target)) {
-    closeModal()
+    closeModal();
   }
-}
+};
 
 onMounted(() => {
   // console.log('transaction', props.transaction)
@@ -52,14 +52,12 @@ onMounted(() => {
     console.log("Updated Transaction Items:", transactionItems.value);
   }
 
-  document.addEventListener('click', handleClickOutside);
-});
+  document.addEventListener("click", handleClickOutside);;
+});;
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
-})
-
-const handleCheckboxChange = (item) => {
+  document.removeEventListener("click", handleClickOutside);
+});const handleCheckboxChange = (item) => {
   item.isChecked = !item.isChecked;
   console.log("Updated Item:", item);
 };
@@ -80,9 +78,14 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5">
-    <div ref="modalContainer"
-      class="w-full max-w-[900px] rounded-[20px] bg-white px-8 py-8 text-center border dark:bg-black">
+  <div
+    v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5"
+  >
+    <div
+      ref="modalContainer"
+      class="w-full max-w-[900px] rounded-[20px] bg-white px-8 py-8 text-center border dark:bg-black"
+    >
       <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
         Update Transaction
       </h3>
@@ -222,14 +225,18 @@ const formatDate = (dateString) => {
       </div>
       <div class="-mx-3 flex flex-wrap">
         <div class="w-1/2 px-3">
-          <button @click="closeModal"
-            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">
+          <button
+            @click="closeModal"
+            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black"
+          >
             No, Cancel.
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="confirmUpdate"
-            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white">
+          <button
+            @click="confirmUpdate"
+            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white"
+          >
             Yes, Update!
           </button>
         </div>
