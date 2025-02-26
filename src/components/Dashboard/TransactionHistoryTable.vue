@@ -16,6 +16,7 @@ const officeSupplies = ref([]);
 const officeEquipments = ref([]);
 const equipmentCopies = ref([]);
 const officeList = ref([]);
+const categoryList = ref([]);
 
 const searchQuery = ref("");
 
@@ -114,7 +115,7 @@ const filteredTransactions = computed(() => {
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(5);
+const itemsPerPage = ref(10);
 
 // Compute total pages based on filtered transactions
 const totalPages = computed(() => {
@@ -240,6 +241,20 @@ onMounted(() => {
       .catch((error) => {
          console.error("Error fetching office names:", error);
       });
+
+axiosClient
+   .get("/api/categories", {
+      headers: {
+         "x-api-key": API_KEY,
+      },
+   })
+   .then((response) => {
+      categoryList.value = response.data;
+      console.log("Category Names:", categoryList.value);
+   })
+   .catch((error) => {
+      console.error("Error fetching category names:", error);
+   });
 });
 
 const toggleDropdown = (transactionId) => {
@@ -281,6 +296,19 @@ const handleClickOutside = (event) => {
   ) {
     officeDropDownFilter.value = false;
   }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "N/A"; // Handle null values
+  const date = new Date(dateString);
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 };
 
 onMounted(() => {
@@ -411,6 +439,7 @@ onUnmounted(() => {
                 <tr>
                   <th scope="col" class="">Transaction ID</th>
                   <th scope="col" class="py-3">Borrower</th>
+                  <th scope="col" class="py-3">Office</th>
                   <th scope="col" class="py-3">Lender</th>
                   <th scope="col" class="py-3">Items</th>
                   <th scope="col" class="py-3">Return Date & Time</th>
@@ -425,7 +454,14 @@ onUnmounted(() => {
                     {{ transaction.id }}
                   </th>
                   <td class="px-4 py-3">
-                    {{ transaction.borrowers.borrowers_name }}
+                    {{ transaction.borrowers?.borrowers_name }}
+                  </td>
+                  <td class="px-4 py-3">
+                    {{
+                      officeList?.find(
+                        (office) => office.id === transaction.borrowers?.office_id
+                      )?.office_name
+                    }}
                   </td>
                   <td class="px-4 py-3">
                     {{
@@ -437,7 +473,7 @@ onUnmounted(() => {
                   <td>
                     <ul v-if="transaction.borrow_transaction_items.length">
                       <li v-for="item in transaction.borrow_transaction_items" :key="item.id"
-                        class="flex flex-row justify-start items-center">
+                        class="flex flex-row justify-center items-center">
                         <div class="mr-1">
                           <CaDotMark />
                         </div>
@@ -449,29 +485,15 @@ onUnmounted(() => {
                           }}
                         </span>
                         <span v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
-                          {{
-                            officeEquipments.find(
-                              (equipment) =>
-                                Number(equipment.id) ===
-                                Number(
-                                  equipmentCopies.find(
-                                    (equipment_copy) =>
-                                      Number(equipment_copy.id) ===
-                                      Number(item.item_copy_id)
-                                  )?.item_id
-                                )
-                            )?.equipment_name || "Unknown Equipment"
-                          }}
-                          #{{
-                            equipmentCopies.find(
-                              (equipment_copy) =>
-                                Number(equipment_copy.id) === Number(item.item_copy_id)
-                            )?.item_id || "Unknown Equipment"
-                          }}
+                          {{officeEquipments.find(equipment => Number(equipment.id) ===
+                    Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                      Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
+                  #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                    Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
                         </span>
                       </li>
                     </ul>
-                    <span v-else class="flex flex-row justify-start items-center text-yellow-600">
+                    <span v-else class="flex flex-row justify-center items-center text-yellow-600">
                       <GlQuestion class="mr-1" />
                       No items found
                     </span>
@@ -484,7 +506,7 @@ onUnmounted(() => {
                         : "Not yet returned"
                     }}
                   </td>
-                  <td class="px-4 py-3">{{ transaction.borrow_date }}</td>
+                  <td class="px-4 py-3">{{ formatDate(transaction.borrow_date) }}</td>
                   <td class="px-4 py-3 flex items-center justify-center relative">
                     <button @click.stop="toggleDropdown(transaction.id)"
                       class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
@@ -502,7 +524,7 @@ onUnmounted(() => {
 
                           <!-- Use the modal component and bind the v-model -->
                           <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen"
-                            :transaction="selectedTransaction" :officeEquipments="officeEquipments" :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList" @click.stop />
+                            :transaction="selectedTransaction" :officeEquipments="officeEquipments" :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList" :categoryList="categoryList" @click.stop />
                         </li>
                         <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                           <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">

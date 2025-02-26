@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps } from "vue";
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed } from "vue";
 import { MdDeleteForever } from "@kalimahapps/vue-icons";
 import axiosClient from "../../../axios";
 import { FlCheckboxChecked } from '@kalimahapps/vue-icons';
@@ -18,7 +18,8 @@ const props = defineProps({
   officeEquipments: Object,
   officeSupplies: Object,
   equipmentCopies: Object,
-  officeList: Object
+  officeList: Object,
+  categoryList: Object
 })
 
 const transactionItems = ref([]);
@@ -48,19 +49,54 @@ onMounted(() => {
       ...item,
       isChecked: item.returned_date ? true : false
     }));
-
-    console.log("Updated Transaction Items:", transactionItems.value);
   }
-
   document.addEventListener("click", handleClickOutside);;
-});;
+});
+
+// **Computed Properties**
+const allEquipmentsChecked = computed(() =>
+  transactionItems.value
+    .filter(item => item.item_type === "Equipment Copy")
+    .every(item => item.isChecked)
+);
+
+const allSuppliesChecked = computed(() =>
+  transactionItems.value
+    .filter(item => item.item_type === "Office Supply")
+    .every(item => item.isChecked)
+);
+
+// **Methods**
+const toggleAllEquipments = () => {
+  const newCheckedState = !allEquipmentsChecked.value;
+  transactionItems.value
+    .filter(item => item.item_type === "Equipment Copy")
+    .forEach(item => (item.isChecked = newCheckedState));
+};
+
+const toggleAllSupplies = () => {
+  const newCheckedState = !allSuppliesChecked.value;
+  transactionItems.value
+    .filter(item => item.item_type === "Office Supply")
+    .forEach(item => (item.isChecked = newCheckedState));
+};
+
+const handleCheckboxChange = (item) => {
+  item.isChecked = !item.isChecked;
+};
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
-});const handleCheckboxChange = (item) => {
-  item.isChecked = !item.isChecked;
-  console.log("Updated Item:", item);
-};
+});
+
+// **Computed properties to automatically calculate counts**
+const equipmentCount = computed(() =>
+  transactionItems.value.filter(item => item.item_type === 'Equipment Copy').length
+);
+
+const supplyCount = computed(() =>
+  transactionItems.value.filter(item => item.item_type === 'Office Supply').length
+);
 
 const formatDate = (dateString) => {
   if (!dateString) return "N/A"; // Handle null values
@@ -78,14 +114,9 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div
-    v-if="modelValue"
-    class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5"
-  >
-    <div
-      ref="modalContainer"
-      class="w-full max-w-[900px] rounded-[20px] bg-white px-8 py-8 text-center border dark:bg-black"
-    >
+  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5">
+    <div ref="modalContainer"
+      class="w-full max-w-[900px] max-h-[85vh] overflow-auto rounded-[20px] bg-white px-8 py-8 text-center border dark:bg-black">
       <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
         Update Transaction
       </h3>
@@ -128,116 +159,131 @@ const formatDate = (dateString) => {
           </div>
         </div>
         <!-- THIRD ROW -->
-        <div class="text-start rounded-2xl py-4 px-8 dark:bg-gray-800 dark:text-gray-300">
-          <p class="text-lg font-bold mb-1 dark:text-white">Borrowed Items:</p>
+        <div class="text-start rounded-2xl mb-5 py-4 px-8 dark:bg-gray-800 dark:text-gray-300">
+          <p v-if="supplyCount > 0" class="text-xl font-bold mb-1 dark:text-white">Borrowed Items</p>
+          <p v-if="transactionItems.length === 0"
+            class="text-sm mb-1 flex flex-row bg-red-200 text-red-800 font-bold py-5 px-5 rounded-xl">
+            <RaCross2 class="text-xl mr-1 font-bold" />NO ITEMS FOUND
+          </p>
           <!-- OFFICE SUPPLIES -->
-          <table class="w-full">
-            <tr>
-              <th class="w-1/8">
+          <p v-if="supplyCount > 0" class="text-lg font-semibold mb-1 dark:text-white">Office Supplies:</p>
+          <table v-if="supplyCount > 0" class="w-full border-2 rounded-xl border-gray-300">
+            <tr class="border bg-gray-900">
+              <th class="py-2 px-1">
                 <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
-                <div class="relative">
-                  <input type="checkbox" class="sr-only" />
-                  <div class="">
-                    <span>
-                      <FlCheckboxChecked class="mr-2 h-7 w-7" />
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="allSuppliesChecked" @change="toggleAllSupplies" />
+                    <span v-if="allSuppliesChecked">
+                      <FlCheckboxChecked class="h-7 w-7" />
+                    </span>
+                    <span v-else>
+                      <FlCheckboxUnchecked class="h-7 w-7" />
                     </span>
                   </div>
-                </div>
-              </label>
-             </th>
-              <th class="w-1/2">Office Supply</th>
+                </label>
+              </th>
+              <th class="text-start">Office Supply</th>
               <th>Quantity</th>
+              <th>Serial Number</th>
             </tr>
             <tr v-for="item in transactionItems" :key="item.id">
-              <td></td>
-              <td v-if="item.item_type === 'Office Supply'">
-                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
-                <div class="relative">
-                  <input type="checkbox" class="sr-only" :checked="item.isChecked"
-                    @change="handleCheckboxChange(item)" />
-                  <div class="">
-                    <span v-if="item.isChecked">
-                      <FlCheckboxChecked class="mr-2 h-7 w-7" />
-                    </span>
-                    <span v-if="!item.isChecked">
-                      <FlCheckboxUnchecked class="mr-2 h-7 w-7" />
-                    </span>
+              <td v-if="item.item_type === 'Office Supply'" colspan="2" class="p-1">
+                <label class="items-center cursor-pointer select-none text-dark dark:text-white flex flex-row gap-10">
+                  <div class="relative max-w-fit">
+                    <input type="checkbox" class="sr-only" :checked="item.isChecked"
+                      @change="handleCheckboxChange(item)" />
+                    <div class="">
+                      <span v-if="item.isChecked">
+                        <FlCheckboxChecked class="h-7 w-7" />
+                      </span>
+                      <span v-if="!item.isChecked">
+                        <FlCheckboxUnchecked class="h-7 w-7" />
+                      </span>
+                    </div>
                   </div>
-                </div>
-                <span v-if="item.item_type === 'Office Supply'" class="col-span-2">
-                  {{officeSupplies.find(supply => Number(supply.id) ===
-                    Number(item.item_copy_id))?.supply_name || 'Unknown Supply'}}
-                </span>
-                <span v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
-                  {{officeEquipments.find(equipment => Number(equipment.id) ===
-                    Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                      Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
-                  #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                    Number(item.item_copy_id))?.item_id || 'Unknown Equipment'}}
-                </span>
-              </label>  
+                  <div class="text-start w-full">
+                    {{officeSupplies.find(supply => Number(supply.id) ===
+                      Number(item.item_copy_id))?.supply_name || 'Unknown Supply'}}
+                  </div>
+                </label>
               </td>
-            </tr>
-          </table>
-          <!-- OFFICE EQUIPMENTS -->
-          <table class="w-full">
-            <tr>
-              <th class="w-1/2">Office Equipment</th>
-              <th>Quantity</th>
-            </tr>
-            <tr v-for="item in transactionItems" :key="item.id">
-              <td v-if="item.item_type === 'Equipment Copy'">
-                {{officeEquipments.find(equipment => Number(equipment.id) === Number(item.item_copy_id))?.equipment_name || 'Unknown Equipment'}}
+              <td v-if="item.item_type === 'Office Supply'" class="text-center">{{ item.quantity }}</td>
+              <td v-if="item.item_type === 'Office Supply'" class="text-center">
+                {{officeSupplies.find(supply => Number(supply.id) ===
+                  Number(item.item_copy_id))?.serial_number || 'Unknown Supply'}}
               </td>
             </tr>
           </table>
 
-          <ul class="mt-1">
-            <li v-for="item in transactionItems" :key="item.id" class="py-2 border-y">
-              <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
-                <div class="relative">
-                  <input type="checkbox" class="sr-only" :checked="item.isChecked"
-                    @change="handleCheckboxChange(item)" />
-                  <div class="">
-                    <span v-if="item.isChecked">
-                      <FlCheckboxChecked class="mr-2 h-7 w-7" />
+          <!-- SPACER -->
+          <div v-if="equipmentCount > 0 && supplyCount > 0" class="mt-3"></div>
+          
+          <!-- OFFICE EQUIPMENTS -->
+          <p v-if="equipmentCount > 0" class="text-lg font-semibold mb-1 dark:text-white">Office Equipments:</p>
+          <table v-if="equipmentCount > 0" class="w-full border-2 rounded-xl border-gray-300">
+            <tr class="border bg-gray-900">
+              <th class="py-2 px-1">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="allEquipmentsChecked"
+                      @change="toggleAllEquipments" />
+                    <span v-if="allEquipmentsChecked">
+                      <FlCheckboxChecked class="h-7 w-7" />
                     </span>
-                    <span v-if="!item.isChecked">
-                      <FlCheckboxUnchecked class="mr-2 h-7 w-7" />
+                    <span v-else>
+                      <FlCheckboxUnchecked class="h-7 w-7" />
                     </span>
                   </div>
-                </div>
-                <span v-if="item.item_type === 'Office Supply'" class="col-span-2">
-                  {{officeSupplies.find(supply => Number(supply.id) ===
-                    Number(item.item_copy_id))?.supply_name || 'Unknown Supply'}}
-                </span>
-                <span v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
-                  {{officeEquipments.find(equipment => Number(equipment.id) ===
-                    Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                      Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
-                  #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                    Number(item.item_copy_id))?.item_id || 'Unknown Equipment'}}
-                </span>
-              </label>
-            </li>
-          </ul>
+                </label>
+              </th>
+              <th class="text-start">Office Equipments</th>
+              <th>Category</th>
+            </tr>
+            <tr v-for="item in transactionItems" :key="item.id">
+              <td v-if="item.item_type === 'Equipment Copy'" colspan="2" class="p-1">
+                <label class="items-center cursor-pointer select-none text-dark dark:text-white flex flex-row gap-10">
+                  <div class="relative max-w-fit">
+                    <input type="checkbox" class="sr-only" :checked="item.isChecked"
+                      @change="handleCheckboxChange(item)" />
+                    <div class="">
+                      <span v-if="item.isChecked">
+                        <FlCheckboxChecked class="h-7 w-7" />
+                      </span>
+                      <span v-if="!item.isChecked">
+                        <FlCheckboxUnchecked class="h-7 w-7" />
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-start w-full">
+                    {{officeEquipments.find(equipment => Number(equipment.id) ===
+                      Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                        Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
+                    #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                      Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
+                  </div>
+                </label>
+              </td>
+              <td v-if="item.item_type === 'Equipment Copy'" class="text-center">
+                {{categoryList.find(category => Number(category.id) === officeEquipments.find(equipment =>
+                  Number(equipment.id) ===
+                  Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                    Number(item.item_copy_id))?.item_id))?.category_id)?.category_name || 'Unknown Category'}}
+              </td>
+            </tr>
+          </table>
         </div>
       </div>
       <div class="-mx-3 flex flex-wrap">
         <div class="w-1/2 px-3">
-          <button
-            @click="closeModal"
-            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black"
-          >
-            No, Cancel.
+          <button @click="closeModal"
+            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">
+            Cancel
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button
-            @click="confirmUpdate"
-            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white"
-          >
-            Yes, Update!
+          <button @click="confirmUpdate"
+            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white">
+            Mark Selected Items as Returned
           </button>
         </div>
       </div>
