@@ -95,6 +95,10 @@ const filteredInventory = computed(() => {
   });
 });
 
+watch(searchQuery, (newQuery) => {
+  console.log("Search Query:", newQuery);
+});
+
 watch(allInventory, (newVal) => {
   console.log("Updated allInventory:", newVal);
 });
@@ -161,7 +165,7 @@ const closeDetails = () => {
         >
           <div
             v-for="item in filteredInventory"
-            :key="item.id"
+            :key="item.newId"
             @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition"
             :class="
