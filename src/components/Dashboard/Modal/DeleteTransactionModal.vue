@@ -10,8 +10,57 @@ const isLoading = ref(false)
 const props = defineProps({
   modelValue: Boolean, // v-model binding for modal open state
   transactionName: String, // Pass the transaction name
-  transaction: Object
+  transaction: Object,
+  officeSupplies: Object
 })
+console.log("hello", props.transaction.borrow_transaction_items)
+
+const updateItemAvailability = async () => {
+  try {
+    for (const item of props.transaction.borrow_transaction_items) {
+      if (item.item_type === "Equipment Copy") {
+        const updateTransactionItems = {
+          is_available: true,
+        };
+
+        const response = await axiosClient.put(
+          `/api/equipment_copies/${item.item_copy_id}`,
+          updateTransactionItems,
+          {
+            headers: {
+              "x-api-key": API_KEY,
+            },
+          }
+        );
+
+        console.log("Updated Equipment Copy successfully:", response.data);
+      } else if (item.item_type === "Office Supply") {
+        const officeSupply = props.officeSupplies?.find(
+          (office_supply) => office_supply.id === item.item_copy_id
+        );
+        const newQuantity = officeSupply.supply_quantity + item.quantity
+
+        const updateTransactionItems = {
+          supply_quantity: newQuantity,
+        };
+
+        const response = await axiosClient.put(
+          `/api/office_supplies/${item.item_copy_id}`,
+          updateTransactionItems,
+          {
+            headers: {
+              "x-api-key": API_KEY,
+            },
+          }
+        );
+        console.log("Updated Office Supply successfully:", response.data);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating items:", error);
+  }
+};
+
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
 
@@ -24,7 +73,7 @@ const closeModal = () => {
 const confirmDelete = async () => {
   try {
     isLoading.value = true;
-    
+
     const updateData = {
       borrow_date: props.transaction.borrow_date,
       return_date: props.transaction.return_date,
@@ -54,6 +103,7 @@ const confirmDelete = async () => {
     console.error('Error deleting transaction:', error)
     alert('Error deleting transaction. Please try again.')
   } finally {
+    updateItemAvailability()
     isLoading.value = false
   }
 }
