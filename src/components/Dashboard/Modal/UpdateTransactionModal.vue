@@ -22,6 +22,8 @@ const props = defineProps({
   categoryList: Object
 })
 
+console.log("transaction:", props.transaction)
+
 const transactionItems = ref([]);
 
 const emit = defineEmits(["update:modelValue", "confirmDelete"]);
@@ -33,7 +35,137 @@ const closeModal = () => {
 };
 
 const confirmUpdate = async () => {
-  console.log("confirm Update");
+  try {
+    for (const item of transactionItems.value) {
+      if (item.item_type === "Equipment Copy") {
+        if (item.isChecked && item.returned_date === null) {
+          const availability = true;
+          updateEquipment(availability, item);
+          const date = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+          const returned = true;
+          updateItems(date, returned, item);
+        } else if (!item.isChecked && item.returned_date !== null) {
+          const availability = false;
+          updateEquipment(availability, item);
+          const date = null;
+          const returned = false;
+          updateItems(date, returned, item);
+        }
+      } else if (item.item_type === "Office Supply") {
+        const officeSupply = props.officeSupplies?.find(
+          (office_supply) => office_supply.id === item.item_copy_id
+        );
+        if (item.isChecked && item.returned_date === null) {
+          const newQuantity = officeSupply.supply_quantity + item.quantity;
+          updateOfficeSupply(newQuantity, item);
+
+          const date = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+          const returned = true;
+          updateItems(date, returned, item);
+        } else if (!item.isChecked && item.returned_date !== null) {
+          const newQuantity = officeSupply.supply_quantity - item.quantity;
+          updateOfficeSupply(newQuantity, item);
+          const date = null;
+          const returned = false;
+          updateItems(date, returned, item);
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Error updating items:", error);
+  }
+};
+
+const updateOfficeSupply = async (newQuantity, item) => {
+  const updateTransactionItems = {
+    supply_quantity: newQuantity,
+  };
+
+  const response = await axiosClient.put(
+    `/api/office_supplies/${item.item_copy_id}`,
+    updateTransactionItems,
+    {
+      headers: {
+        "x-api-key": API_KEY,
+      },
+    }
+  );
+  console.log("Updated Office Supply successfully:", response.data);
+}
+
+const updateEquipment = async (availability, item) => {
+  const updateTransactionItems = {
+    is_available: availability,
+  };
+
+  const response = await axiosClient.put(
+    `/api/equipment_copies/${item.item_copy_id}`,
+    updateTransactionItems,
+    {
+      headers: {
+        "x-api-key": API_KEY,
+      },
+    }
+  );
+
+  console.log("Updated Equipment Copy successfully:", response.data);
+}
+
+const updateItems = async (date, returned, item) => {
+  try {
+    isLoading.value = true;
+
+    // Ensure proper date formatting
+    const formattedDate = date instanceof Date
+      ? new Date(date).toLocaleString('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
+      : date;
+
+    // Simplify the update data structure
+    const updateData = {
+      returned_date: formattedDate,
+      returned: returned
+    };
+
+    console.log('Sending update request with data:', updateData);
+
+    const response = await axiosClient.put(
+      `/api/borrow_transaction_items/${item.id}`,
+      updateData,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+      }
+    );
+
+    console.log('Server response:', response);
+
+    if (response.data) {
+      emit('confirmDelete', response.data);
+      closeModal();
+      alert('Transaction updated successfully');
+    }
+  } catch (error) {
+    console.error('Error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status
+    });
+    alert(`Error updating transaction: ${error.response?.data?.message || error.message}`);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleClickOutside = (event) => {
@@ -52,6 +184,8 @@ onMounted(() => {
   }
   document.addEventListener("click", handleClickOutside);;
 });
+
+console.log("transaction items: ", transactionItems)
 
 // **Computed Properties**
 const allEquipmentsChecked = computed(() =>
@@ -217,7 +351,7 @@ const formatDate = (dateString) => {
 
           <!-- SPACER -->
           <div v-if="equipmentCount > 0 && supplyCount > 0" class="mt-3"></div>
-          
+
           <!-- OFFICE EQUIPMENTS -->
           <p v-if="equipmentCount > 0" class="text-lg font-semibold mb-1 dark:text-white">Office Equipments:</p>
           <table v-if="equipmentCount > 0" class="w-full border-2 rounded-xl border-gray-300">
