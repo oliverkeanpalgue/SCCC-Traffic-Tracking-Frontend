@@ -2,67 +2,92 @@
 import { onMounted, ref, computed, watch } from "vue";
 import axiosClient from "../axios";
 import image from "./../../src/assets/baguio-logo.png";
+import Loading from "../components/Loading.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 // Sample images (Replace with actual data)
+const transactionItems = ref([]);
 const officeEquipments = ref([]);
 const officeSupplies = ref([]);
 const selectedItem = ref(null);
 const searchQuery = ref("");
 const categoryList = ref([]);
+const isLoading = ref(true);
 
 onMounted(() => {
-  axiosClient
-    .get("/api/office_equipments", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      officeEquipments.value = response.data.map((equipment_item) => ({
-        ...equipment_item, // Spread existing data
-        serial_number: equipment_item.serial_number || null,
-        quantity: equipment_item.quantity || null,
-        type: equipment_item.type || "Office Equipment",
-      }));
+  Promise.all([
+    axiosClient
+      .get("/api/office_equipments", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        officeEquipments.value = response.data.map((equipment_item) => ({
+          ...equipment_item, // Spread existing data
+          serial_number: equipment_item.serial_number || null,
+          quantity: equipment_item.quantity || null,
+          type: equipment_item.type || "Office Equipment",
+        }));
 
-      console.log("Office Equipments:", officeEquipments.value);
-    })
+        console.log("Office Equipments:", officeEquipments.value);
+      })
+      .catch((error) => {
+        console.error("Error fetching office eqipments:", error);
+      }),
+
+    axiosClient
+      .get("/api/office_supplies", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        officeSupplies.value = response.data.map((supply_item) => ({
+          ...supply_item, // Spread existing data
+          type: supply_item.type || "Office Supply",
+        }));
+
+        console.log("Office Supplies:", officeSupplies.value);
+      })
+      .catch((error) => {
+        console.error("Error fetching Office Supplies:", error);
+      }),
+
+    axiosClient
+      .get("/api/categories", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        categoryList.value = response.data;
+        console.log("Office Names:", categoryList.value);
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
+      .get("/api/borrow_transaction_items", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        transactionItems.value = response.data;
+        console.log("Transaction History:", transactionItems.value);
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      })
+  ])
     .catch((error) => {
-      console.error("Error fetching office eqipments:", error);
-    });
-
-  axiosClient
-    .get("/api/office_supplies", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
+      console.error("Error fetching data:", error);
     })
-    .then((response) => {
-      officeSupplies.value = response.data.map((supply_item) => ({
-        ...supply_item, // Spread existing data
-        type: supply_item.type || "Office Supply",
-      }));
-
-      console.log("Office Supplies:", officeSupplies.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching Office Supplies:", error);
-    });
-
-  axiosClient
-    .get("/api/categories", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      categoryList.value = response.data;
-      console.log("Office Names:", categoryList.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching office names:", error);
+    .finally(() => {
+      isLoading.value = false; // Set loading to false after all requests finish
     });
 });
 
@@ -154,14 +179,18 @@ const closeDetails = () => {
     </div>
 
     <!-- MAIN CONTAINER -->
-    <div class="border border-gray-800 border-2 p-4 bg-black rounded-xl">
+    <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
+      <div v-if="isLoading" class="h-[74vh] flex items-center justify-center">
+        <Loading />
+      </div>
       <div class="" :class="selectedItem ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
-        <div
+        <div v-if="!isLoading"
           class="grid gap-4 max-h-[74vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
           :class="selectedItem ? 'grid grid-cols-3' : 'grid grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
-            class="cursor-pointer p-2 border rounded-lg hover:shadow-lg  transition duration-300 ease-in-out bg-gray-900" :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-200 dark:text-gray-900' : ''
+            class="cursor-pointer p-2 border rounded-lg hover:shadow-lg  transition duration-300 ease-in-out dark:bg-gray-900"
+            :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-200 dark:text-gray-900' : ''
               ">
             <img :src="item.image_url || image" class="w-full h-32 object-cover rounded-lg" />
             <p class="text-center mt-2 font-medium">
@@ -171,7 +200,7 @@ const closeDetails = () => {
         </div>
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
-        <div v-if="selectedItem" class="relative p-4 border rounded-lg bg-gray-900 transition duration-300 ease-in-out">
+        <div v-if="selectedItem" class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 ">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300 transition">
@@ -190,7 +219,7 @@ const closeDetails = () => {
               </p>
             </div>
             <!-- OFFICE SUPPLY -->
-            <div v-if="selectedItem.type === 'Office Supply'" class="grid grid-cols-3 gap-4 ">
+            <div v-if="selectedItem.type === 'Office Supply'" class="grid grid-cols-3 gap-4">
               <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
                 <p class="text-center text-gray-400">Serial Number</p>
                 <p class="text-xl text-center font-semibold text-gray-200">
@@ -201,7 +230,7 @@ const closeDetails = () => {
                 <p class="text-center text-gray-400">Category</p>
                 <p class="text-xl text-center font-semibold text-gray-200">
                   {{categoryList.find(category => Number(category.id) ===
-                    Number(selectedItem.category_id))?.category_name || 'Unknown Category' }}
+                    Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
                 </p>
               </div>
               <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
@@ -211,24 +240,34 @@ const closeDetails = () => {
                 </p>
               </div>
             </div>
-            <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY-->
+            <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
             <div v-if="selectedItem.type === 'Office Supply'"
-              class="mt-2 bg-gray-800 px-4 py-2 rounded-lg w-full border">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Transaction ID</th>
-                    <th>Borrower</th>
-                    <th>Office</th>
-                    <th>Lender</th>
-                    <th>Return Date & Time</th>
-                    <th>Borrow Date & Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-
-                </tbody>
-              </table>
+              class="mt-4 bg-gray-800 rounded-lg w-full shadow-md">
+              <div class="overflow-x-auto">
+                <table class="w-full border-collapse text-sm text-gray-300">
+                  <thead>
+                    <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs">
+                      <th class="px-4 py-2 border-b border-gray-600">Transaction ID</th>
+                      <th class="px-4 py-2 border-b border-gray-600">Borrower</th>
+                      <th class="px-4 py-2 border-b border-gray-600">Office</th>
+                      <th class="px-4 py-2 border-b border-gray-600">Lender</th>
+                      <th class="px-4 py-2 border-b border-gray-600">Return Date & Time</th>
+                      <th class="px-4 py-2 border-b border-gray-600">Borrow Date & Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="transaction in transactionItems" :key="transaction.id"
+                      class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
+                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.id }}</td>
+                      <td class="px-4 py-3 border-b border-gray-700">name</td>
+                      <td class="px-4 py-3 border-b border-gray-700">opis</td>
+                      <td class="px-4 py-3 border-b border-gray-700">lender</td>
+                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.return_date }}</td>
+                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.borrow_date }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

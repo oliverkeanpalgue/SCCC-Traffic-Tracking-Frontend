@@ -228,33 +228,33 @@ onMounted(() => {
       console.error("Error fetching equipment copies:", error);
     });
 
-   axiosClient
-      .get("/api/offices", {
-         headers: {
-            "x-api-key": API_KEY,
-         },
-      })
-      .then((response) => {
-         officeList.value = response.data;
-         console.log("Office Names:", officeList.value);
-      })
-      .catch((error) => {
-         console.error("Error fetching office names:", error);
-      });
-
-axiosClient
-   .get("/api/categories", {
+  axiosClient
+    .get("/api/offices", {
       headers: {
-         "x-api-key": API_KEY,
+        "x-api-key": API_KEY,
       },
-   })
-   .then((response) => {
+    })
+    .then((response) => {
+      officeList.value = response.data;
+      console.log("Office Names:", officeList.value);
+    })
+    .catch((error) => {
+      console.error("Error fetching office names:", error);
+    });
+
+  axiosClient
+    .get("/api/categories", {
+      headers: {
+        "x-api-key": API_KEY,
+      },
+    })
+    .then((response) => {
       categoryList.value = response.data;
       console.log("Category Names:", categoryList.value);
-   })
-   .catch((error) => {
+    })
+    .catch((error) => {
       console.error("Error fetching category names:", error);
-   });
+    });
 });
 
 const toggleDropdown = (transactionId) => {
@@ -486,10 +486,10 @@ onUnmounted(() => {
                         </span>
                         <span v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
                           {{officeEquipments.find(equipment => Number(equipment.id) ===
-                    Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                      Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
-                  #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                    Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
+                            Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                              Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
+                          #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                            Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
                         </span>
                       </li>
                     </ul>
@@ -524,7 +524,9 @@ onUnmounted(() => {
 
                           <!-- Use the modal component and bind the v-model -->
                           <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen"
-                            :transaction="selectedTransaction" :officeEquipments="officeEquipments" :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList" :categoryList="categoryList" @click.stop />
+                            :transaction="selectedTransaction" :officeEquipments="officeEquipments"
+                            :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList"
+                            :categoryList="categoryList" @click.stop />
                         </li>
                         <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                           <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">
