@@ -6,6 +6,9 @@ import Loading from "../components/Loading.vue";
 import AddItemModal from "../components/Inventory/AddItemModal.vue";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { FlSearch } from '@kalimahapps/vue-icons';
+import OfficeSupplyTransactionHistoryTable from "../components/Inventory/OfficeSupplyTransactionHistoryTable.vue";
+import OfficeEquipmentTransactionHistoryTable from "../components/Inventory/OfficeEquipmentTransactionHistoryTable.vue";
+import EquipmentCopiesTable from "../components/Inventory/EquipmentCopiesTable.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -17,8 +20,13 @@ const OpenAddItemModal = () => {
 
 // Sample images (Replace with actual data)
 const transactionItems = ref([]);
+const transactionHistory = ref([]);
 const officeEquipments = ref([]);
 const officeSupplies = ref([]);
+const officeList = ref([]);
+const users = ref([]);
+const borrowers = ref([]);
+const equipmentCopies = ref([]);
 const selectedItem = ref(null);
 const searchQuery = ref("");
 const categoryList = ref([]);
@@ -65,6 +73,19 @@ onMounted(() => {
       }),
 
     axiosClient
+      .get("/api/equipment_copies", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        equipmentCopies.value = response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
       .get("/api/categories", {
         headers: {
           "x-api-key": API_KEY,
@@ -90,7 +111,59 @@ onMounted(() => {
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
+      .get("/api/borrow_transactions", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
       })
+      .then((response) => {
+        transactionHistory.value = response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
+      .get("/api/users", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        users.value = response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
+      .get("/api/borrowers", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        borrowers.value = response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
+
+    axiosClient
+      .get("/api/offices", {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      })
+      .then((response) => {
+        officeList.value = response.data;
+      })
+      .catch((error) => {
+        console.error("Error fetching office names:", error);
+      }),
   ])
     .catch((error) => {
       console.error("Error fetching data:", error);
@@ -183,7 +256,8 @@ const closeDetails = () => {
         </form>
       </div>
       <div class="mr-2">
-        <button @click.stop="OpenAddItemModal()" class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+        <button @click.stop="OpenAddItemModal()"
+          class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
           <ClAddPlus class="w-8 h-8" />
           <p class="ml-1">Add Item</p>
         </button>
@@ -195,11 +269,11 @@ const closeDetails = () => {
       <div v-if="isLoading" class="h-[74vh] flex items-center justify-center">
         <Loading />
       </div>
-      <div class="" :class="selectedItem ? 'grid grid-cols-2 gap-4' : 'grid grid-cols-1'">
+      <div class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div v-if="!isLoading"
-          class="grid gap-4 max-h-[74vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
-          :class="selectedItem ? 'grid grid-cols-3' : 'grid grid-cols-5'">
+          class="grid gap-4 max-h-[74vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          :class="selectedItem ? 'grid grid-cols-2' : 'grid grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg  transition duration-300 ease-in-out dark:bg-gray-900"
             :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-200 dark:text-gray-900' : ''
@@ -213,7 +287,7 @@ const closeDetails = () => {
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
         <div v-if="selectedItem"
-          class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 ">
+          class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-4">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300 transition">
@@ -231,7 +305,8 @@ const closeDetails = () => {
                 {{ selectedItem.equipment_description || selectedItem.supply_description }}
               </p>
             </div>
-            <!-- OFFICE SUPPLY -->
+
+            <!-- OFFICE SUPPLY DESCRIPTION -->
             <div v-if="selectedItem.type === 'Office Supply'" class="grid grid-cols-3 gap-4">
               <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
                 <p class="text-center text-gray-400">Serial Number</p>
@@ -253,32 +328,56 @@ const closeDetails = () => {
                 </p>
               </div>
             </div>
+
+            <!-- OFFICE EQUIPMENT DESCRIPTION -->
+            <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-3 gap-4">
+              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                <p class="text-center text-gray-400">Serial Number</p>
+                <p class="text-xl text-center font-semibold text-gray-200">
+                  {{ selectedItem.serial_number }}
+                </p>
+              </div>
+              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                <p class="text-center text-gray-400">Category</p>
+                <p class="text-xl text-center font-semibold text-gray-200">
+                  {{categoryList.find(category => Number(category.id) ===
+                    Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
+                </p>
+              </div>
+              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                <p class="text-center text-gray-400">Available Quantity</p>
+                <p class="text-xl text-center font-semibold text-gray-200">
+                  {{ selectedItem.equipment_quantity }} pieces
+                </p>
+              </div>
+            </div>
+
+            <!-- EQUIPMENT COPIES TABLE -->
+            <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
+              <p class="ml-2 text-xl font-semibold rounded-lg">Copies:</p>
+              <EquipmentCopiesTable :selectedItem="selectedItem" :equipmentCopies="equipmentCopies"/>
+            </div>
+
             <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
-            <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 bg-gray-800 rounded-lg w-full shadow-md">
-              <div class="overflow-x-auto">
-                <table class="w-full border-collapse text-sm text-gray-300">
-                  <thead>
-                    <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs">
-                      <th class="px-4 py-2 border-b border-gray-600">Transaction ID</th>
-                      <th class="px-4 py-2 border-b border-gray-600">Borrower</th>
-                      <th class="px-4 py-2 border-b border-gray-600">Office</th>
-                      <th class="px-4 py-2 border-b border-gray-600">Lender</th>
-                      <th class="px-4 py-2 border-b border-gray-600">Return Date & Time</th>
-                      <th class="px-4 py-2 border-b border-gray-600">Borrow Date & Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr v-for="transaction in transactionItems" :key="transaction.id"
-                      class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.id }}</td>
-                      <td class="px-4 py-3 border-b border-gray-700">name</td>
-                      <td class="px-4 py-3 border-b border-gray-700">opis</td>
-                      <td class="px-4 py-3 border-b border-gray-700">lender</td>
-                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.return_date }}</td>
-                      <td class="px-4 py-3 border-b border-gray-700">{{ transaction.borrow_date }}</td>
-                    </tr>
-                  </tbody>
-                </table>
+            <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 ">
+              <p class="ml-2 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.supply_name }}:
+              </p>
+              <div class="bg-gray-800 rounded-lg w-full shadow-md">
+                <OfficeSupplyTransactionHistoryTable :selectedItem="selectedItem" :transactionItems="transactionItems"
+                  :transactionHistory="transactionHistory" :users="users" :officeList="officeList"
+                  :borrowers="borrowers" />
+              </div>
+            </div>
+
+            <!-- OFFICE EQUIPMENT TABLE TRANSACTION HISTORY -->
+            <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
+              <p class="ml-2 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.equipment_name
+                }}:
+              </p>
+              <div class="bg-gray-800 rounded-lg w-full shadow-md">
+                <OfficeEquipmentTransactionHistoryTable :selectedItem="selectedItem"
+                  :transactionItems="transactionItems" :transactionHistory="transactionHistory" :users="users"
+                  :officeList="officeList" :borrowers="borrowers" />
               </div>
             </div>
           </div>
