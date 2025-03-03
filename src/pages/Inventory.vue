@@ -3,8 +3,17 @@ import { onMounted, ref, computed, watch } from "vue";
 import axiosClient from "../axios";
 import image from "./../../src/assets/baguio-logo.png";
 import Loading from "../components/Loading.vue";
+import AddItemModal from "../components/Inventory/AddItemModal.vue";
+import { ClAddPlus } from '@kalimahapps/vue-icons';
+import { FlSearch } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
+
+const isOpenAddItemModal = ref(false);
+
+const OpenAddItemModal = () => {
+  isOpenAddItemModal.value = true;
+}
 
 // Sample images (Replace with actual data)
 const transactionItems = ref([]);
@@ -159,23 +168,26 @@ const closeDetails = () => {
       </div>
     </header>
 
-    <div class="w-full mb-2">
-      <form class="flex items-center" @submit.prevent>
-        <label for="simple-search" class="sr-only">Search</label>
-        <div class="relative w-full">
-          <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-              viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-              <path fill-rule="evenodd"
-                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                clip-rule="evenodd" />
-            </svg>
+    <div class="grid grid-cols-12 flex items-center mb-2">
+      <div class="col-span-11 pr-3">
+        <form class="flex items-center" @submit.prevent>
+          <label for="simple-search" class="sr-only">Search</label>
+          <div class="relative w-full">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <FlSearch class="w-5 h-5 text-gray-300" />
+            </div>
+            <input v-model="searchQuery" type="text" id="simple-search"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              placeholder="Search inventory..." />
           </div>
-          <input v-model="searchQuery" type="text" id="simple-search"
-            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-            placeholder="Search inventory..." />
-        </div>
-      </form>
+        </form>
+      </div>
+      <div class="mr-2">
+        <button @click.stop="OpenAddItemModal()" class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+          <ClAddPlus class="w-8 h-8" />
+          <p class="ml-1">Add Item</p>
+        </button>
+      </div>
     </div>
 
     <!-- MAIN CONTAINER -->
@@ -200,7 +212,8 @@ const closeDetails = () => {
         </div>
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
-        <div v-if="selectedItem" class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 ">
+        <div v-if="selectedItem"
+          class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 ">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300 transition">
@@ -241,8 +254,7 @@ const closeDetails = () => {
               </div>
             </div>
             <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
-            <div v-if="selectedItem.type === 'Office Supply'"
-              class="mt-4 bg-gray-800 rounded-lg w-full shadow-md">
+            <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 bg-gray-800 rounded-lg w-full shadow-md">
               <div class="overflow-x-auto">
                 <table class="w-full border-collapse text-sm text-gray-300">
                   <thead>
@@ -273,6 +285,8 @@ const closeDetails = () => {
         </div>
       </div>
     </div>
+
+    <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" @click.stop />
   </div>
 </template>
 
