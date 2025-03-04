@@ -1,8 +1,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
-import axiosClient from '../../axios';
+import axiosClient from '../../../axios';
 import QRCode from 'qrcode.vue'
+import { BxMessageSquareAdd } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -274,20 +275,52 @@ const printQRCodes = () => {
 <template>
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
     <div ref="modalContainer"
-      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
-      <div class="flex justify-center text-center">
-        <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
-          <MdDeleteForever class="text-4xl text-red-600 " />
-        </span>
+      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-4 text-center dark:bg-dark-2 border dark:bg-gray-700">
+      
+
+<!-- Breadcrumb -->
+<nav class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700" aria-label="Breadcrumb">
+  <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+    <li class="inline-flex items-center">
+      <a href="#" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+        <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+          <path d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z"/>
+        </svg>
+        Home
+      </a>
+    </li>
+    <li>
+      <div class="flex items-center">
+        <svg class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 " aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">Templates</a>
       </div>
-      <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
-        Add Item
-      </h3>
+    </li>
+    <li aria-current="page">
+      <div class="flex items-center">
+        <svg class="rtl:rotate-180  w-3 h-3 mx-1 text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m1 9 4-4-4-4"/>
+        </svg>
+        <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">Flowbite</span>
+      </div>
+    </li>
+  </ol>
+</nav>
+
+      <div class="flex justify-center items-center text-center">
+        <span class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
+          <BxMessageSquareAdd class="text-4xl text-green-600 " />
+        </span>
+        <h3 class="text-3xl ml-3 font-semibold text-dark dark:text-white">
+          Add Item
+        </h3>
+      </div>
 
       <div class="flex flex-col">
         <label class="text-start">Choose Office Equipment or Supply</label>
         <select v-model="selectedOffice">
-          <option v-for="office in officeDropdown" :key="office.id" :value="office.id">
+          <option v-for="office in officeDropdown" :key="office.id" :value="office.id" class="bg-gray-600 text-gray-200">
             {{ office.name }}
           </option>
         </select>
