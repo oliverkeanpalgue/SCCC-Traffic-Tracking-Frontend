@@ -230,6 +230,11 @@ const selectImage = (image) => {
 const closeDetails = () => {
   selectedItem.value = null;
 };
+
+const totalCopies = computed(() => {
+  if (!selectedItem.value) return 0;
+  return equipmentCopies.value.filter(copy => copy.item_id === selectedItem.value.id).length;
+});
 </script>
 
 <template>
@@ -298,64 +303,67 @@ const closeDetails = () => {
             <h2 class="text-2xl font-semibold mb-4">
               {{ selectedItem.equipment_name || selectedItem.supply_name }}
             </h2>
-            <img :src="selectedItem.image_url || image" class="w-full h-40 object-cover rounded-lg" />
-            <div class="mt-4 bg-gray-800 px-4 py-2 rounded-lg">
-              <p class="text-xl font-semibold">Description:</p>
-              <p class="ml-4 text-gray-400">
-                {{ selectedItem.equipment_description || selectedItem.supply_description }}
-              </p>
-            </div>
 
-            <!-- OFFICE SUPPLY DESCRIPTION -->
-            <div v-if="selectedItem.type === 'Office Supply'" class="grid grid-cols-3 gap-4">
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Serial Number</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{ selectedItem.serial_number }}
-                </p>
-              </div>
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Category</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{categoryList.find(category => Number(category.id) ===
-                    Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
-                </p>
-              </div>
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Available Quantity</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{ selectedItem.supply_quantity }} pieces
-                </p>
-              </div>
-            </div>
+            <!-- INFORMATION OF ITEMS -->
+            <div class="grid grid-cols-5 gap-4">
+              <!-- Image -->
+              <img :src="selectedItem.image_url || image" class="w-full h-40 object-cover rounded-lg" />
 
-            <!-- OFFICE EQUIPMENT DESCRIPTION -->
-            <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-3 gap-4">
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Serial Number</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{ selectedItem.serial_number }}
-                </p>
-              </div>
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Category</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{categoryList.find(category => Number(category.id) ===
-                    Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
-                </p>
-              </div>
-              <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
-                <p class="text-center text-gray-400">Available Quantity</p>
-                <p class="text-xl text-center font-semibold text-gray-200">
-                  {{ selectedItem.equipment_quantity }} pieces
-                </p>
+              <div class="col-span-4">
+                <!-- Description -->
+                <div class="mt-4 bg-gray-800 px-4 py-2 rounded-lg">
+                  <p class="text-xl font-semibold">Description:</p>
+                  <p class="ml-4 text-gray-400">
+                    {{ selectedItem.equipment_description || selectedItem.supply_description }}
+                  </p>
+                </div>
+
+                <!-- OFFICE SUPPLY DESCRIPTION -->
+                <div v-if="selectedItem.type === 'Office Supply'" class="grid grid-cols-3 gap-4">
+                  <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                    <p class="text-center text-gray-400">Serial Number</p>
+                    <p class="text-xl text-center font-semibold text-gray-200">
+                      {{ selectedItem.serial_number }}
+                    </p>
+                  </div>
+                  <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                    <p class="text-center text-gray-400">Category</p>
+                    <p class="text-xl text-center font-semibold text-gray-200">
+                      {{categoryList.find(category => Number(category.id) ===
+                        Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
+                    </p>
+                  </div>
+                  <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                    <p class="text-center text-gray-400">Available Quantity</p>
+                    <p class="text-xl text-center font-semibold text-gray-200">
+                      {{ selectedItem.supply_quantity }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- OFFICE EQUIPMENT DESCRIPTION -->
+                <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-2 gap-4">
+                  <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                    <p class="text-center text-gray-400">Category</p>
+                    <p class="text-xl text-center font-semibold text-gray-200">
+                      {{categoryList.find(category => Number(category.id) ===
+                        Number(selectedItem.category_id))?.category_name || 'Unknown Category'}}
+                    </p>
+                  </div>
+                  <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
+                    <p class="text-center text-gray-400">Total Copies</p>
+                    <p class="text-xl text-center font-semibold text-gray-200">
+                      {{ totalCopies }}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- EQUIPMENT COPIES TABLE -->
             <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
-              <p class="ml-2 text-xl font-semibold rounded-lg">Copies:</p>
-              <EquipmentCopiesTable :selectedItem="selectedItem" :equipmentCopies="equipmentCopies"/>
+              <p class="ml-2 text-xl font-semibold rounded-lg">Copies of {{ selectedItem.equipment_name }}:</p>
+              <EquipmentCopiesTable :selectedItem="selectedItem" :equipmentCopies="equipmentCopies" />
             </div>
 
             <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
@@ -372,7 +380,7 @@ const closeDetails = () => {
             <!-- OFFICE EQUIPMENT TABLE TRANSACTION HISTORY -->
             <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
               <p class="ml-2 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.equipment_name
-                }}:
+              }}:
               </p>
               <div class="bg-gray-800 rounded-lg w-full shadow-md">
                 <OfficeEquipmentTransactionHistoryTable :selectedItem="selectedItem"

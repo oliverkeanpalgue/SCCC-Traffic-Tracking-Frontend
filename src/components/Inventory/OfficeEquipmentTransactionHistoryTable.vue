@@ -15,11 +15,11 @@ const filteredTransactionItems = computed(() => {
         .filter(item => 
             item.item_type === "Equipment Copy" && item.item_copy_id === props.selectedItem.id
         )
-        .reverse(); // Reverse to show the latest transaction first
+        .reverse(); 
 });
 
 const formatDate = (dateString) => {
-  if (!dateString) return "N/A"; // Handle null values
+  if (!dateString) return "N/A"; 
   const date = new Date(dateString);
   return date.toLocaleString("en-US", {
     month: "short",
