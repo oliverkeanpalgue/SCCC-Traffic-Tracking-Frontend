@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
-import axiosClient from '../../axios';
+import axiosClient from '../../../axios';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 

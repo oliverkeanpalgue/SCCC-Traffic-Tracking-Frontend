@@ -3,7 +3,7 @@ import { onMounted, ref, computed, watch } from "vue";
 import axiosClient from "../axios";
 import image from "./../../src/assets/baguio-logo.png";
 import Loading from "../components/Loading.vue";
-import AddItemModal from "../components/Inventory/AddItemModal.vue";
+import AddItemModal from "../components/Inventory/Modals/AddItemModal.vue";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { FlSearch } from '@kalimahapps/vue-icons';
 import OfficeSupplyTransactionHistoryTable from "../components/Inventory/OfficeSupplyTransactionHistoryTable.vue";
@@ -362,7 +362,6 @@ const totalCopies = computed(() => {
 
             <!-- EQUIPMENT COPIES TABLE -->
             <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
-              <p class="ml-2 text-xl font-semibold rounded-lg">Copies of {{ selectedItem.equipment_name }}:</p>
               <EquipmentCopiesTable :selectedItem="selectedItem" :equipmentCopies="equipmentCopies" />
             </div>
 
