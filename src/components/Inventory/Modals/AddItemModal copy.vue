@@ -4,10 +4,6 @@ import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
 import QRCode from 'qrcode.vue'
 import { BxMessageSquareAdd } from '@kalimahapps/vue-icons';
-import { IcOpenSelectHandGesture } from '@kalimahapps/vue-icons';
-import { MdRoundNavigateNext } from '@kalimahapps/vue-icons';
-import { AkShippingBox02 } from '@kalimahapps/vue-icons';
-import { FaPenRuler } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -274,16 +270,6 @@ const printQRCodes = () => {
   };
 }
 
-// FOR BREADCRUMB
-const selectedBreadCrumbPhase = ref(1);
-const selectedBreadCrumbCategory = ref(null);
-
-const changeSelectedBreadCrumbCategory = (category, phase) => {
-  console.log("🚀 ~ changeSelectedBreadCrumbCategory ~ changeSelectedBreadCrumbCategory:", changeSelectedBreadCrumbCategory)
-  selectedBreadCrumbCategory.value = category;
-  selectedBreadCrumbPhase.value = phase;
-}
-
 </script>
 
 <template>
@@ -293,72 +279,43 @@ const changeSelectedBreadCrumbCategory = (category, phase) => {
 
       <!-- Breadcrumb -->
       <nav
-        class="flex px-5 py-1 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+        class="flex px-5 py-3 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
         aria-label="Breadcrumb">
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
           <li class="inline-flex items-center">
-            <button @click="changeSelectedBreadCrumbCategory(null, 1)"
+            <a href="#"
               class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-              <IcOpenSelectHandGesture class="w-5 h-5 ml-1 mr-2" />
-              Select Category
-            </button>
+              <svg class="w-3 h-3 me-2.5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor"
+                viewBox="0 0 20 20">
+                <path
+                  d="m19.707 9.293-2-2-7-7a1 1 0 0 0-1.414 0l-7 7-2 2a1 1 0 0 0 1.414 1.414L2 10.414V18a2 2 0 0 0 2 2h3a1 1 0 0 0 1-1v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4a1 1 0 0 0 1 1h3a2 2 0 0 0 2-2v-7.586l.293.293a1 1 0 0 0 1.414-1.414Z" />
+              </svg>
+              Home
+            </a>
           </li>
-          <li v-if="selectedBreadCrumbPhase > 1">
+          <li>
             <div class="flex items-center">
-              <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
-              <button v-if="selectedBreadCrumbCategory === 'equipment'"
-                @click="changeSelectedBreadCrumbCategory('equipment', 2)"
-                class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
-                Office Equipment Details
-              </button>
-              <button v-if="selectedBreadCrumbCategory === 'supply'"
-                @click="changeSelectedBreadCrumbCategory('supply', 2)"
-                class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
-                Office Supply Details
-              </button>
+              <svg class="rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 " aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="m1 9 4-4-4-4" />
+              </svg>
+              <a href="#"
+                class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">Templates</a>
             </div>
           </li>
-          <li aria-current="page" v-if="selectedBreadCrumbPhase > 2">
+          <li aria-current="page">
             <div class="flex items-center">
-              <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
-              <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">Print QR Code</span>
+              <svg class="rtl:rotate-180  w-3 h-3 mx-1 text-gray-400" aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 6 10">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="m1 9 4-4-4-4" />
+              </svg>
+              <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">Flowbite</span>
             </div>
           </li>
         </ol>
       </nav>
-
-      <!-- PHASES -->
-      <div>
-        <!-- PHASE 1 -->
-        <div v-if="selectedBreadCrumbPhase === 1" class="flex flex-col items-center mt-15">
-          <p class="text-3xl mb-4">Create a New Item</p>
-          <p class="mb-8">Choose the type of item that you want to create</p>
-          <div class="grid grid-cols-2 gap-20 item-center justify-center">
-            <div class="">
-              <button @click="changeSelectedBreadCrumbCategory('equipment', 2)" class="p-4 border border-dashed border-2 rounded-3xl w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
-                <AkShippingBox02 class="mb-3 w-23 h-23 w-full items-center justify-center"/>
-                <p class="font-bold text-xl mb-3">Office Equipment</p>
-                <p class="text-sm">Track fixed assets like printers and chairs</p>
-              </button>
-            </div>
-            <div>
-              <button @click="changeSelectedBreadCrumbCategory('supply', 2)" class="border border-dashed border-2 rounded-3xl w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
-                <FaPenRuler class="mb-5 w-20 h-20 w-full items-center justify-center"/>
-                <p class="font-bold text-xl mb-3">Office Supply</p>
-                <p class="text-sm">Manage consumables like paper and pens.</p>
-              </button>
-            </div>
-          </div>
-        </div>
-        <!-- PHASE 2 -->
-        <div v-if="selectedBreadCrumbPhase === 2">
-          <button @click="changeSelectedBreadCrumbCategory('equipment', 2)">Phase 2</button>
-        </div>
-        <!-- PHASE 3 -->
-        <div v-if="selectedBreadCrumbPhase === 3">
-          <button @click="changeSelectedBreadCrumbCategory('supply', 3)">Phase 3</button>
-        </div>
-      </div>
 
       <div class="flex justify-center items-center text-center">
         <span class="flex items-center justify-center w-16 h-16 rounded-full bg-green-100">
