@@ -1,8 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
 import { ClAddPlus } from '@kalimahapps/vue-icons';
-import UpdateEquipmentCopy from '../Inventory/Modals/UpdateEquipmentCopy.vue';
-
+import UpdateEquipmentCopy from '../Modals/AddEquipmentCopy.vue';
 
 const isOpenUpdateEquipmentCopyModal = ref(false);
 

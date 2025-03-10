@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
+import IncreaseSupplyQty from '../Modals/IncreaseSupplyQty.vue';
+import { ClAddPlus } from '@kalimahapps/vue-icons';
 
 const props = defineProps({
     selectedItem: Object,
@@ -10,11 +12,18 @@ const props = defineProps({
     borrowers: Object,
 })
 
+const isOpenIncreaseSupplyQtyModal = ref(false);
+
+const OpenIncreaseSupplyQtyModal = () => {
+    isOpenIncreaseSupplyQtyModal.value = true;
+}
+
+
 const searchQuery = ref("");
 
 const filteredTransactionItems = computed(() => {
     const searchTerm = searchQuery.value.toLowerCase();
-    
+
     return props.transactionItems
         .filter(item =>
             item.item_type === "Office Supply" && item.item_copy_id === props.selectedItem.id
@@ -22,7 +31,7 @@ const filteredTransactionItems = computed(() => {
         .filter(item => {
             // Search by transaction ID
             const transactionId = item.id?.toString().toLowerCase() || "";
-            
+
             // Get transaction details
             const transaction = props.transactionHistory.find(t => t.id === item.transaction_id);
             const borrower = props.borrowers.find(u => u.id === transaction?.borrower_id);
@@ -31,10 +40,10 @@ const filteredTransactionItems = computed(() => {
 
             // Search by borrower name
             const borrowerName = borrower?.borrowers_name?.toLowerCase() || "";
-            
+
             // Search by office name
             const officeName = office?.office_name?.toLowerCase() || "";
-            
+
             // Search by lender name
             const lenderName = lender?.firstName?.toLowerCase() || "";
 
@@ -108,24 +117,30 @@ const goToPage = (page) => {
     <div class="overflow-x-auto">
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <!-- Search Box -->
-                        <div class="w-full md:w-1/2">
-                            <form class="flex items-center" @submit.prevent>
-                                <label for="simple-search" class="sr-only">Search</label>
-                                <div class="relative w-full">
-                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                        <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-                                            viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                            <path fill-rule="evenodd"
-                                                d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                                clip-rule="evenodd" />
-                                        </svg>
-                                    </div>
-                                    <input v-model="searchQuery" type="text" id="simple-search"
-                                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                        placeholder="Search equipment copies..." />
-                                </div>
-                            </form>
+            <div class="w-full md:w-1/2">
+                <form class="flex items-center" @submit.prevent>
+                    <label for="simple-search" class="sr-only">Search</label>
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
+                                viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                    clip-rule="evenodd" />
+                            </svg>
                         </div>
+                        <input v-model="searchQuery" type="text" id="simple-search"
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                            placeholder="Search supply transaction..." />
+                    </div>
+                </form>
+            </div>
+            
+            <button @click.stop="OpenIncreaseSupplyQtyModal()"
+                    class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-6" />
+                    <p class="ml-1">Increase Quantity</p>
+                </button>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300">
             <thead>
@@ -218,5 +233,8 @@ const goToPage = (page) => {
                 </li>
             </ul>
         </nav>
+        
+        <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
+            :selectedItems="selectedItem" @click.stop />
     </div>
 </template>

@@ -6,9 +6,9 @@ import Loading from "../components/Loading.vue";
 import AddItemModal from "../components/Inventory/Modals/AddItemModal.vue";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { FlSearch } from '@kalimahapps/vue-icons';
-import OfficeSupplyTransactionHistoryTable from "../components/Inventory/OfficeSupplyTransactionHistoryTable.vue";
-import OfficeEquipmentTransactionHistoryTable from "../components/Inventory/OfficeEquipmentTransactionHistoryTable.vue";
-import EquipmentCopiesTable from "../components/Inventory/EquipmentCopiesTable.vue";
+import OfficeSupplyTransactionHistoryTable from "../components/Inventory/Tables/OfficeSupplyTransactionHistoryTable.vue";
+import OfficeEquipmentTransactionHistoryTable from "../components/Inventory/Tables/OfficeEquipmentTransactionHistoryTable.vue";
+import EquipmentCopiesTable from "../components/Inventory/Tables/EquipmentCopiesTable.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
