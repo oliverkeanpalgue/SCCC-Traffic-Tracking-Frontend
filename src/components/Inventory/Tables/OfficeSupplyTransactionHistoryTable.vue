@@ -13,6 +13,7 @@ const props = defineProps({
     borrowers: Object,
 })
 
+
 const isOpenIncreaseSupplyQtyModal = ref(false);
 
 const OpenIncreaseSupplyQtyModal = () => {
@@ -137,11 +138,12 @@ const goToPage = (page) => {
             </div>
 
             <button @click.stop="OpenIncreaseSupplyQtyModal()"
+            :selectedItems="selectedItem"
                 class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                 <ClAddPlus class="w-8 h-6" />
                 <p class="ml-1">Increase Quantity</p>
             </button>
-        </div>  
+        </div>
         <table class="w-full border-collapse text-sm text-gray-300">
             <thead>
                 <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs">

@@ -12,6 +12,8 @@ const props = defineProps({
   selectedItems: Object,
 })
 
+console.log("Selected Items: ", props.selectedItems)
+
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
 
 const modalContainer = ref(null)
@@ -34,41 +36,33 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const copyQuantity = ref('')
+const supplyQty = ref('')
 
-const confirmAddCopy = async () => {
+const confirmUpdateQty = async () => {
   try {
     isLoading.value = true;
-    const quantity = parseInt(copyQuantity.value);
-
-    const highestCopyNum = Math.max(...props.equipmentCopies.map(copy => copy.copy_num));
-
-    for (let i = 0; i < quantity; i++) {
-      const addCopy = {
-        item_id: props.equipmentCopies[0].item_id,
-        is_available: 1,
-        copy_num: highestCopyNum + i + 1,
-      }
-
-      console.log("Add copy data sent: ", addCopy)
-
-      const response = await axiosClient.post(
-        `/api/equipment_copies/`,
-        addCopy,
-        {
-          headers: {
-            "x-api-key": API_KEY,
-          },
-        }
-      );
-      console.log('Add Copies API response:', response);
+    const updateQty = {
+      supply_quantity: props.selectedItems.supply_quantity + supplyQty.value
     }
-    alert('Copy/Copies added successfully!');
+
+    console.log("Update supply quantity data sent: ", updateQty)
+
+    const response = await axiosClient.put(
+      `/api/office_supplies/${props.selectedItems.id}`,
+      updateQty,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+    console.log('Update office Quantity API response:', response);
+    alert('Office Quantity updated successfully!');
     closeModal()
   } catch (error) {
-    console.error('Error adding copies:', error);
+    console.error('Error updating office quantity:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error adding copies. Please try again.');
+    alert('Error updating office quantity. Please try again.');
   } finally {
     isLoading.value = false;
   }
@@ -90,7 +84,7 @@ const confirmAddCopy = async () => {
       </h3>
       <div class="flex flex-col">
         <label class="text-start">Supply Quantity</label>
-        <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
+        <input v-model="supplyQty" type="number" class="" placeholder="Enter text here" />
       </div>
       <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
         Are you sure you want to update this Transaction?
@@ -103,7 +97,7 @@ const confirmAddCopy = async () => {
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="confirmAddCopy"
+          <button @click="confirmUpdateQty"
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
             Yes, Add!
           </button>
