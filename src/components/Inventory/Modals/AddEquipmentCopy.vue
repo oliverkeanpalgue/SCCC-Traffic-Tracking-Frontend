@@ -111,7 +111,5 @@ const confirmAddCopy = async () => {
         </div>
       </div>
     </div>
-
-
   </div>
 </template>

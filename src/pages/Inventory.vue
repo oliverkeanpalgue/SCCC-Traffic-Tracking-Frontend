@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, computed, watch } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import axiosClient from "../axios";
 import image from "./../../src/assets/baguio-logo.png";
 import Loading from "../components/Loading.vue";
@@ -9,6 +9,9 @@ import { FlSearch } from '@kalimahapps/vue-icons';
 import OfficeSupplyTransactionHistoryTable from "../components/Inventory/Tables/OfficeSupplyTransactionHistoryTable.vue";
 import OfficeEquipmentTransactionHistoryTable from "../components/Inventory/Tables/OfficeEquipmentTransactionHistoryTable.vue";
 import EquipmentCopiesTable from "../components/Inventory/Tables/EquipmentCopiesTable.vue";
+import { GlCloseXs } from '@kalimahapps/vue-icons';
+import UpdateSelectedEquipment from "../components/Inventory/Modals/UpdateSelectedEquipment.vue";
+import UpdateSelectedSupply from "../components/Inventory/Modals/UpdateSelectedSupply.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -16,6 +19,18 @@ const isOpenAddItemModal = ref(false);
 
 const OpenAddItemModal = () => {
   isOpenAddItemModal.value = true;
+}
+
+const isOpenUpdateSelectedEquipmentModal = ref(false);
+
+const OpenUpdateSelectedEquipmentModal = () => {
+  isOpenUpdateSelectedEquipmentModal.value = true;
+}
+
+const isOpenUpdateSelectedSupplyModal = ref(false);
+
+const OpenUpdateSelectedSupplyModal = () => {
+  isOpenUpdateSelectedSupplyModal.value = true;
 }
 
 // Sample images (Replace with actual data)
@@ -31,8 +46,9 @@ const selectedItem = ref(null);
 const searchQuery = ref("");
 const categoryList = ref([]);
 const isLoading = ref(true);
+let refreshInterval = null;
 
-onMounted(() => {
+const fetchData = () => {
   Promise.all([
     axiosClient
       .get("/api/office_equipments", {
@@ -171,6 +187,15 @@ onMounted(() => {
     .finally(() => {
       isLoading.value = false; // Set loading to false after all requests finish
     });
+};
+
+onMounted(() => {
+  fetchData();
+  refreshInterval = setInterval(fetchData, 5000);
+});
+
+onUnmounted(() => {
+  clearInterval(refreshInterval);
 });
 
 const allInventory = computed(() => {
@@ -277,7 +302,7 @@ const totalCopies = computed(() => {
       <div class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div v-if="!isLoading"
-          class="grid gap-4 max-h-[74vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          class="grid gap-4 max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'grid grid-cols-2' : 'grid grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg  transition duration-300 ease-in-out dark:bg-gray-900"
@@ -292,14 +317,13 @@ const totalCopies = computed(() => {
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
         <div v-if="selectedItem"
-          class="relative p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-4">
+          class="relative max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-4">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
-            class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-2 py-1 rounded-full hover:bg-gray-300 transition">
-            ✕
+            class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-1 py-1 rounded-full hover:bg-gray-300 transition">
+            <GlCloseXs class="w-8 h-8" />
           </button>
-          <div
-            class="max-h-[70vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          <div class="">
             <h2 class="text-2xl font-semibold mb-4">
               {{ selectedItem.equipment_name || selectedItem.supply_name }}
             </h2>
@@ -307,7 +331,7 @@ const totalCopies = computed(() => {
             <!-- INFORMATION OF ITEMS -->
             <div class="grid grid-cols-5 gap-4">
               <!-- Image -->
-              <img :src="selectedItem.image_url || image" class="w-full h-40 object-cover rounded-lg" />
+              <img :src="selectedItem.image_url || image" class="w-full h-[90%] object-cover rounded-lg" />
 
               <div class="col-span-4">
                 <!-- Description -->
@@ -341,6 +365,18 @@ const totalCopies = computed(() => {
                   </div>
                 </div>
 
+                <!-- OFFICE SUPPLY UPDATE BUTTON -->
+                <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 grid grid-cols-2">
+                  <div class="rounded-lg">
+                  </div>
+
+                  <button @click.stop="OpenUpdateSelectedSupplyModal()"
+                    class="flex text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-6" />
+                    <p class="ml-1">Update Supply</p>
+                  </button>
+                </div>
+
                 <!-- OFFICE EQUIPMENT DESCRIPTION -->
                 <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-2 gap-4">
                   <div class="mt-2 bg-gray-800 px-4 py-2 rounded-lg">
@@ -357,11 +393,23 @@ const totalCopies = computed(() => {
                     </p>
                   </div>
                 </div>
+
+                <!-- OFFICE EQUIPMENT UPDATE BUTTON -->
+                <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 grid grid-cols-2">
+                  <div class="rounded-lg">
+                  </div>
+
+                  <button @click.stop="OpenUpdateSelectedEquipmentModal()"
+                    class="flex text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-6" />
+                    <p class="ml-1">Update Equipment</p>
+                  </button>
+                </div>
               </div>
             </div>
 
             <!-- EQUIPMENT COPIES TABLE -->
-            <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
+            <div v-if="selectedItem.type === 'Office Equipment'" class="">
               <EquipmentCopiesTable :selectedItem="selectedItem" :equipmentCopies="equipmentCopies" />
             </div>
 
@@ -393,6 +441,10 @@ const totalCopies = computed(() => {
     </div>
 
     <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" @click.stop />
+    <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
+      :selectedItems="selectedItem" @click.stop />
+    <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
+      :selectedItems="selectedItem" @click.stop />
   </div>
 </template>
 

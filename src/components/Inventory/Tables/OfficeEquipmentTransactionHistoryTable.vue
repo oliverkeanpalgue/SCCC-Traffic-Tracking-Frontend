@@ -1,7 +1,5 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
-import { ClAddPlus } from '@kalimahapps/vue-icons';
-import UpdateSelectedEquipment from '../Modals/UpdateSelectedEquipment.vue';
 
 const props = defineProps({
     selectedItem: Object,
@@ -11,12 +9,6 @@ const props = defineProps({
     officeList: Object,
     borrowers: Object,
 })
-
-const isOpenUpdateSelectedEquipmentModal = ref(false);
-
-const OpenUpdateSelectedEquipmentModal = () => {
-    isOpenUpdateSelectedEquipmentModal.value = true;
-}
 
 // Add this after the props definition
 const searchQuery = ref("");
@@ -95,10 +87,6 @@ const goToPage = (page) => {
     }
 };
 
-
-
-
-
 const formatDate = (dateString) => {
     if (!dateString) return "N/A";
     const date = new Date(dateString);
@@ -135,12 +123,6 @@ const formatDate = (dateString) => {
                     </div>
                 </form>
             </div>
-            
-            <button @click.stop="OpenUpdateSelectedEquipmentModal()"
-                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                <ClAddPlus class="w-8 h-6" />
-                <p class="ml-1">Update Equipment</p>
-            </button>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300 rounded-lg">
             <thead>
@@ -233,9 +215,6 @@ const formatDate = (dateString) => {
                 </li>
             </ul>
         </nav>
-        
-        <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
-            :selectedItems="selectedItem" @click.stop />
     </div>
 
 </template>

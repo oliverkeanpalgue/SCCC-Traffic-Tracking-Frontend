@@ -11,6 +11,7 @@ import { FaPenRuler } from '@kalimahapps/vue-icons';
 import { BsBoxFill } from '@kalimahapps/vue-icons';
 import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
+import { GlCloseXs } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -284,43 +285,49 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5">
     <div ref="modalContainer"
       class="w-full max-w-[1350px] h-[85vh] overflow-auto rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
-
-      <!-- Breadcrumb -->
-      <nav
-        class="flex px-5 py-1 text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
-        aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-          <li class="inline-flex items-center">
-            <button @click="changeSelectedBreadCrumbCategory(null, 1, null)"
-              class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
-              <IcOpenSelectHandGesture class="w-5 h-5 ml-1 mr-2" />
-              Select Category
-            </button>
-          </li>
-          <li v-if="selectedBreadCrumbPhase > 1">
-            <div class="flex items-center">
-              <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
-              <button v-if="selectedBreadCrumbCategory === 'equipment'"
-                @click="changeSelectedBreadCrumbCategory('equipment', 2, 1)"
-                class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
-                Office Equipment Details
+      <div class="flex flex-row">
+        <!-- Breadcrumb -->
+        <nav
+          class="flex px-5 py-1 w-[95%] text-gray-700 border border-gray-200 rounded-lg bg-gray-50 dark:bg-gray-800 dark:border-gray-700"
+          aria-label="Breadcrumb">
+          <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            <li class="inline-flex items-center">
+              <button @click="changeSelectedBreadCrumbCategory(null, 1, null)"
+                class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 dark:text-gray-400 dark:hover:text-white">
+                <IcOpenSelectHandGesture class="w-5 h-5 ml-1 mr-2" />
+                Select Category
               </button>
-              <button v-if="selectedBreadCrumbCategory === 'supply'"
-                @click="changeSelectedBreadCrumbCategory('supply', 2, 2)"
-                class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
-                Office Supply Details
-              </button>
-            </div>
-          </li>
-          <li aria-current="page" v-if="selectedBreadCrumbPhase > 2">
-            <div class="flex items-center">
-              <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
-              <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">Print QR Code</span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+            </li>
+            <li v-if="selectedBreadCrumbPhase > 1">
+              <div class="flex items-center">
+                <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
+                <button v-if="selectedBreadCrumbCategory === 'equipment'"
+                  @click="changeSelectedBreadCrumbCategory('equipment', 2, 1)"
+                  class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  Office Equipment Details
+                </button>
+                <button v-if="selectedBreadCrumbCategory === 'supply'"
+                  @click="changeSelectedBreadCrumbCategory('supply', 2, 2)"
+                  class="ms-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ms-2 dark:text-gray-400 dark:hover:text-white">
+                  Office Supply Details
+                </button>
+              </div>
+            </li>
+            <li aria-current="page" v-if="selectedBreadCrumbPhase > 2">
+              <div class="flex items-center">
+                <MdRoundNavigateNext class="w-7 h-7 ml-1 text-gray-400" />
+                <span class="ms-1 text-sm font-medium text-gray-500 md:ms-2 dark:text-gray-400">Print QR Code</span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
+        <!-- CLOSE BUTTON -->
+        <button @click="closeModal()"
+          class="justify-end bg-gray-200 ml-4 text-gray-700 px-1 py-1 rounded-full hover:bg-gray-300 transition">
+          <GlCloseXs class="w-8 h-8" />
+        </button>
+      </div>
       <!-- PHASES -->
       <div>
         <!-- PHASE 1 -->
@@ -467,7 +474,8 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
         <div v-if="selectedBreadCrumbPhase === 3" class="flex flex-col items-center mt-8">
           <p class="text-3xl mb-8 text-center mt-8">Generated QR Codes</p>
           <div class="grid grid-cols-3 gap-4 w-full">
-            <div v-for="(qrData, index) in equipmentQRCodes" :key="index" class="border p-4 rounded-lg dark:bg-gray-900">
+            <div v-for="(qrData, index) in equipmentQRCodes" :key="index"
+              class="border p-4 rounded-lg dark:bg-gray-900">
               <QRCode :value="JSON.stringify(qrData)" :size="250" level="I" class="m-auto border-8" />
               <div class="mt-2 text-lg">
                 <p class="font-bold">SCCC - MITD Inventory</p>

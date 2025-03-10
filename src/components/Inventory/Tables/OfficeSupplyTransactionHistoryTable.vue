@@ -19,12 +19,6 @@ const OpenIncreaseSupplyQtyModal = () => {
     isOpenIncreaseSupplyQtyModal.value = true;
 }
 
-const isOpenUpdateSelectedSupplyModal = ref(false);
-
-const OpenUpdateSelectedSupplyModal = () => {
-    isOpenUpdateSelectedSupplyModal.value = true;
-}
-
 const searchQuery = ref("");
 
 const filteredTransactionItems = computed(() => {
@@ -147,12 +141,7 @@ const goToPage = (page) => {
                 <ClAddPlus class="w-8 h-6" />
                 <p class="ml-1">Increase Quantity</p>
             </button>
-            <button @click.stop="OpenUpdateSelectedSupplyModal()"
-                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                <ClAddPlus class="w-8 h-6" />
-                <p class="ml-1">Update Supply</p>
-            </button>
-        </div>
+        </div>  
         <table class="w-full border-collapse text-sm text-gray-300">
             <thead>
                 <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs">
@@ -246,8 +235,6 @@ const goToPage = (page) => {
         </nav>
 
         <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
-            :selectedItems="selectedItem" @click.stop />
-        <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
             :selectedItems="selectedItem" @click.stop />
     </div>
 </template>
