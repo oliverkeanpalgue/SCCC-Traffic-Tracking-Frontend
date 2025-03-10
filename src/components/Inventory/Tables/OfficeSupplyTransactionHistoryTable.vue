@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
 import IncreaseSupplyQty from '../Modals/IncreaseSupplyQty.vue';
 import { ClAddPlus } from '@kalimahapps/vue-icons';
+import UpdateSelectedSupply from '../Modals/UpdateSelectedSupply.vue';
 
 const props = defineProps({
     selectedItem: Object,
@@ -18,6 +19,11 @@ const OpenIncreaseSupplyQtyModal = () => {
     isOpenIncreaseSupplyQtyModal.value = true;
 }
 
+const isOpenUpdateSelectedSupplyModal = ref(false);
+
+const OpenUpdateSelectedSupplyModal = () => {
+    isOpenUpdateSelectedSupplyModal.value = true;
+}
 
 const searchQuery = ref("");
 
@@ -135,12 +141,17 @@ const goToPage = (page) => {
                     </div>
                 </form>
             </div>
-            
+
             <button @click.stop="OpenIncreaseSupplyQtyModal()"
-                    class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                    <ClAddPlus class="w-8 h-6" />
-                    <p class="ml-1">Increase Quantity</p>
-                </button>
+                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-6" />
+                <p class="ml-1">Increase Quantity</p>
+            </button>
+            <button @click.stop="OpenUpdateSelectedSupplyModal()"
+                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-6" />
+                <p class="ml-1">Update Supply</p>
+            </button>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300">
             <thead>
@@ -233,8 +244,10 @@ const goToPage = (page) => {
                 </li>
             </ul>
         </nav>
-        
+
         <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
+            :selectedItems="selectedItem" @click.stop />
+        <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
             :selectedItems="selectedItem" @click.stop />
     </div>
 </template>
