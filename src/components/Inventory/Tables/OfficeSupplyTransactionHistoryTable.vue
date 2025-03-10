@@ -12,12 +12,12 @@ const props = defineProps({
     borrowers: Object,
 })
 
+
 const isOpenIncreaseSupplyQtyModal = ref(false);
 
 const OpenIncreaseSupplyQtyModal = () => {
     isOpenIncreaseSupplyQtyModal.value = true;
 }
-
 
 const searchQuery = ref("");
 
@@ -135,12 +135,13 @@ const goToPage = (page) => {
                     </div>
                 </form>
             </div>
-            
+
             <button @click.stop="OpenIncreaseSupplyQtyModal()"
-                    class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                    <ClAddPlus class="w-8 h-6" />
-                    <p class="ml-1">Increase Quantity</p>
-                </button>
+            :selectedItems="selectedItem"
+                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-6" />
+                <p class="ml-1">Increase Quantity</p>
+            </button>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300">
             <thead>
@@ -233,7 +234,7 @@ const goToPage = (page) => {
                 </li>
             </ul>
         </nav>
-        
+
         <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
             :selectedItems="selectedItem" @click.stop />
     </div>
