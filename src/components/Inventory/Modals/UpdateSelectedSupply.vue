@@ -10,7 +10,10 @@ const isLoading = ref(false)
 const props = defineProps({
   modelValue: Boolean,
   selectedItems: Object,
+  categories: Object,
 })
+
+console.log("Selected Items: ", props.selectedItems)
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
 
@@ -34,41 +37,53 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const copyQuantity = ref('')
+const supplyName = ref('')
+const supplyDescription = ref('')
+const serialNumber = ref('')
+const selectedCategory = ref(null)
+const supplyQuantity = ref('')
 
-const confirmAddCopy = async () => {
+// Add this watch effect
+watch(() => props.selectedItems, (items) => {
+  if (items) {
+    supplyName.value = items.supply_name
+    supplyDescription.value = items.supply_description
+    serialNumber.value = items.serial_number
+    selectedCategory.value = items.category_id
+    supplyQuantity.value = items.supply_quantity
+  }
+}, { immediate: true })
+
+const confirmUpdateSupply = async () => {
   try {
     isLoading.value = true;
-    const quantity = parseInt(copyQuantity.value);
 
-    const highestCopyNum = Math.max(...props.equipmentCopies.map(copy => copy.copy_num));
-
-    for (let i = 0; i < quantity; i++) {
-      const addCopy = {
-        item_id: props.equipmentCopies[0].item_id,
-        is_available: 1,
-        copy_num: highestCopyNum + i + 1,
+      const updateSupply = {
+        supply_name: supplyName.value,
+        supply_description: supplyDescription.value,
+        serial_number: serialNumber.value,
+        category_id: selectedCategory.value,
+        supply_quantity: supplyQuantity.value
       }
 
-      console.log("Add copy data sent: ", addCopy)
+      console.log("Update supply data sent: ", updateSupply)
 
-      const response = await axiosClient.post(
-        `/api/equipment_copies/`,
-        addCopy,
+      const response = await axiosClient.put(
+        `/api/office_supplies/${props.selectedItems.id}`,
+        updateSupply,
         {
           headers: {
             "x-api-key": API_KEY,
           },
         }
       );
-      console.log('Add Copies API response:', response);
-    }
-    alert('Copy/Copies added successfully!');
+      console.log('Update Supplies API response:', response);
+    alert('Supply updated successfully!');
     closeModal()
   } catch (error) {
-    console.error('Error adding copies:', error);
+    console.error('Error updating supplies:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error adding copies. Please try again.');
+    alert('Error updating supplies. Please try again.');
   } finally {
     isLoading.value = false;
   }
@@ -89,6 +104,20 @@ const confirmAddCopy = async () => {
         Update Supply
       </h3>
       <div class="flex flex-col">
+        <label class="text-start">Supply Name</label>
+        <input v-model="supplyName" type="text" class="" placeholder="Enter text here" />
+        <label class="text-start">Supply Description</label>
+        <input v-model="supplyDescription" type="text" class="" placeholder="Enter text here" />
+        <label class="text-start">Serial Number</label>
+        <input v-model="serialNumber" type="text" class="" placeholder="Enter text here" />
+        <label class="text-start">Supply Quantity</label>
+        <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
+        <label class="text-start">Category Name</label>
+          <select v-model="selectedCategory">
+            <option v-for="category in props.categories" :key="category.id" :value="category.id">
+              {{ category.category_name }}
+            </option>
+          </select>
         <label class="text-start">Supply Quantity</label>
         <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
       </div>
@@ -103,7 +132,7 @@ const confirmAddCopy = async () => {
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="confirmAddCopy"
+          <button @click="confirmUpdateSupply"
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
             Yes, Add!
           </button>

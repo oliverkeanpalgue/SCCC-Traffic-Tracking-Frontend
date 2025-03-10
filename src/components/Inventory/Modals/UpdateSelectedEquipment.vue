@@ -10,6 +10,7 @@ const isLoading = ref(false)
 const props = defineProps({
   modelValue: Boolean,
   selectedItems: Object,
+  categories: Object,
 })
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
@@ -34,41 +35,49 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-const copyQuantity = ref('')
+console.log('Selected Items:', props.selectedItems)
 
-const confirmAddCopy = async () => {
+const equipmentName = ref('')
+const equipmentDescription = ref('')
+const selectedCategory = ref(null)
+
+// Add this watch effect
+watch(() => props.selectedItems, (items) => {
+  if (items) {
+    equipmentName.value = items.equipment_name
+    equipmentDescription.value = items.equipment_description
+    selectedCategory.value = items.category_id
+  }
+}, { immediate: true })
+
+const confirmUpdateEquipment = async () => {
   try {
     isLoading.value = true;
-    const quantity = parseInt(copyQuantity.value);
 
-    const highestCopyNum = Math.max(...props.equipmentCopies.map(copy => copy.copy_num));
-
-    for (let i = 0; i < quantity; i++) {
-      const addCopy = {
-        item_id: props.equipmentCopies[0].item_id,
-        is_available: 1,
-        copy_num: highestCopyNum + i + 1,
+      const updateEquipment = {
+        equipment_name: equipmentName.value,
+        equipment_description: equipmentDescription.value,
+        category_id: selectedCategory.value,
       }
 
-      console.log("Add copy data sent: ", addCopy)
+      console.log("Update equipment data sent: ", updateEquipment)
 
-      const response = await axiosClient.post(
-        `/api/equipment_copies/`,
-        addCopy,
+      const response = await axiosClient.put(
+        `/api/office_equipments/${props.selectedItems.id}`,
+        updateEquipment,
         {
           headers: {
             "x-api-key": API_KEY,
           },
         }
       );
-      console.log('Add Copies API response:', response);
-    }
-    alert('Copy/Copies added successfully!');
+      console.log('Update Equipment API response:', response);
+    alert('Equipment updated successfully!');
     closeModal()
   } catch (error) {
-    console.error('Error adding copies:', error);
+    console.error('Error updating equipment:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error adding copies. Please try again.');
+    alert('Error updating equipment. Please try again.');
   } finally {
     isLoading.value = false;
   }
@@ -88,8 +97,16 @@ const confirmAddCopy = async () => {
         Update Equipment
       </h3>
       <div class="flex flex-col">
-        <label class="text-start">Supply Quantity</label>
-        <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
+        <label class="text-start">Equipment Name</label>
+        <input v-model="equipmentName" type="text" class="" placeholder="Enter text here" />
+        <label class="text-start">Equipment Description</label>
+        <input v-model="equipmentDescription" type="text" class="" placeholder="Enter text here" />
+        <label class="text-start">Category Name</label>
+          <select v-model="selectedCategory">
+            <option v-for="category in props.categories" :key="category.id" :value="category.id">
+              {{ category.category_name }}
+            </option>
+          </select>
       </div>
       <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
         Are you sure you want to update this Transaction?
@@ -102,7 +119,7 @@ const confirmAddCopy = async () => {
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="confirmAddCopy"
+          <button @click="confirmUpdateEquipment"
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
             Yes, Add!
           </button>
