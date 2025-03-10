@@ -64,7 +64,7 @@ const fetchData = () => {
           type: equipment_item.type || "Office Equipment",
         }));
 
-        console.log("Office Equipments:", officeEquipments.value);
+        // console.log("Office Equipments:", officeEquipments.value);
       })
       .catch((error) => {
         console.error("Error fetching office eqipments:", error);
@@ -82,7 +82,7 @@ const fetchData = () => {
           type: supply_item.type || "Office Supply",
         }));
 
-        console.log("Office Supplies:", officeSupplies.value);
+        // console.log("Office Supplies:", officeSupplies.value);
       })
       .catch((error) => {
         console.error("Error fetching Office Supplies:", error);
@@ -109,7 +109,7 @@ const fetchData = () => {
       })
       .then((response) => {
         categoryList.value = response.data;
-        console.log("Office Names:", categoryList.value);
+        // console.log("Office Names:", categoryList.value);
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -123,7 +123,7 @@ const fetchData = () => {
       })
       .then((response) => {
         transactionItems.value = response.data;
-        console.log("Transaction History:", transactionItems.value);
+        // console.log("Transaction History:", transactionItems.value);
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -240,11 +240,11 @@ const filteredInventory = computed(() => {
 });
 
 watch(searchQuery, (newQuery) => {
-  console.log("Search Query:", newQuery);
+  // console.log("Search Query:", newQuery);
 });
 
 watch(allInventory, (newVal) => {
-  console.log("Updated allInventory:", newVal);
+  // console.log("Updated allInventory:", newVal);
 });
 
 const selectImage = (image) => {
@@ -366,12 +366,12 @@ const totalCopies = computed(() => {
                 </div>
 
                 <!-- OFFICE SUPPLY UPDATE BUTTON -->
-                <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 grid grid-cols-2">
+                <div v-if="selectedItem.type === 'Office Supply'" class="mt-2 grid grid-cols-4 gap-4">
                   <div class="rounded-lg">
                   </div>
 
                   <button @click.stop="OpenUpdateSelectedSupplyModal()"
-                    class="flex text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    class="flex col-span-2 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <ClAddPlus class="w-8 h-6" />
                     <p class="ml-1">Update Supply</p>
                   </button>
@@ -395,12 +395,12 @@ const totalCopies = computed(() => {
                 </div>
 
                 <!-- OFFICE EQUIPMENT UPDATE BUTTON -->
-                <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 grid grid-cols-2">
+                <div v-if="selectedItem.type === 'Office Equipment'" class="mt-2 grid grid-cols-4 gap-4">
                   <div class="rounded-lg">
                   </div>
 
                   <button @click.stop="OpenUpdateSelectedEquipmentModal()"
-                    class="flex text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    class="flex col-span-2 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <ClAddPlus class="w-8 h-6" />
                     <p class="ml-1">Update Equipment</p>
                   </button>
