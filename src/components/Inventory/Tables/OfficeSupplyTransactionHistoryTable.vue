@@ -137,8 +137,7 @@ const goToPage = (page) => {
                 </form>
             </div>
 
-            <button @click.stop="OpenIncreaseSupplyQtyModal()"
-            :selectedItems="selectedItem"
+            <button @click.stop="OpenIncreaseSupplyQtyModal()" 
                 class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                 <ClAddPlus class="w-8 h-6" />
                 <p class="ml-1">Increase Quantity</p>

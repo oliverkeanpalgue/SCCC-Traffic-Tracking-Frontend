@@ -442,9 +442,9 @@ const totalCopies = computed(() => {
 
     <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" @click.stop />
     <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
-      :selectedItems="selectedItem" @click.stop />
+      :selectedItems="selectedItem" :categories="categoryList" @click.stop />
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
-      :selectedItems="selectedItem" @click.stop />
+      :selectedItems="selectedItem" :categories="categoryList" @click.stop />
   </div>
 </template>
 
