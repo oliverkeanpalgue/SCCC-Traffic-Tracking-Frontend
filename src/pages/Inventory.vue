@@ -316,12 +316,12 @@ const selectedCopies = computed(() => {
           class="grid gap-4 max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'grid grid-cols-2' : 'grid grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
-            class="cursor-pointer p-2 border rounded-lg hover:shadow-lg  transition duration-300 ease-in-out dark:bg-gray-900"
-            :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-200 dark:text-gray-900' : ''
+            class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
+            :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-300 dark:text-gray-950' : ' dark:bg-gray-900'
               ">
             <img :src="item.image_url || image" class="w-full h-32 object-cover rounded-lg" />
             <p class="text-center mt-2 font-medium">
-              {{ item.equipment_name || item.supply_name }}
+              {{ item.equipment_name || item.supply_name }} 
             </p>
           </div>
         </div>
