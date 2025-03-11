@@ -1,10 +1,9 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
-import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
+import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import axiosClient from '../../../axios';
-import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import ConfirmationModal from '../../ConfirmationModal.vue';
+import Loading from '../../Loading.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -20,10 +19,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
   if (confirmed) {
-    console.log("User confirmed the action!") 
-    // Call your API or any function here
-  } else {
-    console.log("User canceled the action.")
+    confirmAddCopy()
   }
 }
 
@@ -89,23 +85,21 @@ const confirmAddCopy = async () => {
   }
 }
 
-const openAddEquipmentCopyConfirmationModal = ref(false);
-const setOpenAddEquipmentCopyConfirmationModal = (passedValue) => {
-  openAddEquipmentCopyConfirmationModal.value = passedValue;
-}
 </script>
 
 <template>
   <div v-if="modelValue"
     class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5">
-    <div ref="modalContainer"
+    <Loading v-if="isLoading" />
+    <div v-else ref="modalContainer"
       class="w-full max-w-[650px] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
       <h3 class="text-3xl font-semibold mb-4">
         Add Copy
       </h3>
       <!-- QUANTITY INPUT -->
       <div class="text-start">
-        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Copy Quantity to be Added:</label>
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Copy Quantity to be
+          Added:</label>
         <div class="relative ml-2">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
             <AnOutlinedNumber />
@@ -123,52 +117,17 @@ const setOpenAddEquipmentCopyConfirmationModal = (passedValue) => {
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="setOpenAddEquipmentCopyConfirmationModal(true)"          
+          <button @click="showConfirmationModal = true"
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
-            Add Copy    
+            Add Copy
           </button>
         </div>
       </div>
 
-      <button @click="showConfirmationModal = true" class="bg-blue-500 text-white p-2 rounded">Open Modal</button>
-
-  <ConfirmationModal
-    v-model="showConfirmationModal"
-    title="Confirm Addition"
-    :message="`Are you sure you want to add ${copyQuantity} cop${copyQuantity === 1 ? 'y' : 'ies'}?`"
-    cancelText="No, Cancel"
-    confirmText="Yes, Add"
-    @confirm="confirmAction"
-  />
-    </div>
-
-    <!-- CONFIRMATION MODAL -->
-    <div class="fixed left-0 top-0 flex h-full min-h-screen w-full items-center justify-center bg-gray-950/50 px-4 py-5"
-      :class="{ block: openAddEquipmentCopyConfirmationModal, hidden: !openAddEquipmentCopyConfirmationModal }">
-      <div ref="modalContainer"
-        class="w-full max-w-[570px] rounded-[20px] bg-white border px-8 py-12 text-center dark:bg-gray-800 md:px-[70px] md:py-[60px]">
-        <h3 class="pb-[18px] text-xl font-semibold text-dark dark:text-white sm:text-2xl">
-          Confirm Addition
-        </h3>
-        <span class="mx-auto mb-6 inline-block h-1 w-[90px] rounded bg-primary"></span>
-      <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
-        Are you sure you want to add {{ copyQuantity }} cop{{ copyQuantity === 1 ? 'y' : 'ies' }} to this transaction?
-      </p>
-        <div class="-mx-3 flex flex-wrap">
-          <div class="w-1/2 px-3">
-            <button @click="setOpenAddEquipmentCopyConfirmationModal(false)" ref="trigger"
-              class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
-              No, Cancel
-            </button>
-          </div>
-          <div class="w-1/2 px-3">
-            <button @click="confirmAddCopy"
-              class="block w-full rounded-md border border-primary bg-primary p-3 text-center text-base font-medium text-white transition hover:bg-blue-dark">
-              Yes, Add Cop{{ copyQuantity === 1 ? 'y' : 'ies' }}
-            </button>
-          </div>
-        </div>
-      </div>
+      <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition"
+        :message="`You are about to add a copy to this Equipment.`"
+        :messageData="`\nEquipment Name: ${selectedItems.equipment_name}\nCop${copyQuantity === 1 ? 'y' : 'ies'} to add: ${copyQuantity}`"
+        cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmAction" />
     </div>
   </div>
 </template>
