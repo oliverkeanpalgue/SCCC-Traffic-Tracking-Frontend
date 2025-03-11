@@ -2,8 +2,12 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
+import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
+
+const showQRCodes = ref(false)
+const generatedQRCodes = ref([])
 
 const isLoading = ref(false)
 
@@ -56,9 +60,23 @@ const confirmUpdateQty = async () => {
         },
       }
     );
+    
+    // Generate QR codes after successful update
+    generatedQRCodes.value = [{
+      id: props.selectedItems.id,
+      name: props.selectedItems.supply_name,
+      description: props.selectedItems.supply_description,
+      serialNumber: props.selectedItems.serial_number,
+      categoryId: props.selectedItems.category_id,
+      quantity: parseInt(supplyQty.value),
+      type: 'supply'
+    }];
+
+    showQRCodes.value = true;
     console.log('Update office Quantity API response:', response);
     alert('Office Quantity updated successfully!');
-    closeModal()
+
+    // closeModal()
   } catch (error) {
     console.error('Error updating office quantity:', error);
     console.error('Error details:', error.response?.data);
@@ -68,11 +86,21 @@ const confirmUpdateQty = async () => {
   }
 }
 
+const handlePrint = () => {
+  window.print();
+}
+
+const closeQRDisplay = () => {
+  showQRCodes.value = false;
+  closeModal();
+}
+
+
 </script>
 
 <template>
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div ref="modalContainer"
+    <div v-if="!showQRCodes" ref="modalContainer"
       class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
       <div class="flex justify-center text-center">
         <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
@@ -103,6 +131,14 @@ const confirmUpdateQty = async () => {
           </button>
         </div>
       </div>
+    </div>
+    <!-- QR Code Display -->
+    <div v-else class="w-full max-w-[1000px]">
+      <QRCodeDisplay 
+        :qr-codes="generatedQRCodes"
+        :on-print="handlePrint"
+        :on-close="closeQRDisplay"
+      />
     </div>
   </div>
 </template>

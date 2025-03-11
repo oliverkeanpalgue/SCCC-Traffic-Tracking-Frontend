@@ -2,15 +2,19 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
+import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
+const showQRCodes = ref(false)
+const generatedQRCodes = ref([])
 
 const props = defineProps({
   modelValue: Boolean,
   selectedItems: Object,
   categories: Object,
+  selectedCopy: Object
 })
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
@@ -34,8 +38,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
-
-console.log('Selected Items:', props.selectedItems)
 
 const equipmentName = ref('')
 const equipmentDescription = ref('')
@@ -71,9 +73,21 @@ const confirmUpdateEquipment = async () => {
           },
         }
       );
-      console.log('Update Equipment API response:', response);
+      // Generate QR codes for each copy
+    generatedQRCodes.value = props.selectedCopy.map((copy, index) => ({
+      id: props.selectedItems.id,
+      name: equipmentName.value,
+      description: equipmentDescription.value,
+      categoryId: selectedCategory.value,
+      copyNumber: copy.copy_num || index + 1,
+      serialNumber: copy.serial_number || '',
+      type: 'equipment'
+    }));
+
+    showQRCodes.value = true;
+    console.log('Update Equipment API response:', response);
     alert('Equipment updated successfully!');
-    closeModal()
+    // closeModal()
   } catch (error) {
     console.error('Error updating equipment:', error);
     console.error('Error details:', error.response?.data);
@@ -82,11 +96,21 @@ const confirmUpdateEquipment = async () => {
     isLoading.value = false;
   }
 }
+
+const handlePrint = () => {
+  window.print();
+}
+
+const closeQRDisplay = () => {
+  showQRCodes.value = false;
+  closeModal();
+}
+
 </script>
 
 <template>
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div ref="modalContainer"
+    <div v-if="!showQRCodes" ref="modalContainer"
       class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
       <div class="flex justify-center text-center">
         <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
@@ -125,6 +149,13 @@ const confirmUpdateEquipment = async () => {
           </button>
         </div>
       </div>
+    </div>
+    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay 
+        :qr-codes="generatedQRCodes"
+        :on-print="handlePrint"
+        :on-close="closeQRDisplay"
+      />
     </div>
   </div>
 </template>
