@@ -133,7 +133,7 @@ const closeQRDisplay = () => {
       </div>
     </div>
     <!-- QR Code Display -->
-    <div v-else class="w-full max-w-[1000px]">
+    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
       <QRCodeDisplay 
         :qr-codes="generatedQRCodes"
         :on-print="handlePrint"

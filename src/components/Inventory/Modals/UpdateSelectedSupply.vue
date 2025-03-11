@@ -81,9 +81,21 @@ const confirmUpdateSupply = async () => {
         },
       }
     );
+    // Generate QR codes with updated values
+    generatedQRCodes.value = [{
+      id: props.selectedItems.id,
+      name: supplyName.value,
+      description: supplyDescription.value,
+      serialNumber: serialNumber.value,
+      categoryId: selectedCategory.value,
+      quantity: parseInt(supplyQuantity.value),
+      type: 'supply'
+    }];
+
+    showQRCodes.value = true;
     console.log('Update Supplies API response:', response);
     alert('Supply updated successfully!');
-    closeModal()
+    // closeModal()
   } catch (error) {
     console.error('Error updating supplies:', error);
     console.error('Error details:', error.response?.data);
@@ -93,11 +105,21 @@ const confirmUpdateSupply = async () => {
   }
 }
 
+// Add these required functions
+const handlePrint = () => {
+  window.print();
+}
+
+const closeQRDisplay = () => {
+  showQRCodes.value = false;
+  closeModal();
+}
+
 </script>
 
 <template>
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div ref="modalContainer"
+    <div v-if="!showQRCodes" ref="modalContainer"
       class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
       <div class="flex justify-center text-center">
         <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
@@ -114,8 +136,6 @@ const confirmUpdateSupply = async () => {
         <input v-model="supplyDescription" type="text" class="" placeholder="Enter text here" />
         <label class="text-start">Serial Number</label>
         <input v-model="serialNumber" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Supply Quantity</label>
-        <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
         <label class="text-start">Category Name</label>
         <select v-model="selectedCategory">
           <option v-for="category in props.categories" :key="category.id" :value="category.id">
@@ -142,6 +162,13 @@ const confirmUpdateSupply = async () => {
           </button>
         </div>
       </div>
+    </div>
+    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay 
+        :qr-codes="generatedQRCodes"
+        :on-print="handlePrint"
+        :on-close="closeQRDisplay"
+      />
     </div>
   </div>
 </template>
