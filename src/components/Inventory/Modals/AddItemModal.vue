@@ -182,67 +182,14 @@ const confirmAddItem = async () => {
   }
 }
 
-// Add function to print QR codes
-const printQRCodes = () => {
-  const printWindow = window.open('', '_blank');
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>${selectedOffice.value === 1 ? 'Equipment' : 'Supply'} QR Codes</title>
-        <style>
-          .qr-container {
-            display: inline-block;
-            margin: 10px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            text-align: center;
-            page-break-inside: avoid;
-            width: 25%;
-          }
-          .qr-details {
-            margin-top: 10px;
-            font-size: 12px;
-          }
-          #qr-codes {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-          }
-          img {
-            width: 180px;
-            height: 180px;
-          }
-          @media print {
-            .no-print {
-              display: none;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <div id="qr-codes">
-          ${equipmentQRCodes.value.map((qrData, index) => `
-            <div class="qr-container">
-              <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(JSON.stringify(qrData))}" />
-              <div class="qr-details">
-                ${qrData.copyNumber ? `<p style="font-size: 16px; font-weight: bold;">${qrData.name} #${qrData.copyNumber}</p>` : `${qrData.name}`}
-                ${qrData.serialNumber ? `<p class="serial-number">S/N: ${qrData.serialNumber}</p>` : ''}
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      </body>
-    </html>
-  `);
+// Add these required functions
+const handlePrint = () => {
+  window.print();
+}
 
-  printWindow.document.close();
-  printWindow.onload = function () {
-    printWindow.focus();
-    printWindow.print();
-    setTimeout(() => {
-      printWindow.close();
-    }, 1000);
-  };
+const closeQRDisplay = () => {
+  showQRCodes.value = false;
+  closeModal();
 }
 
 // FOR BREADCRUMB
@@ -364,19 +311,19 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
               <!-- EQUIPMENT CATEGORY -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
                 Category:</label>
-        <div class="relative">
-          <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
-            <BxSolidCategoryAlt />
-          </div>
-          <div class="pr-2">
-            <select v-model="selectedCategory"
-              class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
-              <option v-for="category in props.categories" :key="category.id" :value="category.id">
-                {{ category.category_name }}
-              </option>
-            </select>
-          </div>
-        </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
+                  <BxSolidCategoryAlt />
+                </div>
+                <div class="pr-2">
+                  <select v-model="selectedCategory"
+                    class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
+                    <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                      {{ category.category_name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
               <!-- EQUIPMENT QUANTITY -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
                 Quantity:</label>
@@ -462,9 +409,9 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
           </div>
         </div>
 
-        <!-- PHASE 3 -->
-        <QRCodeDisplay v-if="selectedBreadCrumbPhase === 3" :qr-codes="equipmentQRCodes" :on-print="printQRCodes"
-          :on-close="closeModal" />
+        <div v-if="selectedBreadCrumbPhase === 3">
+          <QRCodeDisplay :qr-codes="equipmentQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
+        </div>
       </div>
 
       <!-- QR Codes Section -->
