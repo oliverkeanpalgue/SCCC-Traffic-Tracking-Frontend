@@ -1,9 +1,12 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
-import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
+import { BsBoxFill } from '@kalimahapps/vue-icons';
+import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
+import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
-
+import Loading from '../../Loading.vue';
+import ConfirmationModal from '../../ConfirmationModal.vue';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -56,24 +59,24 @@ const confirmUpdateEquipment = async () => {
   try {
     isLoading.value = true;
 
-      const updateEquipment = {
-        equipment_name: equipmentName.value,
-        equipment_description: equipmentDescription.value,
-        category_id: selectedCategory.value,
+    const updateEquipment = {
+      equipment_name: equipmentName.value,
+      equipment_description: equipmentDescription.value,
+      category_id: selectedCategory.value,
+    }
+
+    console.log("Update equipment data sent: ", updateEquipment)
+
+    const response = await axiosClient.put(
+      `/api/office_equipments/${props.selectedItems.id}`,
+      updateEquipment,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
       }
-
-      console.log("Update equipment data sent: ", updateEquipment)
-
-      const response = await axiosClient.put(
-        `/api/office_equipments/${props.selectedItems.id}`,
-        updateEquipment,
-        {
-          headers: {
-            "x-api-key": API_KEY,
-          },
-        }
-      );
-      // Generate QR codes for each copy
+    );
+    // Generate QR codes for each copy
     generatedQRCodes.value = props.selectedCopy.map((copy, index) => ({
       id: props.selectedItems.id,
       name: equipmentName.value,
@@ -84,7 +87,6 @@ const confirmUpdateEquipment = async () => {
       type: 'equipment'
     }));
 
-    showQRCodes.value = true;
     console.log('Update Equipment API response:', response);
     alert('Equipment updated successfully!');
     // closeModal()
@@ -94,6 +96,7 @@ const confirmUpdateEquipment = async () => {
     alert('Error updating equipment. Please try again.');
   } finally {
     isLoading.value = false;
+    showQRCodes.value = true;
   }
 }
 
@@ -106,31 +109,62 @@ const closeQRDisplay = () => {
   closeModal();
 }
 
+const showConfirmationModal = ref(false)
+
+const confirmAction = (confirmed) => {
+  if (confirmed) {
+    confirmUpdateEquipment()
+  }
+}
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div v-if="!showQRCodes" ref="modalContainer"
-      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
-      <div class="flex justify-center text-center">
-        <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
-          <MdDeleteForever class="text-4xl text-red-600 " />
-        </span>
-      </div>
-      <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/70 px-4 py-5">
+    <Loading v-if="isLoading" />
+    <div v-if="!showQRCodes && !isLoading" ref="modalContainer"
+      class="w-full max-w-[650px] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
+      <h3 class="text-3xl font-semibold mb-4">
         Update Equipment
       </h3>
-      <div class="flex flex-col">
-        <label class="text-start">Equipment Name</label>
-        <input v-model="equipmentName" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Equipment Description</label>
-        <input v-model="equipmentDescription" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Category Name</label>
-          <select v-model="selectedCategory">
-            <option v-for="category in props.categories" :key="category.id" :value="category.id">
-              {{ category.category_name }}
-            </option>
-          </select>
+      <div class="flex flex-col text-start">
+        <!-- EQUIPMENT NAME -->
+        <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <BsBoxFill />
+          </div>
+          <input type="text" v-model="equipmentName"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Ex. Printer, Chair, Stairs">
+        </div>
+        <!-- EQUIPMENT DESCRIPTION -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
+          Description:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <FlFilledTextDescription />
+          </div>
+          <textarea type="text" v-model="equipmentDescription"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Ex. Printer, Chair, Stairs"></textarea>
+        </div>
+        <!-- EQUIPMENT CATEGORY -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
+          Category:</label>
+        <div class="relative">
+          <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
+            <BxSolidCategoryAlt />
+          </div>
+          <div class="pr-2">
+            <select v-model="selectedCategory"
+              class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
+              <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                {{ category.category_name }}
+              </option>
+            </select>
+          </div>
+        </div>
       </div>
       <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
         Are you sure you want to update this Transaction?
@@ -147,15 +181,21 @@ const closeQRDisplay = () => {
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
             Yes, Add!
           </button>
+          <button @click="showConfirmationModal = true"
+            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
+            Update
+          </button>
         </div>
       </div>
     </div>
-    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
-      <QRCodeDisplay 
-        :qr-codes="generatedQRCodes"
-        :on-print="handlePrint"
-        :on-close="closeQRDisplay"
-      />
+    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[60vw] max-h-[80vh] overflow-auto bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
+
+    <!-- CONFIRMATION MODAL -->
+    <ConfirmationModal v-model="showConfirmationModal" title="Confirm Update"
+      :message="`You are about to update this equipment with the updated information:`"
+      :messageData="`\nName: ${equipmentName}\nDescription: ${equipmentDescription}\nCategory: ${categories.find(category => category.id === selectedCategory)?.category_name || 'Unknown'}`"
+      cancelText="Cancel" confirmText="Confirm Update" @confirm="confirmAction" />
   </div>
 </template>
