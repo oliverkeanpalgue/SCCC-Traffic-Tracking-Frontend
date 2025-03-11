@@ -416,14 +416,20 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
               </div>
               <!-- SUPPLY CATEGORY -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Category:</label>
-              <div class="pr-2">
-                <select v-model="selectedCategory"
-                  class="border rounded-lg ml-2 w-full dark:text-gray-200 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
-                  <option v-for="category in props.categories" :key="category.id" :value="category.id">
-                    {{ category.category_name }}
-                  </option>
-                </select>
-              </div>
+              
+        <div class="relative">
+          <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
+            <BxSolidCategoryAlt />
+          </div>
+          <div class="pr-2">
+            <select v-model="selectedCategory"
+              class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
+              <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                {{ category.category_name }}
+              </option>
+            </select>
+          </div>
+        </div>
               <!-- SERIAL NUMBER -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Number:</label>
               <div class="relative ml-2">

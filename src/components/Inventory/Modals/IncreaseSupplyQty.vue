@@ -3,6 +3,9 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed 
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
+import Loading from '../../Loading.vue';
+import ConfirmationModal from '../../ConfirmationModal.vue';
+import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -15,6 +18,14 @@ const props = defineProps({
   modelValue: Boolean,
   selectedItems: Object,
 })
+
+const showConfirmationModal = ref(false)
+
+const confirmAction = (confirmed) => {
+  if (confirmed) {
+    confirmUpdateQty()
+  }
+}
 
 console.log("Selected Items: ", props.selectedItems)
 
@@ -60,7 +71,7 @@ const confirmUpdateQty = async () => {
         },
       }
     );
-    
+
     // Generate QR codes after successful update
     generatedQRCodes.value = [{
       id: props.selectedItems.id,
@@ -99,46 +110,50 @@ const closeQRDisplay = () => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div v-if="!showQRCodes" ref="modalContainer"
-      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
-      <div class="flex justify-center text-center">
-        <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
-          <MdDeleteForever class="text-4xl text-red-600 " />
-        </span>
-      </div>
-      <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5">
+    <Loading v-if="isLoading" />
+    <div v-if="!showQRCodes && !isLoading" ref="modalContainer"
+      class="w-full max-w-[650px] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
+      <h3 class="text-3xl font-semibold mb-4">
         Increase Supply Quantity
       </h3>
-      <div class="flex flex-col">
-        <label class="text-start">Supply Quantity</label>
-        <input v-model="supplyQty" type="number" class="" placeholder="Enter text here" />
+      <!-- QUANTITY INPUT -->
+      <div class="text-start">
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Copy Quantity to be
+          Added:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <AnOutlinedNumber />
+          </div>
+          <input type="number" v-model="supplyQty" placeholder="Enter quantity..."
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
       </div>
-      <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
-        Are you sure you want to update this Transaction?
-      </p>
-      <div class="-mx-3 flex flex-wrap">
+      <!-- BUTTONS -->
+      <div class="-mx-3 flex flex-wrap mt-4">
         <div class="w-1/2 px-3">
           <button @click="closeModal"
-            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-green-800 hover:bg-green-800 hover:text-white dark:text-black">
-            No, Keep it.
+            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-300 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">
+            Cancel
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="confirmUpdateQty"
-            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
-            Yes, Add!
+          <button @click="showConfirmationModal = true"
+            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
+            Add Copy
           </button>
         </div>
       </div>
     </div>
     <!-- QR Code Display -->
-    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
-      <QRCodeDisplay 
-        :qr-codes="generatedQRCodes"
-        :on-print="handlePrint"
-        :on-close="closeQRDisplay"
-      />
+    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
+    <!-- CONFIRMATION MODAL -->
+    <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition"
+      :message="`You are about to add a copy to this Supply.`"
+      :messageData="`\nSupply Name: ${selectedItems.supply_name}\nQuantit${supplyQty === 1 ? 'y' : 'ies'} to add: ${supplyQty}`"
+      cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmAction" />
   </div>
 </template>

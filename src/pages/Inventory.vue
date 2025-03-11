@@ -419,8 +419,8 @@ const selectedCopies = computed(() => {
             </div>
 
             <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
-            <div v-if="selectedItem.type === 'Office Supply'" class="mt-4 ">
-              <p class="ml-2 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.supply_name }}:
+            <div v-if="selectedItem.type === 'Office Supply'" class=" dark:bg-black rounded-xl p-4 px-6">
+              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.supply_name }}:
               </p>
               <div class="bg-gray-800 rounded-lg w-full shadow-md">
                 <OfficeSupplyTransactionHistoryTable :selectedItem="selectedItem" :transactionItems="transactionItems"
@@ -430,8 +430,8 @@ const selectedCopies = computed(() => {
             </div>
 
             <!-- OFFICE EQUIPMENT TABLE TRANSACTION HISTORY -->
-            <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 ">
-              <p class="ml-2 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.equipment_name
+            <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 dark:bg-black rounded-xl p-4 px-6">
+              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.equipment_name
               }}:
               </p>
               <div class="bg-gray-800 rounded-lg w-full shadow-md">

@@ -116,9 +116,9 @@ const goToPage = (page) => {
 
 <template>
     <div class="overflow-x-auto">
-        <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+        <div class="grid grid-cols-12 items-center p-4">
             <!-- Search Box -->
-            <div class="w-full md:w-1/2">
+            <div class="col-span-10 pr-3">
                 <form class="flex items-center" @submit.prevent>
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
@@ -138,8 +138,8 @@ const goToPage = (page) => {
             </div>
 
             <button @click.stop="OpenIncreaseSupplyQtyModal()" 
-                class="flex items-center justify-center mx-auto w-fit px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                <ClAddPlus class="w-8 h-6" />
+                class="flex items-center col-span-2 justify-center w-full px-4 py-2 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-6 " />
                 <p class="ml-1">Increase Quantity</p>
             </button>
         </div>

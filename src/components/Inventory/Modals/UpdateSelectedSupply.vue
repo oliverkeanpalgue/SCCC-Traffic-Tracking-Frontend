@@ -1,9 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
-import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
-
+import { BsBoxFill } from '@kalimahapps/vue-icons';
+import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
+import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
+import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
+import Loading from '../../Loading.vue';
+import ConfirmationModal from '../../ConfirmationModal.vue';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -115,39 +119,100 @@ const closeQRDisplay = () => {
   closeModal();
 }
 
+const showConfirmationModal = ref(false)
+
+const confirmAction = (confirmed) => {
+  if (confirmed) {
+    confirmUpdateSupply()
+  }
+}
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
-    <div v-if="!showQRCodes" ref="modalContainer"
-      class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
-      <div class="flex justify-center text-center">
-        <span class="flex items-center justify-center w-16 h-16 rounded-full bg-red-100">
-          <MdDeleteForever class="text-4xl text-red-600 " />
-        </span>
-      </div>
-      <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/70 px-4 py-5">
+    <Loading v-if="isLoading" />
+    <div v-if="!showQRCodes && !isLoading" ref="modalContainer"
+      class="w-full max-w-[650px] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
+      <h3 class="text-3xl font-semibold mb-4">
         Update Supply
       </h3>
-      <div class="flex flex-col">
-        <label class="text-start">Supply Name</label>
-        <input v-model="supplyName" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Supply Description</label>
-        <input v-model="supplyDescription" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Serial Number</label>
-        <input v-model="serialNumber" type="text" class="" placeholder="Enter text here" />
-        <label class="text-start">Category Name</label>
-        <select v-model="selectedCategory">
-          <option v-for="category in props.categories" :key="category.id" :value="category.id">
-            {{ category.category_name }}
-          </option>
-        </select>
-        <label class="text-start">Supply Quantity</label>
-        <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
+      <div class="flex flex-col text-start">
+        <!-- SUPPLY NAME -->
+        <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <BsBoxFill />
+          </div>
+          <input type="text" v-model="supplyName"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Ex. Printer, Chair, Stairs">
+        </div>
+        <!-- SUPPLY DESCRIPTION -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply
+          Description:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <FlFilledTextDescription />
+          </div>
+          <textarea type="text" v-model="supplyDescription"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Ex. Printer, Chair, Stairs"></textarea>
+        </div>
+        <!-- SUPPLY CATEGORY -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Category:</label>
+
+        <div class="relative">
+          <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
+            <BxSolidCategoryAlt />
+          </div>
+          <div class="pr-2">
+            <select v-model="selectedCategory"
+              class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
+              <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                {{ category.category_name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <!-- SERIAL NUMBER -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Serial Number:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <BsBoxFill />
+          </div>
+          <input type="text" v-model="serialNumber"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            placeholder="Ex. Printer, Chair, Stairs">
+        </div>
+        <!-- EQUIPMENT QUANTITY -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Quantity:</label>
+        <div class="relative ml-2">
+          <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+            <AnOutlinedNumber />
+          </div>
+          <input type="number" v-model="supplyQuantity"
+            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+        </div>
       </div>
-      <p class="text-base mb-2 leading-relaxed text-body-color dark:text-dark-6">
-        Are you sure you want to update this Transaction?
-      </p>
+
+      <!-- BUTTONS -->
+      <div class="-mx-3 flex flex-wrap mt-4">
+        <div class="w-1/2 px-3">
+          <button @click="closeModal"
+            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-300 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">
+            Cancel
+          </button>
+        </div>
+        <div class="w-1/2 px-3">
+          <button @click="showConfirmationModal = true"
+            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
+            Update
+          </button>
+        </div>
+      </div>
+
+
       <div class="-mx-3 flex flex-wrap">
         <div class="w-1/2 px-3">
           <button @click="closeModal"
@@ -163,12 +228,13 @@ const closeQRDisplay = () => {
         </div>
       </div>
     </div>
-    <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
-      <QRCodeDisplay 
-        :qr-codes="generatedQRCodes"
-        :on-print="handlePrint"
-        :on-close="closeQRDisplay"
-      />
+    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
+    <!-- CONFIRMATION MODAL -->
+    <ConfirmationModal v-model="showConfirmationModal" title="Confirm Update"
+      :message="`You are about to update this supply with the updated information:`"
+      :messageData="`\nName: ${supplyName}\nDescription: ${supplyDescription}\nCategory: ${categories.find(category => category.id === selectedCategory)?.category_name || 'Unknown'}\nSerial Number: ${serialNumber}\nQuantity: ${supplyQuantity}`"
+      cancelText="Cancel" confirmText="Confirm Update" @confirm="confirmAction" />
   </div>
 </template>
