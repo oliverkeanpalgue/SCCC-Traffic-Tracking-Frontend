@@ -191,7 +191,7 @@ const fetchData = () => {
 
 onMounted(() => {
   fetchData();
-  refreshInterval = setInterval(fetchData, 5000);
+  refreshInterval = setInterval(fetchData, 30000);
 });
 
 onUnmounted(() => {
@@ -260,6 +260,11 @@ const totalCopies = computed(() => {
   if (!selectedItem.value) return 0;
   return equipmentCopies.value.filter(copy => copy.item_id === selectedItem.value.id).length;
 });
+
+const selectedCopies = computed(() => {
+  if (!selectedItem.value) return [];
+  return equipmentCopies.value.filter(copy => copy.item_id === selectedItem.value.id);
+})
 </script>
 
 <template>
@@ -440,11 +445,12 @@ const totalCopies = computed(() => {
       </div>
     </div>
 
-    <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" @click.stop />
+    <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" :categories="categoryList" @click.stop />
     <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
       :selectedItems="selectedItem" :categories="categoryList" @click.stop />
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
-      :selectedItems="selectedItem" :categories="categoryList" @click.stop />
+      :selectedItems="selectedItem" :categories="categoryList"
+      :selectedCopy="selectedCopies" @click.stop />
   </div>
 </template>
 

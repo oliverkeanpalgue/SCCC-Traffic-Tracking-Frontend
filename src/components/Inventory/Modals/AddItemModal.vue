@@ -12,6 +12,7 @@ import { BsBoxFill } from '@kalimahapps/vue-icons';
 import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
+import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -19,6 +20,7 @@ const isLoading = ref(false)
 
 const props = defineProps({
   modelValue: Boolean,
+  categories: Object,
 })
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
@@ -56,27 +58,6 @@ const supplyDescription = ref('')
 const serialNumber = ref('')
 const supplyQuantity = ref('')
 const equipmentQuantity = ref('')
-
-const categories = ref([]);
-
-const fetchCategory = async () => {
-  try {
-    const response = await axiosClient.get('/api/categories', {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    });
-    categories.value = response.data;
-  } catch (error) {
-    console.error('Error fetching categories:', error);
-    alert('Failed to fetch categories');
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside);
-  fetchCategory();
-});
 
 const addEquipmentCopies = async (equipmentId) => {
   try {
@@ -221,14 +202,14 @@ const printQRCodes = () => {
             margin-top: 10px;
             font-size: 12px;
           }
-            #qr-codes {
+          #qr-codes {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
           }
           img {
-            width: 180px;  /* Increased QR code size */
-            height: 180px;  /* Increased QR code size */
+            width: 180px;
+            height: 180px;
           }
           @media print {
             .no-print {
@@ -253,7 +234,6 @@ const printQRCodes = () => {
     </html>
   `);
 
-  // Wait for images to load before printing
   printWindow.document.close();
   printWindow.onload = function () {
     printWindow.focus();
@@ -386,7 +366,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
               <div class="pr-2">
                 <select v-model="selectedCategory"
                   class="border rounded-lg ml-2 w-full dark:text-gray-200 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
-                  <option v-for="category in categories" :key="category.id" :value="category.id">
+                  <option v-for="category in props.categories" :key="category.id" :value="category.id">
                     {{ category.category_name }}
                   </option>
                 </select>
@@ -433,7 +413,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
               <div class="pr-2">
                 <select v-model="selectedCategory"
                   class="border rounded-lg ml-2 w-full dark:text-gray-200 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
-                  <option v-for="category in categories" :key="category.id" :value="category.id">
+                  <option v-for="category in props.categories" :key="category.id" :value="category.id">
                     {{ category.category_name }}
                   </option>
                 </select>
@@ -471,32 +451,8 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
         </div>
 
         <!-- PHASE 3 -->
-        <div v-if="selectedBreadCrumbPhase === 3" class="flex flex-col items-center mt-8">
-          <p class="text-3xl mb-8 text-center mt-8">Generated QR Codes</p>
-          <div class="grid grid-cols-3 gap-4 w-full">
-            <div v-for="(qrData, index) in equipmentQRCodes" :key="index"
-              class="border p-4 rounded-lg dark:bg-gray-900">
-              <QRCode :value="JSON.stringify(qrData)" :size="250" level="I" class="m-auto border-8" />
-              <div class="mt-2 text-lg">
-                <p class="font-bold">SCCC - MITD Inventory</p>
-                <p v-if="qrData.type !== 'equipment'">
-                  {{ `${qrData.name} #${qrData.copyNumber}` }}
-                </p>
-                <p v-if="qrData.serialNumber" class="text-gray-600 text-lg">
-                  SN: {{ qrData.serialNumber }}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div class="mt-4 flex gap-2 justify-center">
-            <button @click="printQRCodes" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-              Print QR Codes
-            </button>
-            <button @click="closeModal" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
-              Close
-            </button>
-          </div>
-        </div>
+        <QRCodeDisplay v-if="selectedBreadCrumbPhase === 3" :qr-codes="equipmentQRCodes" :on-print="printQRCodes"
+          :on-close="closeModal" />
       </div>
 
       <!-- QR Codes Section -->

@@ -2,10 +2,14 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
+import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
+
+const showQRCodes = ref(false)
+const generatedQRCodes = ref([])
 
 const props = defineProps({
   modelValue: Boolean,
@@ -58,26 +62,26 @@ const confirmUpdateSupply = async () => {
   try {
     isLoading.value = true;
 
-      const updateSupply = {
-        supply_name: supplyName.value,
-        supply_description: supplyDescription.value,
-        serial_number: serialNumber.value,
-        category_id: selectedCategory.value,
-        supply_quantity: supplyQuantity.value
+    const updateSupply = {
+      supply_name: supplyName.value,
+      supply_description: supplyDescription.value,
+      serial_number: serialNumber.value,
+      category_id: selectedCategory.value,
+      supply_quantity: supplyQuantity.value
+    }
+
+    console.log("Update supply data sent: ", updateSupply)
+
+    const response = await axiosClient.put(
+      `/api/office_supplies/${props.selectedItems.id}`,
+      updateSupply,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
       }
-
-      console.log("Update supply data sent: ", updateSupply)
-
-      const response = await axiosClient.put(
-        `/api/office_supplies/${props.selectedItems.id}`,
-        updateSupply,
-        {
-          headers: {
-            "x-api-key": API_KEY,
-          },
-        }
-      );
-      console.log('Update Supplies API response:', response);
+    );
+    console.log('Update Supplies API response:', response);
     alert('Supply updated successfully!');
     closeModal()
   } catch (error) {
@@ -113,11 +117,11 @@ const confirmUpdateSupply = async () => {
         <label class="text-start">Supply Quantity</label>
         <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
         <label class="text-start">Category Name</label>
-          <select v-model="selectedCategory">
-            <option v-for="category in props.categories" :key="category.id" :value="category.id">
-              {{ category.category_name }}
-            </option>
-          </select>
+        <select v-model="selectedCategory">
+          <option v-for="category in props.categories" :key="category.id" :value="category.id">
+            {{ category.category_name }}
+          </option>
+        </select>
         <label class="text-start">Supply Quantity</label>
         <input v-model="supplyQuantity" type="number" class="" placeholder="Enter text here" />
       </div>
