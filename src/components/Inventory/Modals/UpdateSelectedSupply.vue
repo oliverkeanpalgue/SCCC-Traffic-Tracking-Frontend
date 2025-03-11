@@ -211,23 +211,8 @@ const confirmAction = (confirmed) => {
           </button>
         </div>
       </div>
-
-
-      <div class="-mx-3 flex flex-wrap">
-        <div class="w-1/2 px-3">
-          <button @click="closeModal"
-            class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-green-800 hover:bg-green-800 hover:text-white dark:text-black">
-            No, Keep it.
-          </button>
-        </div>
-        <div class="w-1/2 px-3">
-          <button @click="confirmUpdateSupply"
-            class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-red-700 hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
-            Yes, Add!
-          </button>
-        </div>
-      </div>
     </div>
+    <!-- QR CODE DISPLAY -->
     <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
       <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>

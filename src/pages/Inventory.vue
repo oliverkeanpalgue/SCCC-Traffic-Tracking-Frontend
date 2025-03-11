@@ -12,6 +12,7 @@ import EquipmentCopiesTable from "../components/Inventory/Tables/EquipmentCopies
 import { GlCloseXs } from '@kalimahapps/vue-icons';
 import UpdateSelectedEquipment from "../components/Inventory/Modals/UpdateSelectedEquipment.vue";
 import UpdateSelectedSupply from "../components/Inventory/Modals/UpdateSelectedSupply.vue";
+import IncreaseSupplyQty from "../components/Inventory/Modals/IncreaseSupplyQty.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -33,6 +34,11 @@ const OpenUpdateSelectedSupplyModal = () => {
   isOpenUpdateSelectedSupplyModal.value = true;
 }
 
+const isOpenIncreaseSupplyQtyModal = ref(false);
+
+const OpenIncreaseSupplyQtyModal = () => {
+    isOpenIncreaseSupplyQtyModal.value = true;
+}
 // Sample images (Replace with actual data)
 const transactionItems = ref([]);
 const transactionHistory = ref([]);
@@ -372,13 +378,16 @@ const selectedCopies = computed(() => {
 
                 <!-- OFFICE SUPPLY UPDATE BUTTON -->
                 <div v-if="selectedItem.type === 'Office Supply'" class="mt-2 grid grid-cols-4 gap-4">
-                  <div class="rounded-lg">
-                  </div>
-
                   <button @click.stop="OpenUpdateSelectedSupplyModal()"
                     class="flex col-span-2 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <ClAddPlus class="w-8 h-6" />
                     <p class="ml-1">Update Supply</p>
+                  </button>
+
+                  <button @click.stop="OpenIncreaseSupplyQtyModal()"
+                    class="flex col-span-2 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-6" />
+                    <p class="ml-1">Increase Quantity</p>
                   </button>
                 </div>
 
@@ -451,6 +460,9 @@ const selectedCopies = computed(() => {
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
       :selectedItems="selectedItem" :categories="categoryList"
       :selectedCopy="selectedCopies" @click.stop />
+      
+      <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
+            :selectedItems="selectedItem" @click.stop />
   </div>
 </template>
 
