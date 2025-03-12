@@ -46,6 +46,29 @@ const selectedItem = ref(null);
 const searchQuery = ref("");
 const categoryList = ref([]);
 const isLoading = ref(true);
+
+const inventoryFilter = ref(false);
+const filterButtonRef = ref(null);
+const filterMenuRef = ref(null);
+
+const filterItems = ref([
+  { id: 1, type: "Office Equipment", isActive: true },
+  { id: 2, type: "Office Supply", isActive: true },
+]);
+
+// Add these methods
+const toggleFilter = () => {
+  inventoryFilter.value = !inventoryFilter.value;
+};
+
+const handleCheckboxChange = (id, event) => {
+  event.stopPropagation();
+  const item = filterItems.value.find((item) => item.id === id);
+  if (item) {
+    item.isActive = !item.isActive;
+  }
+};
+
 let refreshInterval = null;
 
 const fetchData = () => {
@@ -189,13 +212,26 @@ const fetchData = () => {
     });
 };
 
+const handleClickOutside = (event) => {
+  if (
+    inventoryFilter.value &&
+    !filterButtonRef.value?.contains(event.target) &&
+    !filterMenuRef.value?.contains(event.target)
+  ) {
+    inventoryFilter.value = false;
+  }
+};
+
 onMounted(() => {
   fetchData();
   refreshInterval = setInterval(fetchData, 30000);
+
+  document.addEventListener('click', handleClickOutside);
 });
 
 onUnmounted(() => {
   clearInterval(refreshInterval);
+  document.removeEventListener('click', handleClickOutside);
 });
 
 const allInventory = computed(() => {
@@ -205,23 +241,25 @@ const allInventory = computed(() => {
   }));
 });
 
+// Update the filteredInventory computed property
 const filteredInventory = computed(() => {
-  if (!searchQuery.value) return allInventory.value;
+  const activeFilters = filterItems.value
+    .filter(item => item.isActive)
+    .map(item => item.type);
+
+  let filtered = allInventory.value.filter(item =>
+    activeFilters.includes(item.type)
+  );
+
+  if (!searchQuery.value) return filtered;
 
   const searchTerm = searchQuery.value.toLowerCase();
-  return allInventory.value.filter((item) => {
-    // Search in equipment properties
+  return filtered.filter((item) => {
     const equipmentName = item.equipment_name?.toLowerCase() || "";
     const equipmentDescription = item.equipment_description?.toLowerCase() || "";
     const serialNumber = item.serial_number?.toString().toLowerCase() || "";
-    const equipmentType = item.type?.toLowerCase() || "";
-
-    // Search in supply properties
     const supplyName = item.supply_name?.toLowerCase() || "";
     const supplyDescription = item.supply_description?.toLowerCase() || "";
-    const supplyType = item.type?.toLowerCase() || "";
-
-    // Search in common properties
     const id = item.id?.toString().toLowerCase() || "";
     const newId = item.newId?.toLowerCase() || "";
 
@@ -229,10 +267,8 @@ const filteredInventory = computed(() => {
       equipmentName.includes(searchTerm) ||
       equipmentDescription.includes(searchTerm) ||
       serialNumber.includes(searchTerm) ||
-      equipmentType.includes(searchTerm) ||
       supplyName.includes(searchTerm) ||
       supplyDescription.includes(searchTerm) ||
-      supplyType.includes(searchTerm) ||
       id.includes(searchTerm) ||
       newId.includes(searchTerm)
     );
@@ -298,6 +334,54 @@ const selectedCopies = computed(() => {
         </button>
       </div>
     </div>
+
+    <!-- Replace your current filter button with this -->
+    <section class="">
+      <div class="container">
+        <div class="">
+          <div ref="domNode" class="">
+            <div class="text-center">
+              <div class="relative inline-block text-left">
+                <button @click="toggleFilter" ref="filterButtonRef"
+                  class="flex items-center rounded-[5px] px-5 py-[13px] bg-dark dark:bg-dark-2 text-base font-medium text-white">
+                  <span class="material-icons pl-4">filter_alt</span>
+                  Filter
+                  <span class="material-icons pl-4">arrow_drop_down</span>
+                </button>
+                <div v-show="inventoryFilter" ref="filterMenuRef"
+                  class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                  :class="{
+                    'top-full visible': inventoryFilter,
+                    'top-[110%] invisible': !inventoryFilter,
+                  }">
+                  <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+                    v-for="item in filterItems" :key="item.id">
+                    <div class="relative">
+                      <input type="checkbox" class="sr-only" :checked="item.isActive"
+                        @change="handleCheckboxChange(item.id, $event)" />
+                      <div
+                        class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                        <span :class="{
+                          'opacity-100': item.isActive,
+                          'opacity-0': !item.isActive,
+                        }">
+                          <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                              d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                              fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                          </svg>
+                        </span>
+                      </div>
+                    </div>
+                    {{ item.type }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- MAIN CONTAINER -->
     <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
@@ -449,8 +533,7 @@ const selectedCopies = computed(() => {
     <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
       :selectedItems="selectedItem" :categories="categoryList" @click.stop />
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
-      :selectedItems="selectedItem" :categories="categoryList"
-      :selectedCopy="selectedCopies" @click.stop />
+      :selectedItems="selectedItem" :categories="categoryList" :selectedCopy="selectedCopies" @click.stop />
   </div>
 </template>
 
