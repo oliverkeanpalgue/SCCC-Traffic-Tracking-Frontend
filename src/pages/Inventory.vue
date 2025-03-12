@@ -307,14 +307,14 @@ const selectedCopies = computed(() => {
 
     <!-- MAIN CONTAINER -->
     <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-      <div v-if="isLoading" class="h-[74vh] flex items-center justify-center">
+      <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
         <Loading />
       </div>
       <div class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div v-if="!isLoading"
-          class="grid gap-4 max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
-          :class="selectedItem ? 'grid grid-cols-2' : 'grid grid-cols-5'">
+          class="grid gap-4 max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          :class="selectedItem ? 'hidden md:grid md:grid-cols-1 xl:grid-cols-2' : 'grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
             :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-300 dark:text-gray-950' : ' dark:bg-gray-900'
@@ -328,7 +328,7 @@ const selectedCopies = computed(() => {
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
         <div v-if="selectedItem"
-          class="relative max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-4">
+          class="relative max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-5 md:col-span-4">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-1 py-1 rounded-full hover:bg-gray-300 transition">
@@ -340,11 +340,11 @@ const selectedCopies = computed(() => {
             </h2>
 
             <!-- INFORMATION OF ITEMS -->
-            <div class="grid grid-cols-5 gap-4">
+            <div class="grid grid-cols-3 md:grid-cols-12 xl:grid-cols-5 gap-4">
               <!-- Image -->
-              <img :src="selectedItem.image_url || image" class="w-full h-[90%] object-cover rounded-lg" />
+              <img :src="selectedItem.image_url || image" class="w-full h-[90%] object-cover rounded-lg md:col-span-4 xl:col-span-1" />
 
-              <div class="col-span-4">
+              <div class="col-span-2 md:col-span-8 xl:col-span-4">
                 <!-- Description -->
                 <div class="mt-4 bg-gray-800 px-4 py-2 rounded-lg">
                   <p class="text-xl font-semibold">Description:</p>
@@ -409,12 +409,12 @@ const selectedCopies = computed(() => {
                 </div>
 
                 <!-- OFFICE EQUIPMENT UPDATE BUTTON -->
-                <div v-if="selectedItem.type === 'Office Equipment'" class="mt-2 grid grid-cols-4 gap-4">
-                  <div class="rounded-lg">
+                <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2 ">
+                  <div class="rounded-lg hidden md:block">
                   </div>
 
                   <button @click.stop="OpenUpdateSelectedEquipmentModal()"
-                    class="flex col-span-2 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    class="flex col-span-2 mb-4 text-center items-center justify-center mx-auto w-full px-8 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <ClAddPlus class="w-8 h-6" />
                     <p class="ml-1">Update Equipment</p>
                   </button>
