@@ -37,7 +37,7 @@ const OpenUpdateSelectedSupplyModal = () => {
 const isOpenIncreaseSupplyQtyModal = ref(false);
 
 const OpenIncreaseSupplyQtyModal = () => {
-    isOpenIncreaseSupplyQtyModal.value = true;
+  isOpenIncreaseSupplyQtyModal.value = true;
 }
 // Sample images (Replace with actual data)
 const transactionItems = ref([]);
@@ -318,8 +318,9 @@ const selectedCopies = computed(() => {
       </div>
     </header>
 
-    <div class="grid grid-cols-12 flex items-center mb-2">
-      <div class="col-span-11 pr-3">
+    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 flex items-center px-1 mb-2">
+      <!-- SEARCH BAR -->
+      <div class="col-span-2 mb-2 md:mb-0 md:col-span-4 xl:col-span-6 pr-2 md:pr-3">
         <form class="flex items-center" @submit.prevent>
           <label for="simple-search" class="sr-only">Search</label>
           <div class="relative w-full">
@@ -332,6 +333,46 @@ const selectedCopies = computed(() => {
           </div>
         </form>
       </div>
+
+      <!-- FILTER BUTTON -->
+      <div class="relative inline-block rounded-lg text-left dark:bg-slate-700 mr-3 justify-center items-center">
+        <button @click="toggleFilter" ref="filterButtonRef"
+          class="flex items-center justify-center w-full p-2 bg-dark dark:bg-dark-2 dark:text-gray-200">
+          <span class="material-icons pr-2">filter_alt</span>
+          Filter
+          <span class="material-icons pl-4">arrow_drop_down</span>
+        </button>
+        <div v-show="inventoryFilter" ref="filterMenuRef"
+          class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+          :class="{
+            'top-full visible': inventoryFilter,
+            'top-[110%] invisible': !inventoryFilter,
+          }">
+          <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+            v-for="item in filterItems" :key="item.id">
+            <div class="relative">
+              <input type="checkbox" class="sr-only" :checked="item.isActive"
+                @change="handleCheckboxChange(item.id, $event)" />
+              <div
+                class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                <span :class="{
+                  'opacity-100': item.isActive,
+                  'opacity-0': !item.isActive,
+                }">
+                  <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                      d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                      fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                  </svg>
+                </span>
+              </div>
+            </div>
+            {{ item.type }}
+          </label>
+        </div>
+      </div>
+
+      <!-- ADD ITEM BUTTON -->
       <div class="mr-2">
         <button @click.stop="OpenAddItemModal()"
           class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
@@ -340,54 +381,6 @@ const selectedCopies = computed(() => {
         </button>
       </div>
     </div>
-
-    <!-- Replace your current filter button with this -->
-    <section class=" ">
-      <div class="container">
-        <div class="">
-          <div ref="domNode" class="">
-            <div class="text-center">
-              <div class="relative inline-block text-left">
-                <button @click="toggleFilter" ref="filterButtonRef"
-                  class="flex items-center rounded-[5px] px-5 py-[13px] bg-dark dark:bg-dark-2 text-base font-medium text-white">
-                  <span class="material-icons pl-4">filter_alt</span>
-                  Filter
-                  <span class="material-icons pl-4">arrow_drop_down</span>
-                </button>
-                <div v-show="inventoryFilter" ref="filterMenuRef"
-                  class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
-                  :class="{
-                    'top-full visible': inventoryFilter,
-                    'top-[110%] invisible': !inventoryFilter,
-                  }">
-                  <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
-                    v-for="item in filterItems" :key="item.id">
-                    <div class="relative">
-                      <input type="checkbox" class="sr-only" :checked="item.isActive"
-                        @change="handleCheckboxChange(item.id, $event)" />
-                      <div
-                        class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
-                        <span :class="{
-                          'opacity-100': item.isActive,
-                          'opacity-0': !item.isActive,
-                        }">
-                          <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path
-                              d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
-                              fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
-                          </svg>
-                        </span>
-                      </div>
-                    </div>
-                    {{ item.type }}
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
 
     <!-- MAIN CONTAINER -->
     <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
@@ -405,7 +398,7 @@ const selectedCopies = computed(() => {
               ">
             <img :src="item.image_url || image" class="w-full h-32 object-cover rounded-lg" />
             <p class="text-center mt-2 font-medium">
-              {{ item.equipment_name || item.supply_name }} 
+              {{ item.equipment_name || item.supply_name }}
             </p>
           </div>
         </div>
@@ -426,7 +419,8 @@ const selectedCopies = computed(() => {
             <!-- INFORMATION OF ITEMS -->
             <div class="grid grid-cols-3 md:grid-cols-12 xl:grid-cols-5 gap-4">
               <!-- Image -->
-              <img :src="selectedItem.image_url || image" class="w-full h-[90%] object-cover rounded-lg md:col-span-4 xl:col-span-1" />
+              <img :src="selectedItem.image_url || image"
+                class="w-full h-[90%] object-cover rounded-lg md:col-span-4 xl:col-span-1" />
 
               <div class="col-span-2 md:col-span-8 xl:col-span-4">
                 <!-- Description -->
@@ -493,7 +487,8 @@ const selectedCopies = computed(() => {
                 </div>
 
                 <!-- OFFICE EQUIPMENT UPDATE BUTTON -->
-                <div v-if="selectedItem.type === 'Office Equipment'" class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2 ">
+                <div v-if="selectedItem.type === 'Office Equipment'"
+                  class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-2 ">
                   <div class="rounded-lg hidden md:block">
                   </div>
 
@@ -513,7 +508,8 @@ const selectedCopies = computed(() => {
 
             <!-- OFFICE SUPPLY TABLE TRANSACTION HISTORY -->
             <div v-if="selectedItem.type === 'Office Supply'" class=" dark:bg-black rounded-xl p-4 px-6">
-              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.supply_name }}:
+              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.supply_name
+              }}:
               </p>
               <div class="bg-gray-800 rounded-lg w-full shadow-md">
                 <OfficeSupplyTransactionHistoryTable :selectedItem="selectedItem" :transactionItems="transactionItems"
@@ -524,7 +520,8 @@ const selectedCopies = computed(() => {
 
             <!-- OFFICE EQUIPMENT TABLE TRANSACTION HISTORY -->
             <div v-if="selectedItem.type === 'Office Equipment'" class="mt-4 dark:bg-black rounded-xl p-4 px-6">
-              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{ selectedItem.equipment_name
+              <p class="ml-2 mb-4 text-xl font-semibold rounded-lg">Transaction History for {{
+                selectedItem.equipment_name
               }}:
               </p>
               <div class="bg-gray-800 rounded-lg w-full shadow-md">
@@ -542,11 +539,10 @@ const selectedCopies = computed(() => {
     <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
       :selectedItems="selectedItem" :categories="categoryList" @click.stop />
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
-      :selectedItems="selectedItem" :categories="categoryList"
-      :selectedCopy="selectedCopies" @click.stop />
-      
-      <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
-            :selectedItems="selectedItem" @click.stop />
+      :selectedItems="selectedItem" :categories="categoryList" :selectedCopy="selectedCopies" @click.stop />
+
+    <IncreaseSupplyQty v-if="isOpenIncreaseSupplyQtyModal" v-model="isOpenIncreaseSupplyQtyModal"
+      :selectedItems="selectedItem" @click.stop />
   </div>
 </template>
 
