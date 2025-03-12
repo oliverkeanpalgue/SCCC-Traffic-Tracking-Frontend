@@ -22,39 +22,81 @@ const OpenIncreaseSupplyQtyModal = () => {
 
 const searchQuery = ref("");
 
+// Add after the searchQuery ref
+const officeFilter = ref(false);
+const officeButtonRef = ref(null);
+const officeMenuRef = ref(null);
+
+// Create a computed property for office filter items
+const officeFilterItems = computed(() => {
+    return props.officeList.map(office => ({
+        id: office.id,
+        type: office.office_name,
+        isActive: true
+    }));
+});
+
+// Add filter methods
+const toggleOfficeFilter = () => {
+    officeFilter.value = !officeFilter.value;
+};
+
+const handleOfficeCheckboxChange = (id, event) => {
+    event.stopPropagation();
+    const item = officeFilterItems.value.find((item) => item.id === id);
+    if (item) {
+        item.isActive = !item.isActive;
+    }
+};
+
+const handleClickOutside = (event) => {
+    if (
+        officeFilter.value &&
+        !officeButtonRef.value?.contains(event.target) &&
+        !officeMenuRef.value?.contains(event.target)
+    ) {
+        officeFilter.value = false;
+    }
+};
+
 const filteredTransactionItems = computed(() => {
     const searchTerm = searchQuery.value.toLowerCase();
+    const activeOffices = officeFilterItems.value
+        .filter(item => item.isActive)
+        .map(item => item.id);
 
     return props.transactionItems
         .filter(item =>
             item.item_type === "Office Supply" && item.item_copy_id === props.selectedItem.id
         )
         .filter(item => {
-            // Search by transaction ID
-            const transactionId = item.id?.toString().toLowerCase() || "";
-
             // Get transaction details
             const transaction = props.transactionHistory.find(t => t.id === item.transaction_id);
-            const borrower = props.borrowers.find(u => u.id === transaction?.borrower_id);
+            if (!transaction) return false;
+
+            // Get borrower and office info
+            const borrower = props.borrowers.find(u => u.id === transaction.borrower_id);
             const office = props.officeList.find(o => o.id === borrower?.office_id);
-            const lender = props.users.find(u => u.id === transaction?.lender_id);
 
-            // Search by borrower name
-            const borrowerName = borrower?.borrowers_name?.toLowerCase() || "";
+            // Filter by office
+            if (!activeOffices.includes(office?.id)) return false;
 
-            // Search by office name
-            const officeName = office?.office_name?.toLowerCase() || "";
+            // Get lender info
+            const lender = props.users.find(u => u.id === transaction.lender_id);
 
-            // Search by lender name
-            const lenderName = lender?.firstName?.toLowerCase() || "";
+            // Search fields
+            const id = item.id.toString();
+            const borrowerName = borrower?.borrowers_name || '';
+            const officeName = office?.office_name || '';
+            const lenderName = lender?.firstName || '';
 
             // Return true if any field matches the search term
-            return transactionId.includes(searchTerm) ||
-                borrowerName.includes(searchTerm) ||
-                officeName.includes(searchTerm) ||
-                lenderName.includes(searchTerm);
+            return id.includes(searchTerm) ||
+                borrowerName.toLowerCase().includes(searchTerm) ||
+                officeName.toLowerCase().includes(searchTerm) ||
+                lenderName.toLowerCase().includes(searchTerm);
         })
-        .reverse(); // Reverse to show the latest transaction first
+        .reverse();
 });
 
 // Reset to first page when searching
@@ -111,6 +153,13 @@ const goToPage = (page) => {
     }
 };
 
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
 
 </script>
 
@@ -135,6 +184,43 @@ const goToPage = (page) => {
                             placeholder="Search supply transaction..." />
                     </div>
                 </form>
+            </div>
+        </div>
+        <div class="relative ml-2 flex justify-end">
+            <button @click="toggleOfficeFilter" ref="officeButtonRef"
+                class="flex items-center rounded-[5px] px-4 py-2 bg-dark dark:bg-dark-2 text-base font-medium text-white">
+                <span class="material-icons">filter_alt</span>
+                Filter Offices
+                <span class="material-icons ml-1">arrow_drop_down</span>
+            </button>
+            <div v-show="officeFilter" ref="officeMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute right-0 border border-gray-500 w-48 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                    'top-full visible': officeFilter,
+                    'top-[110%] invisible': !officeFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+                    v-for="item in officeFilterItems" :key="item.id">
+                    <div class="relative">
+                        <input type="checkbox" class="sr-only" :checked="item.isActive"
+                            @change="handleOfficeCheckboxChange(item.id, $event)" />
+                        <div
+                            class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                            <span :class="{
+                                'opacity-100': item.isActive,
+                                'opacity-0': !item.isActive,
+                            }">
+                                <svg width="11" height="8" viewBox="0 0 11 8" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                                        fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                    {{ item.type }}
+                </label>
             </div>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300">
