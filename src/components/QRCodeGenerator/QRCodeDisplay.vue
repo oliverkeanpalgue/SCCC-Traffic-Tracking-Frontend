@@ -1,6 +1,7 @@
 <script setup>
-import { defineProps, onMounted, ref } from 'vue'
+import { defineProps, ref, onMounted, onUnmounted } from 'vue'
 import QRCode from 'qrcode.vue'
+import { BsPrinterFill } from '@kalimahapps/vue-icons';
 
 const props = defineProps({
   qrCodes: {
@@ -84,6 +85,22 @@ const handlePrint = () => {
   };
 }
 
+// **Reactive QR Code size**
+const qrSize = ref(window.innerWidth >= 1024 ? 250 : window.innerWidth >= 768 ? 225 : 200)
+
+// **Update size on screen resize**
+const updateQrSize = () => {
+  qrSize.value = window.innerWidth >= 1024 ? 250 : window.innerWidth >= 768 ? 225 : 200
+}
+
+onMounted(() => {
+  window.addEventListener('resize', updateQrSize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateQrSize)
+})
+
 </script>
 
 <template>
@@ -92,9 +109,9 @@ const handlePrint = () => {
 
     <!-- Preview section -->
     <div class="w-full p-4 pl-2 rounded-xl dark:bg-gray-800">
-      <div class="grid grid-cols-3 gap-4 p-2 w-full max-h-[60vh] overflow-auto">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 p-2 w-full max-h-[60vh] overflow-auto">
         <div v-for="(qrData, index) in qrCodes" :key="index" class="border p-4 rounded-lg dark:bg-gray-950">
-          <QRCode :value="JSON.stringify(qrData)" :size="250" level="M" class="m-auto border-8" render-as="svg" />
+          <QRCode :value="JSON.stringify(qrData)" :size="qrSize" level="M" class="m-auto border-8" render-as="svg" />
           <div class="mt-2 text-lg">
             <p class="font-bold">SCCC - MITD Inventory</p>
             <p v-if="qrData.type === 'supply'">
@@ -113,10 +130,11 @@ const handlePrint = () => {
 
     <!-- Control buttons -->
     <div class="mt-4 flex gap-2 justify-center ">
-      <button @click="handlePrint" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+      <button @click="handlePrint" class="flex flex-row justify-center items-center px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 dark:bg-green-900 dark:text-gray-100 dark:hover:bg-green-700">
+        <BsPrinterFill class="w-5 h-5 mr-1"/>
         Print QR Codes
       </button>
-      <button @click="onClose" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300">
+      <button @click="onClose" class="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 border dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 dark:hover:bg-red-800">
         Close
       </button>
     </div>

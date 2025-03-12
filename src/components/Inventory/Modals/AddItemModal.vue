@@ -209,9 +209,10 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5 z-50 bg-black/70">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5 z-50 bg-black/70">
     <div ref="modalContainer"
-      class="w-full max-w-[1350px] h-[90vh] rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
+      class="w-full lg:max-w-[1100px] 2xl:max-w-[1200px] 3xl:max-w-[1350px] h-[90vh] rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
       <div class="flex flex-row">
         <!-- Breadcrumb -->
         <nav
@@ -261,10 +262,10 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
         <div v-if="selectedBreadCrumbPhase === 1" class="flex flex-col items-center mt-15">
           <p class="text-3xl mb-4">Create a New Item</p>
           <p class="mb-8">Choose the type of item that you want to create</p>
-          <div class="grid grid-cols-2 gap-20 item-center justify-center">
+          <div class="grid grid-cols-2 gap-5 sm:gap-10 md:gap-20 item-center justify-center">
             <div class="">
               <button @click="changeSelectedBreadCrumbCategory('equipment', 2, 1)"
-                class="p-4 border border-dashed border-2 rounded-3xl w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
+                class="p-4 border border-dashed border-2 rounded-3xl w-65 sm:w-75 md:w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
                 <AkShippingBox02 class="mb-3 w-23 h-23 w-full items-center justify-center" />
                 <p class="font-bold text-xl mb-3">Office Equipment</p>
                 <p class="text-sm">Track fixed assets like printers and chairs</p>
@@ -272,7 +273,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
             </div>
             <div>
               <button @click="changeSelectedBreadCrumbCategory('supply', 2, 2)"
-                class="border border-dashed border-2 rounded-3xl w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
+                class="border border-dashed border-2 rounded-3xl w-65 sm:w-75 md:w-80 h-80 justify-center dark:border-gray-300 dark:hover:bg-black dark:hover:border-solid dark:hover:border-blue-500 dark:hover:text-blue-200">
                 <FaPenRuler class="mb-5 w-20 h-20 w-full items-center justify-center" />
                 <p class="font-bold text-xl mb-3">Office Supply</p>
                 <p class="text-sm">Manage consumables like paper and pens.</p>
@@ -284,7 +285,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
         <div v-if="selectedBreadCrumbPhase === 2">
           <!-- FOR EQUIPMENT -->
           <div v-if="selectedBreadCrumbCategory === 'equipment'">
-            <div class="px-80 text-start">
+            <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Equipment Details</p>
               <!-- EQUIPMENT NAME -->
               <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
@@ -337,7 +338,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
           </div>
           <!-- FOR SUPPLY -->
           <div v-if="selectedBreadCrumbCategory === 'supply'">
-            <div class="px-80 text-start">
+            <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Supply Details</p>
               <!-- SUPPLY NAME -->
               <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
@@ -362,20 +363,20 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
               </div>
               <!-- SUPPLY CATEGORY -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Category:</label>
-              
-        <div class="relative">
-          <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
-            <BxSolidCategoryAlt />
-          </div>
-          <div class="pr-2">
-            <select v-model="selectedCategory"
-              class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
-              <option v-for="category in props.categories" :key="category.id" :value="category.id">
-                {{ category.category_name }}
-              </option>
-            </select>
-          </div>
-        </div>
+
+              <div class="relative">
+                <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
+                  <BxSolidCategoryAlt />
+                </div>
+                <div class="pr-2">
+                  <select v-model="selectedCategory"
+                    class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 pl-4 ">
+                    <option v-for="category in props.categories" :key="category.id" :value="category.id">
+                      {{ category.category_name }}
+                    </option>
+                  </select>
+                </div>
+              </div>
               <!-- SERIAL NUMBER -->
               <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Number:</label>
               <div class="relative ml-2">
@@ -398,10 +399,10 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
             </div>
           </div>
 
-          <div class="flex flex-wrap ml-1 px-80 mt-6">
+          <div class="flex flex-wrap ml-1 px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70  mt-6">
             <div class="w-full pl-1">
               <button @click="setOpenAddItemConfirmationModal(true)"
-                class="block w-full rounded-md border p-3 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
+                class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
                 Add Item
               </button>
             </div>
@@ -409,7 +410,7 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
         </div>
 
         <div v-if="selectedBreadCrumbPhase === 3" class="mt-8">
-          <QRCodeDisplay :qr-codes="equipmentQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay"/>
+          <QRCodeDisplay :qr-codes="equipmentQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
         </div>
       </div>
 
