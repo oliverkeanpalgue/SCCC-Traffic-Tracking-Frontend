@@ -92,7 +92,6 @@ const confirmUpdateSupply = async () => {
       description: supplyDescription.value,
       serialNumber: serialNumber.value,
       categoryId: selectedCategory.value,
-      quantity: parseInt(supplyQuantity.value),
       type: 'supply'
     }];
 
@@ -213,7 +212,7 @@ const confirmAction = (confirmed) => {
       </div>
     </div>
     <!-- QR CODE DISPLAY -->
-    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
+    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
       <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
     <!-- CONFIRMATION MODAL -->

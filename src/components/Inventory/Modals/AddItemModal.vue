@@ -156,7 +156,6 @@ const confirmAddItem = async () => {
           description: supplyDescription.value,
           serialNumber: serialNumber.value,
           categoryId: selectedCategory.value,
-          quantity: supplyQuantity.value,  // Include total quantity instead of copyNumber
           type: 'supply'
         }];
 
@@ -210,9 +209,9 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5">
+  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5 z-50 bg-black/70">
     <div ref="modalContainer"
-      class="w-full max-w-[1350px] h-[85vh] overflow-auto rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
+      class="w-full max-w-[1350px] h-[90vh] rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
       <div class="flex flex-row">
         <!-- Breadcrumb -->
         <nav
@@ -403,14 +402,14 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
             <div class="w-full pl-1">
               <button @click="setOpenAddItemConfirmationModal(true)"
                 class="block w-full rounded-md border p-3 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
-                Add Item Confirmation
+                Add Item
               </button>
             </div>
           </div>
         </div>
 
-        <div v-if="selectedBreadCrumbPhase === 3">
-          <QRCodeDisplay :qr-codes="equipmentQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
+        <div v-if="selectedBreadCrumbPhase === 3" class="mt-8">
+          <QRCodeDisplay :qr-codes="equipmentQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay"/>
         </div>
       </div>
 

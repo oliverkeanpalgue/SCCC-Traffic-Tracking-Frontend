@@ -182,8 +182,7 @@ const confirmAction = (confirmed) => {
         </div>
       </div>
     </div>
-    <div v-if="showQRCodes && !isLoading"
-      class="w-full max-w-[60vw] max-h-[80vh] overflow-auto bg-white rounded-[20px] p-8 dark:bg-gray-700">
+    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[60vw] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
       <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
 
