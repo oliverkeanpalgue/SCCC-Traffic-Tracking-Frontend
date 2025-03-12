@@ -60,7 +60,7 @@ const confirmUpdateQty = async () => {
         },
       }
     );
-    
+
     // Generate QR codes after successful update
     generatedQRCodes.value = [{
       id: props.selectedItems.id,
@@ -134,11 +134,7 @@ const closeQRDisplay = () => {
     </div>
     <!-- QR Code Display -->
     <div v-else class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-700">
-      <QRCodeDisplay 
-        :qr-codes="generatedQRCodes"
-        :on-print="handlePrint"
-        :on-close="closeQRDisplay"
-      />
+      <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
   </div>
 </template>

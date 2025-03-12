@@ -59,7 +59,7 @@ const confirmAddCopy = async () => {
       alert('No equipment copies data available');
       return;
     }
-    
+
     isLoading.value = true;
     const quantity = parseInt(copyQuantity.value);
     const highestCopyNum = Math.max(...props.equipmentCopies.map(copy => copy.copy_num));
@@ -125,18 +125,18 @@ const closeQRDisplay = () => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5">
     <!-- Loading State -->
     <Loading v-if="isLoading" />
 
     <!-- Main Add Copy Form -->
-    <div v-else-if="!showQRCodes" 
-      ref="modalContainer"
+    <div v-else-if="!showQRCodes" ref="modalContainer"
       class="w-full max-w-[650px] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
       <h3 class="text-3xl font-semibold mb-4">
         Add Copy
       </h3>
-      
+
       <!-- QUANTITY INPUT -->
       <div class="text-start">
         <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">
@@ -146,10 +146,7 @@ const closeQRDisplay = () => {
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
             <AnOutlinedNumber />
           </div>
-          <input 
-            type="number" 
-            v-model="copyQuantity" 
-            placeholder="Enter quantity..."
+          <input type="number" v-model="copyQuantity" placeholder="Enter quantity..."
             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
         </div>
       </div>
@@ -171,25 +168,15 @@ const closeQRDisplay = () => {
       </div>
 
       <!-- Confirmation Modal -->
-      <ConfirmationModal 
-        v-model="showConfirmationModal" 
-        title="Confirm Addition"
+      <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition"
         :message="`You are about to add a copy to this Equipment.`"
         :messageData="`\nEquipment Name: ${selectedItems.equipment_name}\nCop${copyQuantity === 1 ? 'y' : 'ies'} to add: ${copyQuantity}`"
-        cancelText="Cancel" 
-        confirmText="Confirm Adding" 
-        @confirm="confirmAction" 
-      />
+        cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmAction" />
     </div>
 
     <!-- QR Codes Display (Separate Modal) -->
-    <div v-else
-      class="w-full max-w-[60vw] max-h-[80vh] overflow-auto bg-white rounded-[20px] p-8 dark:bg-gray-700">
-      <QRCodeDisplay 
-        :qr-codes="generatedQRCodes" 
-        :on-print="handlePrint" 
-        :on-close="closeQRDisplay" 
-      />
+    <div v-else class="w-full max-w-[60vw] max-h-[80vh] overflow-auto bg-white rounded-[20px] p-8 dark:bg-gray-700">
+      <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
   </div>
 </template>
