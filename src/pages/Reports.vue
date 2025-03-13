@@ -3,9 +3,6 @@ import { PhotoIcon } from '@heroicons/vue/24/solid'
 import { ref, computed } from "vue";
 import axiosClient from "../axios.js";
 import router from "../router.js";
-import { useThemeStore } from '../stores/themeStore';
-
-const themeStore = useThemeStore();
 
 const data = ref({
   image: null,
@@ -21,6 +18,21 @@ function submit() {
       router.push({ name: 'MyImages' })
     })
 }
+
+import Toast from '../components/Toasts/SuccessToast.vue';
+const toastRef = ref(null);
+
+const showSuccessToast = () => {
+  toastRef.value?.addToast("Operation successful!", "success");
+};
+
+const showErrorToast = () => {
+  toastRef.value?.addToast("Something went wrong!", "error");
+};
+
+const showWarningToast = () => {
+  toastRef.value?.addToast("This is a warning message!", "warning");
+};
 </script>
 
 <template>
@@ -99,6 +111,14 @@ function submit() {
         </form>
       </div>
     </main>
+
+    <div class="p-10">
+    <button @click="showSuccessToast" class="px-4 py-2 bg-green-500 text-white rounded mr-2">Success</button>
+    <button @click="showErrorToast" class="px-4 py-2 bg-red-500 text-white rounded mr-2">Error</button>
+    <button @click="showWarningToast" class="px-4 py-2 bg-yellow-500 text-white rounded">Warning</button>
+
+    <Toast ref="toastRef" />
+  </div>
   </div>
 </template>
 
