@@ -16,6 +16,8 @@ import IncreaseSupplyQty from "../components/Inventory/Modals/IncreaseSupplyQty.
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 const isOpenAddItemModal = ref(false);
 
 const OpenAddItemModal = () => {
@@ -56,6 +58,7 @@ const isLoading = ref(true);
 const inventoryFilter = ref(false);
 const filterButtonRef = ref(null);
 const filterMenuRef = ref(null);
+
 
 const filterItems = ref([
   { id: 1, type: "Office Equipment", isActive: true },
@@ -307,6 +310,7 @@ const selectedCopies = computed(() => {
   if (!selectedItem.value) return [];
   return equipmentCopies.value.filter(copy => copy.item_id === selectedItem.value.id);
 })
+
 </script>
 
 <template>
@@ -396,7 +400,7 @@ const selectedCopies = computed(() => {
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
             :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-300 dark:text-gray-950' : ' dark:bg-gray-900'
               ">
-            <img :src="item.image_url || image" class="w-full h-32 object-cover rounded-lg" />
+            <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image" class="w-full h-32 object-cover rounded-lg" />
             <p class="text-center mt-2 font-medium">
               {{ item.equipment_name || item.supply_name }}
             </p>
@@ -419,7 +423,7 @@ const selectedCopies = computed(() => {
             <!-- INFORMATION OF ITEMS -->
             <div class="grid grid-cols-3 md:grid-cols-12 xl:grid-cols-5 gap-4">
               <!-- Image -->
-              <img :src="selectedItem.image_url || image"
+              <img :src="selectedItem.image_path ? `${VITE_API_BASE_URL}/storage/${selectedItem.image_path}` : image" 
                 class="w-full h-[90%] object-cover rounded-lg md:col-span-4 xl:col-span-1" />
 
               <div class="col-span-2 md:col-span-8 xl:col-span-4">

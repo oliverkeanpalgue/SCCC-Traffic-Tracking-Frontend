@@ -50,6 +50,8 @@ onUnmounted(() => {
 const showQRCodes = ref(false)
 const equipmentQRCodes = ref([])
 
+// user inputs
+const selectedImage = ref(null);
 const selectedOffice = ref(null)
 const selectedCategory = ref(null)
 const equipmentName = ref('')
@@ -59,6 +61,11 @@ const supplyDescription = ref('')
 const serialNumber = ref('')
 const supplyQuantity = ref('')
 const equipmentQuantity = ref('')
+
+// for image
+const handleImageUpload = (event) => {
+  selectedImage.value = event.target.files[0];
+};
 
 const addEquipmentCopies = async (equipmentId) => {
   try {
@@ -90,39 +97,47 @@ const confirmAddItem = async () => {
 
     if (selectedOffice.value === 1) {
       try {
-        const addData = {
-          equipment_name: equipmentName.value,
-          equipment_description: equipmentDescription.value,
-          category_id: selectedCategory.value,
+        const formData = new FormData();
+        formData.append('equipment_name', equipmentName.value);
+        formData.append('equipment_description', equipmentDescription.value);
+        formData.append('category_id', selectedCategory.value);
+
+        if (selectedImage.value) {
+          formData.append('image', selectedImage.value);
         }
-        console.log('Equipment data to be sent:', addData);
 
         const response = await axiosClient.post(
           `/api/office_equipments/`,
-          addData,
+          formData,
           {
             headers: {
               "x-api-key": API_KEY,
+              "Content-Type": "multipart/form-data"
             },
           }
         );
 
-        await addEquipmentCopies(response.data.data.id);
+        // Use the correct path to the equipment ID
+        if (response.data && response.data.data && response.data.data.equipment && response.data.data.equipment.id) {
+          const equipmentId = response.data.data.equipment.id;
 
-        // Generate QR codes for each equipment copy
-        equipmentQRCodes.value = Array.from({ length: parseInt(equipmentQuantity.value) }, (_, index) => ({
-          id: response.data.data.id,
-          copyNumber: index + 1,
-          name: equipmentName.value,
-          description: equipmentDescription.value,
-          categoryId: selectedCategory.value
-        }));
+          await addEquipmentCopies(equipmentId);
 
-        showQRCodes.value = true;
-        console.log('Equipment API response:', response);
-        console.log('Equipment API response:', response);
-        alert('Equipment added successfully!');
-        // closeModal()
+          // Generate QR codes for each equipment copy
+          equipmentQRCodes.value = Array.from({ length: parseInt(equipmentQuantity.value) }, (_, index) => ({
+            id: equipmentId,
+            copyNumber: index + 1,
+            name: equipmentName.value,
+            description: equipmentDescription.value,
+            categoryId: selectedCategory.value
+          }));
+
+          showQRCodes.value = true;
+          console.log('Equipment API response:', response);
+          alert('Equipment added successfully!');
+        } else {
+          console.error('Invalid response structure:', response);
+        }
       } catch (error) {
         console.error('Error adding equipment:', error);
         console.error('Error details:', error.response?.data);
@@ -130,21 +145,24 @@ const confirmAddItem = async () => {
       }
     } else if (selectedOffice.value === 2) {
       try {
-        const addData = {
-          supply_name: supplyName.value,
-          supply_description: supplyDescription.value,
-          serial_number: serialNumber.value,
-          category_id: selectedCategory.value,
-          supply_quantity: supplyQuantity.value
+        const formData = new FormData();
+        formData.append('supply_name', supplyName.value);
+        formData.append('supply_description', supplyDescription.value);
+        formData.append('serial_number', serialNumber.value);
+        formData.append('category_id', selectedCategory.value);
+        formData.append('supply_quantity', supplyQuantity.value);
+
+        if (selectedImage.value) {
+          formData.append('image', selectedImage.value);
         }
-        console.log('Supply data to be sent:', addData);
 
         const response = await axiosClient.post(
           `/api/office_supplies/`,
-          addData,
+          formData,
           {
             headers: {
               "x-api-key": API_KEY,
+              "Content-Type": "multipart/form-data"
             },
           }
         );
@@ -161,7 +179,7 @@ const confirmAddItem = async () => {
 
         showQRCodes.value = true;
 
-        console.log('Supply API response:', response);
+        console.log('Supply API response:', response, formData);
         alert('Supply added successfully!');
         // closeModal();
       } catch (error) {
@@ -181,7 +199,6 @@ const confirmAddItem = async () => {
   }
 }
 
-// Add these required functions
 const handlePrint = () => {
   window.print();
 }
@@ -287,6 +304,12 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
           <div v-if="selectedBreadCrumbCategory === 'equipment'">
             <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Equipment Details</p>
+              <!-- EQUIPMENT IMAGE -->
+              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+              <div class="relative ml-2">
+                <input type="file" @change="handleImageUpload" accept="image/*"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+              </div>
               <!-- EQUIPMENT NAME -->
               <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
               <div class="relative ml-2">
@@ -340,6 +363,12 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
           <div v-if="selectedBreadCrumbCategory === 'supply'">
             <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Supply Details</p>
+              <!-- SUPPLY IMAGE -->
+              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Image:</label>
+              <div class="relative ml-2">
+                <input type="file" @change="handleImageUpload" accept="image/*"
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+              </div>
               <!-- SUPPLY NAME -->
               <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
               <div class="relative ml-2">
