@@ -6,6 +6,9 @@ import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const showQRCodes = ref(false)
@@ -56,7 +59,7 @@ const copyQuantity = ref('')
 const confirmAddCopy = async () => {
   try {
     if (!props.equipmentCopies || props.equipmentCopies.length === 0) {
-      alert('No equipment copies data available');
+      emitter.emit("show-toast", { message: "No equipment copies data available", type: "warning" });
       return;
     }
 
@@ -101,12 +104,12 @@ const confirmAddCopy = async () => {
     // Set the generated QR codes
     generatedQRCodes.value = newQRCodes;
     showQRCodes.value = true;
-    alert('Copy/Copies added successfully!');
+    emitter.emit("show-toast", { message: "Copy/Copies added successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error adding copies:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error adding copies. Please try again.');
+    emitter.emit("show-toast", { message: "Error adding copies. Please try again.", type: "error" });
   } finally {
     isLoading.value = false;
   }

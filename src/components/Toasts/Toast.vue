@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
+import emitter from "../../eventBus";
 import { JaClose } from '@kalimahapps/vue-icons';
 import { AkCircleCheckFill } from '@kalimahapps/vue-icons';
 import { BsExclamationTriangleFill } from '@kalimahapps/vue-icons';
@@ -7,22 +8,26 @@ import { IoCloseCircle } from '@kalimahapps/vue-icons';
 
 const toasts = ref([]);
 
-const addToast = (message, type = "success") => {
-    const id = Date.now(); // Unique ID
+const addToast = ({ message, type = "success" }) => {
+    const id = Date.now();
     toasts.value.push({ id, message, type });
 
-    // Remove toast after 10 seconds
     setTimeout(() => {
         removeToast(id);
-    }, 10000);
+    }, 5000);
 };
 
 const removeToast = (id) => {
-    toasts.value = toasts.value.filter((toast) => toast.id !== id);
+    toasts.value = toasts.value.filter(toast => toast.id !== id);
 };
 
-// Expose the function so parent components can call it
-defineExpose({ addToast });
+onMounted(() => {
+    emitter.on("show-toast", addToast);
+});
+
+onUnmounted(() => {
+    emitter.off("show-toast", addToast);
+});
 </script>
 
 <template>
@@ -34,14 +39,12 @@ defineExpose({ addToast });
                 'dark:from-red-950 dark:to-gray-950 dark:border-red-900': toast.type === 'error',
                 'dark:from-yellow-950 dark:to-gray-950 dark:border-yellow-900': toast.type === 'warning',
             }">
-            <!-- Icon -->
             <span class="col-span-1">
                 <AkCircleCheckFill v-if="toast.type === 'success'" class="w-7 h-7 text-green-500 mr-4" />
                 <BsExclamationTriangleFill v-else-if="toast.type === 'warning'" class="w-6 h-6 text-yellow-500 mr-2" />
                 <IoCloseCircle v-else class="w-7 h-7 text-red-600 mr-4" />
             </span>
 
-            <!-- Title -->
             <p class="col-span-8 font-semibold text-lg" :class="{
                 'text-green-600 dark:text-green-500': toast.type === 'success',
                 'text-red-600 dark:text-red-500': toast.type === 'error',
@@ -50,17 +53,13 @@ defineExpose({ addToast });
                 {{ toast.type.charAt(0).toUpperCase() + toast.type.slice(1) }}
             </p>
 
-            <!-- Close Button -->
-            <button class="col-span-1 ml-4" @click="removeToast(toast.id)">
+            <button class="col-span-1 ml-4 dark:text-gray-200" @click="removeToast(toast.id)">
                 <JaClose class="w-7 h-7" />
             </button>
 
-            <!-- SPACER -->
             <div class="col-span-1"></div>
 
-            <!-- Message -->
-            <p class="col-span-9">{{ toast.message }}</p>
-            
+            <p class="col-span-9 dark:text-gray-200">{{ toast.message }}</p>
         </div>
     </div>
 </template>

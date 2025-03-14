@@ -8,6 +8,10 @@ import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import Loading from '../../Loading.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
+
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -97,12 +101,12 @@ const confirmUpdateSupply = async () => {
 
     showQRCodes.value = true;
     console.log('Update Supplies API response:', response);
-    alert('Supply updated successfully!');
+    emitter.emit("show-toast", { message: "Supply updated successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error updating supplies:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error updating supplies. Please try again.');
+    emitter.emit("show-toast", { message: "Error updating supplies. Please try again.", type: "error" });
   } finally {
     isLoading.value = false;
   }

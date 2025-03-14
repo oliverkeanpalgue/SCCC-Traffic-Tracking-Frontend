@@ -17,6 +17,9 @@ import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
 
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -136,7 +139,7 @@ const confirmAddItem = async () => {
 
           showQRCodes.value = true;
           console.log('Equipment API response:', response);
-          toastRef.value?.addToast("Equipment Added Successfully!", "success");
+          emitter.emit("show-toast", { message: "Equipment Added Successfully!", type: "success" });
           selectedBreadCrumbPhase.value = 3;
           isLoading.value = false;
         } else {
@@ -145,7 +148,7 @@ const confirmAddItem = async () => {
       } catch (error) {
         console.error('Error adding equipment:', error);
         console.error('Error details:', error.response?.data);
-        toastRef.value?.addToast("Error adding equipment. Please try again.", "error");
+        emitter.emit("show-toast", { message: "Error adding equipment. Please try again.", type: "error" });
         selectedBreadCrumbPhase.value = 2;
         isLoading.value = false;
       }
@@ -186,13 +189,13 @@ const confirmAddItem = async () => {
         showQRCodes.value = true;
 
         console.log('Supply API response:', response, formData);
-        toastRef.value?.addToast("Supply Added Successfully!", "success");
+        emitter.emit("show-toast", { message: "Supply Added Successfully!", type: "success" });
         selectedBreadCrumbPhase.value = 3;
         isLoading.value = false;
       } catch (error) {
         console.error('Error adding supply:', error);
         console.error('Error details:', error.response?.data);
-        toastRef.value?.addToast("Error adding supply. Please try again.", "error");
+        emitter.emit("show-toast", { message: "Error adding supply. Please try again.", type: "error" });
         selectedBreadCrumbPhase.value = 2;
         isLoading.value = false;
       }
@@ -238,12 +241,6 @@ const confirmSupplyAction = (confirmed) => {
     confirmAddItem()
   }
 }
-
-// FOR THE TOAST
-import Toast from '../../Toasts/Toast.vue';
-const toastRef = ref(null);
-
-
 </script>
 
 <template>
@@ -473,9 +470,6 @@ const toastRef = ref(null);
       <div v-if="showQRCodes" class="mt-4">
       </div>
     </div>
-
-    <!-- FOR THE TOAST -->
-    <Toast ref="toastRef" />
 
     <!-- EQUIPMENT Confirmation Modal -->
     <ConfirmationModal v-model="showEquipmentConfirmationModal" title="Confirm Addition"

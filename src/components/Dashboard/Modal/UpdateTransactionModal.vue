@@ -7,6 +7,7 @@ import { FlCheckboxUnchecked } from '@kalimahapps/vue-icons';
 import { AkCheck } from '@kalimahapps/vue-icons';
 import { RaCross2 } from '@kalimahapps/vue-icons';
 
+import emitter from "../../../eventBus";
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false);
@@ -154,7 +155,7 @@ const updateItems = async (date, returned, item) => {
     if (response.data) {
       emit('confirmDelete', response.data);
       closeModal();
-      alert('Transaction updated successfully');
+      emitter.emit("show-toast", { message: "Transaction updated successfully!", type: "success" });
     }
   } catch (error) {
     console.error('Error details:', {
@@ -162,7 +163,7 @@ const updateItems = async (date, returned, item) => {
       response: error.response?.data,
       status: error.response?.status
     });
-    alert(`Error updating transaction: ${error.response?.data?.message || error.message}`);
+    emitter.emit("show-toast", { message: `Error updating transaction: ${error.response?.data?.message || error.message}`, type: "error" });
   } finally {
     isLoading.value = false;
   }

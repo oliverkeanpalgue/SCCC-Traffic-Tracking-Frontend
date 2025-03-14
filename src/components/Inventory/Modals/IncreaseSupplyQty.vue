@@ -7,6 +7,9 @@ import Loading from '../../Loading.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const showQRCodes = ref(false)
@@ -84,13 +87,12 @@ const confirmUpdateQty = async () => {
 
     showQRCodes.value = true;
     console.log('Update office Quantity API response:', response);
-    alert('Office Quantity updated successfully!');
-
+    emitter.emit("show-toast", { message: "Office Quantity updated successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error updating office quantity:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error updating office quantity. Please try again.');
+    emitter.emit("show-toast", { message: "Error updating office quantity. Please try again.", type: "error" });
   } finally {
     isLoading.value = false;
   }

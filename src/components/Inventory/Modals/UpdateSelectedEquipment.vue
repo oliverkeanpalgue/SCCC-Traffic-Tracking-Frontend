@@ -7,6 +7,10 @@ import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 import Loading from '../../Loading.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
+
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -88,12 +92,12 @@ const confirmUpdateEquipment = async () => {
     }));
 
     console.log('Update Equipment API response:', response);
-    alert('Equipment updated successfully!');
+    emitter.emit("show-toast", { message: "Equipment updated successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error updating equipment:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error updating equipment. Please try again.');
+    emitter.emit("show-toast", { message: "Error updating equipment. Please try again.", type: "error" });
   } finally {
     isLoading.value = false;
     showQRCodes.value = true;
