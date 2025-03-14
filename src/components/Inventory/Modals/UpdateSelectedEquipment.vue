@@ -24,6 +24,8 @@ const props = defineProps({
   selectedCopy: Object
 })
 
+console.log("Selected Items:", props.selectedItems)
+
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
 
 const modalContainer = ref(null)
@@ -49,6 +51,11 @@ onUnmounted(() => {
 const equipmentName = ref('')
 const equipmentDescription = ref('')
 const selectedCategory = ref(null)
+const selectedImage = ref(null);
+
+const handleImageUpload = (event) => {
+  selectedImage.value = event.target.files[0]; // Get the selected image
+};
 
 // Add this watch effect
 watch(() => props.selectedItems, (items) => {
@@ -56,6 +63,7 @@ watch(() => props.selectedItems, (items) => {
     equipmentName.value = items.equipment_name
     equipmentDescription.value = items.equipment_description
     selectedCategory.value = items.category_id
+
   }
 }, { immediate: true })
 
@@ -63,20 +71,26 @@ const confirmUpdateEquipment = async () => {
   try {
     isLoading.value = true;
 
-    const updateEquipment = {
-      equipment_name: equipmentName.value,
-      equipment_description: equipmentDescription.value,
-      category_id: selectedCategory.value,
+    const formData = new FormData();
+    formData.append("equipment_name", equipmentName.value);
+    formData.append("equipment_description", equipmentDescription.value);
+    formData.append("category_id", selectedCategory.value);
+
+    if (selectedImage.value) {
+      formData.append("image", selectedImage.value); // Ensure the server expects this key
     }
 
-    console.log("Update equipment data sent: ", updateEquipment)
+    formData.append("_method", "PUT");
 
-    const response = await axiosClient.put(
+    console.log("Update equipment data sent: ", formData);
+
+    const response = await axiosClient.post(
       `/api/office_equipments/${props.selectedItems.id}`,
-      updateEquipment,
+      formData,
       {
         headers: {
           "x-api-key": API_KEY,
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -132,6 +146,10 @@ const confirmAction = (confirmed) => {
         Update Equipment
       </h3>
       <div class="flex flex-col text-start">
+        <!-- IMAGE UPLOAD -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+        <input type="file" @change="handleImageUpload"
+          class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
         <!-- EQUIPMENT NAME -->
         <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
         <div class="relative ml-2">
@@ -186,7 +204,8 @@ const confirmAction = (confirmed) => {
         </div>
       </div>
     </div>
-    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[60vw] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
+    <div v-if="showQRCodes && !isLoading"
+      class="w-full max-w-[60vw] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
       <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
 

@@ -54,6 +54,11 @@ const supplyDescription = ref('')
 const serialNumber = ref('')
 const selectedCategory = ref(null)
 const supplyQuantity = ref('')
+const selectedImage = ref(null);
+
+const handleImageUpload = (event) => {
+  selectedImage.value = event.target.files[0]; // Get the selected image
+};
 
 // Add this watch effect
 watch(() => props.selectedItems, (items) => {
@@ -70,22 +75,28 @@ const confirmUpdateSupply = async () => {
   try {
     isLoading.value = true;
 
-    const updateSupply = {
-      supply_name: supplyName.value,
-      supply_description: supplyDescription.value,
-      serial_number: serialNumber.value,
-      category_id: selectedCategory.value,
-      supply_quantity: supplyQuantity.value
+    const formData = new FormData();
+    formData.append("supply_name", supplyName.value);
+    formData.append("supply_description", supplyDescription.value);
+    formData.append("serial_number", supplyDescription.value);
+    formData.append("category_id", selectedCategory.value);
+    formData.append("supply_quantity", supplyQuantity.value);
+
+    if (selectedImage.value) {
+      formData.append("image", selectedImage.value); // Ensure the server expects this key
     }
 
-    console.log("Update supply data sent: ", updateSupply)
+    formData.append("_method", "PUT");
 
-    const response = await axiosClient.put(
+    console.log("Update supply data sent: ", formData)
+
+    const response = await axiosClient.post(
       `/api/office_supplies/${props.selectedItems.id}`,
-      updateSupply,
+      formData,
       {
         headers: {
           "x-api-key": API_KEY,
+          "Content-Type": "multipart/form-data",
         },
       }
     );
@@ -141,6 +152,10 @@ const confirmAction = (confirmed) => {
         Update Supply
       </h3>
       <div class="flex flex-col text-start">
+        <!-- IMAGE UPLOAD -->
+        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+        <input type="file" @change="handleImageUpload"
+          class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
         <!-- SUPPLY NAME -->
         <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
         <div class="relative ml-2">
@@ -216,7 +231,8 @@ const confirmAction = (confirmed) => {
       </div>
     </div>
     <!-- QR CODE DISPLAY -->
-    <div v-if="showQRCodes && !isLoading" class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
+    <div v-if="showQRCodes && !isLoading"
+      class="w-full max-w-[1000px] bg-white rounded-[20px] p-8 dark:bg-gray-950 border border-4 dark:border-white">
       <QRCodeDisplay :qr-codes="generatedQRCodes" :on-print="handlePrint" :on-close="closeQRDisplay" />
     </div>
     <!-- CONFIRMATION MODAL -->
