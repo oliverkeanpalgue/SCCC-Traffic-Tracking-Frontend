@@ -164,10 +164,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="overflow-x-auto">
-        <div class="items-center p-4">
+    <div class="overflow-x-auto ">
+        <div class="flex flex-row items-center p-4">
             <!-- Search Box -->
-            <div class="w-full">
+            <div class="w-4/5">
                 <form class="flex items-center" @submit.prevent>
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
@@ -185,42 +185,42 @@ onUnmounted(() => {
                     </div>
                 </form>
             </div>
-        </div>
-        <div class="relative ml-2 flex justify-end">
-            <button @click="toggleOfficeFilter" ref="officeButtonRef"
-                class="flex items-center rounded-[5px] px-4 py-2 bg-dark dark:bg-dark-2 text-base font-medium text-white">
-                <span class="material-icons">filter_alt</span>
-                Filter Offices
-                <span class="material-icons ml-1">arrow_drop_down</span>
-            </button>
-            <div v-show="officeFilter" ref="officeMenuRef"
-                class="shadow-1 dark:shadow-box-dark absolute right-0 border border-gray-500 w-48 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
-                :class="{
-                    'top-full visible': officeFilter,
-                    'top-[110%] invisible': !officeFilter,
-                }">
-                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
-                    v-for="item in officeFilterItems" :key="item.id">
-                    <div class="relative">
-                        <input type="checkbox" class="sr-only" :checked="item.isActive"
-                            @change="handleOfficeCheckboxChange(item.id, $event)" />
-                        <div
-                            class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
-                            <span :class="{
-                                'opacity-100': item.isActive,
-                                'opacity-0': !item.isActive,
-                            }">
-                                <svg width="11" height="8" viewBox="0 0 11 8" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
-                                        fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
-                                </svg>
-                            </span>
+            <div class=" relative ml-2 flex justify-end w-1/5">
+                <button @click="toggleOfficeFilter" ref="officeButtonRef"
+                    class="flex items-center rounded-lg px-6 py-2 bg-dark dark:bg-dark-2 text-base font-medium text-white border dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600">
+                    <span class="material-icons">filter_alt</span>
+                    Filter Offices
+                    <span class="material-icons ml-1">arrow_drop_down</span>
+                </button>
+                <div v-show="officeFilter" ref="officeMenuRef"
+                    class="absolute shadow-1 dark:shadow-box-dark absolute right-0 border border-gray-500 w-48 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                    :class="{
+                        'top-full visible': officeFilter,
+                        'top-[110%] invisible': !officeFilter,
+                    }">
+                    <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+                        v-for="item in officeFilterItems" :key="item.id">
+                        <div class="relative">
+                            <input type="checkbox" class="sr-only" :checked="item.isActive"
+                                @change="handleOfficeCheckboxChange(item.id, $event)" />
+                            <div
+                                class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                                <span :class="{
+                                    'opacity-100': item.isActive,
+                                    'opacity-0': !item.isActive,
+                                }">
+                                    <svg width="11" height="8" viewBox="0 0 11 8" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    {{ item.type }}
-                </label>
+                        {{ item.type }}
+                    </label>
+                </div>
             </div>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300">
