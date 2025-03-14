@@ -54,10 +54,17 @@ const openDeleteModal = (transaction) => {
   console.log("🚀 ~ openDeleteModal ~ isDeleteModalOpen:", isDeleteModalOpen.value);
 };
 
+const getActiveOfficeIds = () => {
+  return officeDropDownItems.value
+    .filter((item) => item.isActive)
+    .map((item) => item.id);
+};
+
 const filteredTransactions = computed(() => {
   if (!transactionHistories.value.borrow_transactions) return [];
 
   const searchTerm = searchQuery.value.toLowerCase();
+  const activeOfficeIds = getActiveOfficeIds();
 
   return transactionHistories.value.borrow_transactions.filter((transaction) => {
     if (transaction.is_deleted) return false;
@@ -102,13 +109,16 @@ const filteredTransactions = computed(() => {
       return false;
     }) || false;
 
+    const officeMatch = activeOfficeIds.includes(transaction.borrowers?.office_id);
+
     return (
-      borrowerName.includes(searchTerm) ||
+      officeMatch &&
+      (borrowerName.includes(searchTerm) ||
       transactionId.includes(searchTerm) ||
       lender.includes(searchTerm) ||
       returnDate.includes(searchTerm) ||
       borrowDate.includes(searchTerm) ||
-      itemsMatch
+      itemsMatch)
     );
   });
 });
@@ -158,19 +168,8 @@ const openDropdownId = ref(null);
 
 const dropdownRefs = ref([]);
 
-const closeDropdown = () => {
-  openDropdownId.value = null;
-};
-
 onMounted(() => {
-  document.addEventListener("click", (event) => {
-    if (
-      openDropdownId.value !== null &&
-      !dropdownRefs.value[openDropdownId.value]?.contains(event.target)
-    ) {
-      closeDropdown();
-    }
-  });
+  document.addEventListener("click", handleClickOutside);
 
   axiosClient
     .get("/api/transaction_history", {
@@ -237,6 +236,13 @@ onMounted(() => {
     .then((response) => {
       officeList.value = response.data;
       console.log("Office Names:", officeList.value);
+
+      // Update officeDropDownItems based on fetched office data
+      officeDropDownItems.value = officeList.value.map((office) => ({
+        id: office.id,
+        type: office.office_name,
+        isActive: true,
+      }));
     })
     .catch((error) => {
       console.error("Error fetching office names:", error);
@@ -265,13 +271,7 @@ const officeDropDownFilter = ref(false);
 const officeDropDownButtonRef = ref(null);
 const officeDropDownMenuRef = ref(null); // Reference to officeDropDown menu
 
-const officeDropDownItems = ref([
-  { id: 1, type: "911 Office", isActive: true },
-  { id: 2, type: "MITD Office", isActive: true },
-  { id: 3, type: "Library Office", isActive: true },
-  { id: 4, type: "Convention Office", isActive: true },
-  { id: 5, type: "Public Information Office", isActive: true },
-]);
+const officeDropDownItems = ref([]);
 
 const toggleofficeDropDown = () => {
   officeDropDownFilter.value = !officeDropDownFilter.value;
@@ -349,22 +349,7 @@ onUnmounted(() => {
             </div>
             <div
               class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
-              <button type="button"
-                class="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
-                <span class="material-icons pl-4">add</span>
-                Add Items
-              </button>
               <div class="flex items-center space-x-3 w-full md:w-auto">
-                <button id="actionsDropdownButton" data-dropdown-toggle="actionsDropdown"
-                  class="w-full md:w-auto flex items-center justify-center py-2 px-4 text-sm font-medium text-gray-900 focus:outline-none bg-white rounded-lg border border-gray-200 hover:bg-gray-100 hover:text-primary-700 focus:z-10 focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-600 dark:hover:text-white dark:hover:bg-gray-700"
-                  type="button">
-                  <svg class="-ml-1 mr-1.5 w-5 h-5" fill="currentColor" viewbox="0 0 20 20"
-                    xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path clip-rule="evenodd" fill-rule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                  </svg>
-                  Actions
-                </button>
                 <div id="actionsDropdown"
                   class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
                   <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
