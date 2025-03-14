@@ -14,6 +14,8 @@ import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
+import ConfirmationModal from '../../ConfirmationModal.vue';
+import Loading from '../../Loading.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -134,14 +136,18 @@ const confirmAddItem = async () => {
 
           showQRCodes.value = true;
           console.log('Equipment API response:', response);
-          alert('Equipment added successfully!');
+          toastRef.value?.addToast("Equipment Added Successfully!", "success");
+          selectedBreadCrumbPhase.value = 3;
+          isLoading.value = false;
         } else {
           console.error('Invalid response structure:', response);
         }
       } catch (error) {
         console.error('Error adding equipment:', error);
         console.error('Error details:', error.response?.data);
-        alert('Error adding equipment. Please try again.');
+        toastRef.value?.addToast("Error adding equipment. Please try again.", "error");
+        selectedBreadCrumbPhase.value = 2;
+        isLoading.value = false;
       }
     } else if (selectedOffice.value === 2) {
       try {
@@ -180,22 +186,20 @@ const confirmAddItem = async () => {
         showQRCodes.value = true;
 
         console.log('Supply API response:', response, formData);
-        alert('Supply added successfully!');
-        // closeModal();
+        toastRef.value?.addToast("Supply Added Successfully!", "success");
+        selectedBreadCrumbPhase.value = 3;
+        isLoading.value = false;
       } catch (error) {
         console.error('Error adding supply:', error);
         console.error('Error details:', error.response?.data);
-        alert('Error adding supply. Please try again.');
+        toastRef.value?.addToast("Error adding supply. Please try again.", "error");
+        selectedBreadCrumbPhase.value = 2;
+        isLoading.value = false;
       }
     }
   } catch (error) {
     console.error('Error adding item:', error);
     console.error('Error details:', error.response?.data);
-    alert('Error adding item. Please try again.');
-  } finally {
-    openAddItemConfirmationModal.value = false;
-    selectedBreadCrumbPhase.value = 3;
-    isLoading.value = false;
   }
 }
 
@@ -219,16 +223,34 @@ const changeSelectedBreadCrumbCategory = (category, phase, office) => {
   selectedOffice.value = office;
 }
 
-const openAddItemConfirmationModal = ref(false);
-const setOpenAddItemConfirmationModal = (passedValue) => {
-  openAddItemConfirmationModal.value = passedValue;
+const showEquipmentConfirmationModal = ref(false)
+
+const confirmEquipmentAction = (confirmed) => {
+  if (confirmed) {
+    confirmAddItem()
+  }
 }
+
+const showSupplyConfirmationModal = ref(false)
+
+const confirmSupplyAction = (confirmed) => {
+  if (confirmed) {
+    confirmAddItem()
+  }
+}
+
+// FOR THE TOAST
+import Toast from '../../Toasts/Toast.vue';
+const toastRef = ref(null);
+
+
 </script>
 
 <template>
   <div v-if="modelValue"
     class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5 z-50 bg-black/70">
-    <div ref="modalContainer"
+    <Loading v-if="isLoading" />
+    <div v-else ref="modalContainer"
       class="w-full lg:max-w-[1100px] 2xl:max-w-[1200px] 3xl:max-w-[1350px] h-[90vh] rounded-[20px] bg-white p-4 text-center border border-3 dark:border-gray-300 dark:bg-gray-950">
       <div class="flex flex-row">
         <!-- Breadcrumb -->
@@ -430,9 +452,13 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
 
           <div class="flex flex-wrap ml-1 px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70  mt-6">
             <div class="w-full pl-1">
-              <button @click="setOpenAddItemConfirmationModal(true)"
+              <button v-if="selectedBreadCrumbCategory === 'equipment'" @click="showEquipmentConfirmationModal = true"
                 class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
-                Add Item
+                Add Equipment
+              </button>
+              <button v-if="selectedBreadCrumbCategory === 'supply'" @click="showSupplyConfirmationModal = true"
+                class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
+                Add Supply
               </button>
             </div>
           </div>
@@ -448,33 +474,19 @@ const setOpenAddItemConfirmationModal = (passedValue) => {
       </div>
     </div>
 
-    <!-- CONFIRMATION MODAL -->
-    <div class="fixed left-0 top-0 flex h-full min-h-screen w-full items-center justify-center bg-gray-950/50 px-4 py-5"
-      :class="{ block: openAddItemConfirmationModal, hidden: !openAddItemConfirmationModal }">
-      <div ref="modalContainer"
-        class="w-full max-w-[570px] rounded-[20px] bg-white border px-8 py-12 text-center dark:bg-gray-800 md:px-[70px] md:py-[60px]">
-        <h3 class="pb-[18px] text-xl font-semibold text-dark dark:text-white sm:text-2xl">
-          Confirm Addition
-        </h3>
-        <span class="mx-auto mb-6 inline-block h-1 w-[90px] rounded bg-primary"></span>
-        <p class="mb-10 text-base leading-relaxed text-body-color dark:text-dark-6">
-          Are you sure you want to add <strong>{{ supplyName || equipmentName }}</strong> to the inventory?
-        </p>
-        <div class="-mx-3 flex flex-wrap">
-          <div class="w-1/2 px-3">
-            <button @click="setOpenAddItemConfirmationModal(false)" ref="trigger"
-              class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition hover:border-red-600 hover:bg-red-600 hover:text-white dark:text-white">
-              No, Cancel
-            </button>
-          </div>
-          <div class="w-1/2 px-3">
-            <button @click="confirmAddItem"
-              class="block w-full rounded-md border border-primary bg-primary p-3 text-center text-base font-medium text-white transition hover:bg-blue-dark">
-              Yes, Add Item
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- FOR THE TOAST -->
+    <Toast ref="toastRef" />
+
+    <!-- EQUIPMENT Confirmation Modal -->
+    <ConfirmationModal v-model="showEquipmentConfirmationModal" title="Confirm Addition"
+      :message="`You are about to add this Equipment.`"
+      :messageData="`\nEquipment Name: ${equipmentName}\nDescription: ${equipmentDescription}\nCategory: ${categories.find(category => category.id === selectedCategory)?.category_name || 'Unknown Category'}\nCop${equipmentQuantity === 1 ? 'y' : 'ies'}: ${equipmentQuantity}`"
+      cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmEquipmentAction" />
+
+    <!-- SUPPLY Confirmation Modal -->
+    <ConfirmationModal v-model="showSupplyConfirmationModal" title="Confirm Addition"
+      :message="`You are about to add this Supply.`"
+      :messageData="`\nSupply Name: ${supplyName}\nDescription: ${supplyDescription}\nCategory: ${categories.find(category => category.id === selectedCategory)?.category_name || 'Unknown Category'}\nSerial Number: ${serialNumber}\nQuantity: ${supplyQuantity}`"
+      cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmSupplyAction" />
   </div>
 </template>

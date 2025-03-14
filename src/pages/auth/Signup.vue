@@ -13,6 +13,7 @@ const data = ref({
   email: '',
   password: '',
   password_confirmation: '',
+  for_911: false,
 })
 
 const errors = ref({
@@ -27,7 +28,7 @@ function submit() {
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/register", data.value)
       .then(response => {
-        router.push({ name: 'Home' })
+        router.push({ name: 'Login' })
       })
       .catch(error => {
         console.log(error.response.data)

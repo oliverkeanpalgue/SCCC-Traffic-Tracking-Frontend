@@ -19,7 +19,7 @@ function submit() {
     })
 }
 
-import Toast from '../components/Toasts/SuccessToast.vue';
+import Toast from '../components/Toasts/Toast.vue';
 const toastRef = ref(null);
 
 const showSuccessToast = () => {

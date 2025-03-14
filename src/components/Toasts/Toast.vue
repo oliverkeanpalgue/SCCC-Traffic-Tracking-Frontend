@@ -60,6 +60,7 @@ defineExpose({ addToast });
 
             <!-- Message -->
             <p class="col-span-9">{{ toast.message }}</p>
+            
         </div>
     </div>
 </template>
