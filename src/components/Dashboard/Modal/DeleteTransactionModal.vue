@@ -3,6 +3,9 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
 
+// FOR THE TOAST
+import emitter from "../../../eventBus";
+
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false)
@@ -97,11 +100,11 @@ const confirmDelete = async () => {
     if (response.data.success) {
       emit('confirmDelete', response.data.data)
       closeModal()
-      alert('Transaction deleted successfully')
+      emitter.emit("show-toast", { message: "Transaction deleted successfully!", type: "success" });
     }
   } catch (error) {
     console.error('Error deleting transaction:', error)
-    alert('Error deleting transaction. Please try again.')
+    emitter.emit("show-toast", { message: "Error deleting transaction. Please try again.", type: "error" });
   } finally {
     updateItemAvailability()
     isLoading.value = false
