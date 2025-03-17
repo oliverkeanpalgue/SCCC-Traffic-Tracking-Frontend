@@ -11,6 +11,7 @@ import Reports from "./pages/Reports.vue";
 import Inventory from "./pages/Inventory.vue";
 import Borrowed from "./pages/Borrowed.vue";
 import MainLayout from "./components/MainLayout.vue";
+import Cateogries from "./pages/Cateogries.vue";
 
 const routes = [
   {
@@ -23,6 +24,7 @@ const routes = [
       {path: '/reports', name: 'Reports', component: Reports},
       {path: '/inventory', name: 'Inventory', component: Inventory},
       {path: '/borrowed', name: 'Borrowed', component: Borrowed},
+      {path: '/categories', name: 'Categories', component: Cateogries},
     ],
     beforeEnter: async (to, from, next) => {
       try {
