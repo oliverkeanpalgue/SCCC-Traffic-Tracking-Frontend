@@ -13,6 +13,8 @@ import { GlCloseXs } from '@kalimahapps/vue-icons';
 import UpdateSelectedEquipment from "../components/Inventory/Modals/UpdateSelectedEquipment.vue";
 import UpdateSelectedSupply from "../components/Inventory/Modals/UpdateSelectedSupply.vue";
 import IncreaseSupplyQty from "../components/Inventory/Modals/IncreaseSupplyQty.vue";
+import { FlFilledGrid } from '@kalimahapps/vue-icons';
+import { BxTable } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -311,17 +313,48 @@ const selectedCopies = computed(() => {
   return equipmentCopies.value.filter(copy => copy.item_id === selectedItem.value.id);
 })
 
+
+const tableView = ref(false);
+
+const handleTableViewChange = () => {
+  tableView.value = !tableView.value;
+};
 </script>
 
 <template>
   <div class="">
     <!-- HEADER -->
     <header class="shadow">
-      <div class="p-4 md:px-6 md:py-6 sm:px-6">
-        <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">Inventory</h1>
+      <div class="flex p-4 md:px-6 md:py-6 sm:px-6">
+        <h1 class="text-3xl w-10/12 font-bold tracking-tight dark:text-gray-200">Inventory</h1>
+        <!-- TOGGLE OF TABLE OR GRID -->
+        <label class="justify-end relative inline-flex cursor-pointer select-none items-center">
+          <input type="checkbox" class="sr-only" @change="handleTableViewChange" :checked="tableView" />
+          <label>Grid View</label>
+
+          <span
+            class="slider flex h-12 w-[75px] p-1 items-center rounded-full bg-gray-400 duration-200 relative overflow-hidden"
+            :class="{ 'bg-blue-400': tableView }">
+            <!-- Grid Icon (Shows when tableView is false) -->
+            <div class="transition-transform duration-300"
+              :class="{ 'translate-x-[30px] translate-y-[-13px] opacity-100 text-red-700': tableView, 'z-10 translate-x-[6px] translate-y-[-13px] opacity-100 text-red-700': !tableView }">
+              <FlFilledGrid class="absolute w-7 h-7 " />
+            </div>
+
+            <!-- Toggle Button -->
+            <span class="dot h-10 w-10 rounded-full bg-white duration-200 transform flex items-center justify-center"
+              :class="{ 'translate-x-[28px]': tableView, 'translate-x-0': !tableView }">
+              <!-- Table Icon (Appears inside the button when tableView is true) -->
+            <div class="transition-transform duration-400"
+                :class="{ 'opacity-100 text-red-700': tableView, 'translate-x-[-30px] opacity-0 text-red-700': !tableView }">
+                <BxTable class="w-7 h-7" />
+              </div>
+            </span>
+          </span>
+          <label>Table View</label>
+        </label>
       </div>
     </header>
-
     <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 flex items-center px-1 mb-2">
       <!-- SEARCH BAR -->
       <div class="col-span-2 mb-2 md:mb-0 md:col-span-4 xl:col-span-6 pr-2 md:pr-3">
@@ -400,7 +433,8 @@ const selectedCopies = computed(() => {
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
             :class="selectedItem && selectedItem.newId === item.newId ? 'bg-blue-200 dark:bg-gray-300 dark:text-gray-950' : ' dark:bg-gray-900'
               ">
-            <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image" class="w-full h-32 object-cover rounded-lg" />
+            <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image"
+              class="w-full h-32 object-cover rounded-lg" />
             <p class="text-center mt-2 font-medium">
               {{ item.equipment_name || item.supply_name }}
             </p>
@@ -423,7 +457,7 @@ const selectedCopies = computed(() => {
             <!-- INFORMATION OF ITEMS -->
             <div class="grid grid-cols-3 md:grid-cols-12 xl:grid-cols-5 gap-4">
               <!-- Image -->
-              <img :src="selectedItem.image_path ? `${VITE_API_BASE_URL}/storage/${selectedItem.image_path}` : image" 
+              <img :src="selectedItem.image_path ? `${VITE_API_BASE_URL}/storage/${selectedItem.image_path}` : image"
                 class="w-full h-[90%] object-cover rounded-lg md:col-span-4 xl:col-span-1" />
 
               <div class="col-span-2 md:col-span-8 xl:col-span-4">
