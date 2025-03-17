@@ -44,6 +44,8 @@ const navigation = [
     { name: 'Dashboard', to: { name: 'Dashboard' }, icon: 'dashboard' },
     { name: 'Inventory', to: { name: 'Inventory' }, icon: 'inventory' },
     { name: 'Categories', to: { name: 'Categories' }, icon: 'category' },
+    { name: 'Borrowers', to: { name: 'Borrowers' }, icon: 'transfer_within_a_station' },
+    { name: 'Users', to: { name: 'Users' }, icon: 'groups' },
     { name: 'Reports', to: { name: 'Reports' }, icon: 'analytics' },
     { name: 'Borrowed', to: { name: 'Borrowed' }, icon: 'transfer_within_a_station' },
     { name: 'Upload', to: { name: 'Upload' }, icon: 'upload' },
