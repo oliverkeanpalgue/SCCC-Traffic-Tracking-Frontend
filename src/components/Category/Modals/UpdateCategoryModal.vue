@@ -1,6 +1,5 @@
-
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch } from 'vue'
 import axiosClient from '../../../axios';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { BsBoxFill } from '@kalimahapps/vue-icons';
@@ -27,7 +26,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmAddCopy()
+        confirmUpdateCopy()
     }
 }
 
@@ -53,19 +52,43 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-const copyQuantity = ref('')
+watch(() => props.category, (categories) => {
+  if (categories) {
+    categoryName.value = categories.category_name
+  }
+}, { immediate: true })
 
-const confirmAddCopy = async () => {
+
+const confirmUpdateCopy = async () => {
     try {
-        emitter.emit("show-toast", { message: "Copy/Copies added successfully!", type: "success" });
-        // closeModal()
+        isLoading.value = true
+
+        const updateCategory = {
+            category_name: categoryName.value
+        }
+
+        console.log("Add copy data sent: ", updateCategory)
+
+        const response = await axiosClient.put(
+            `/api/categories/${props.category.id}`,
+            updateCategory,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+        console.log('Update Category API response:', response);
+        emitter.emit("show-toast", { message: "Copy/Copies updated successfully!", type: "success" });
+        closeModal()
     } catch (error) {
-        emitter.emit("show-toast", { message: "Error adding copies. Please try again.", type: "error" });
+        console.error('Error updating category:', error);
+        console.error('Error details:', error.response?.data);
+        emitter.emit("show-toast", { message: "Error updating category. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;
     }
 }
-
 </script>
 
 <template>
@@ -78,7 +101,7 @@ const confirmAddCopy = async () => {
         <div v-else ref="modalContainer"
             class="w-full max-w-[650px] max-h-[90vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
             <h3 class="text-3xl font-semibold mb-4">
-                Update Category 
+                Update Category
             </h3>
 
             <!-- QUANTITY INPUT -->
@@ -112,9 +135,9 @@ const confirmAddCopy = async () => {
             </div>
 
             <!-- Confirmation Modal -->
-            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Update" :message="`You are about to update this category.`"
-                :messageData="`\nCategory Name: ${categoryName}`" cancelText="Cancel"
-                confirmText="Confirm Update" @confirm="confirmAction" />
+            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Update"
+                :message="`You are about to update this category.`" :messageData="`\nCategory Name: ${categoryName}`"
+                cancelText="Cancel" confirmText="Confirm Update" @confirm="confirmAction" />
         </div>
     </div>
 </template>

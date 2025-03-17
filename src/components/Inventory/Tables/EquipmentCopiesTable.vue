@@ -122,6 +122,10 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside);
 });
 
+onUnmounted(() => {
+    document.removeEventListener('click', handleClickOutside)
+})
+
 </script>
 
 <template>
