@@ -1,5 +1,113 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
+import axiosClient from "../../axios";
+
+const API_KEY = import.meta.env.VITE_API_KEY;
+
+const borrowersList = ref([])
+
+const fetchBorrowers = async () => {
+    console.log('Fetching borrowers...');
+    try {
+        const response = await axiosClient.get('api/borrowers', {
+            headers: {
+                'x-api-key': API_KEY,
+            },
+        });
+        console.log('Borrowers fetched:', response.data);
+        borrowersList.value = response.data;
+    } catch (error) {
+        console.error('Error fetching borrowers:', error);
+    }
+};
+
+// fetch office
+const officeList = ref([])
+const fetchOffices = async () => {
+    console.log('Fetching offices...');
+    try {
+        const response = await axiosClient.get('api/offices', {
+            headers: {
+                'x-api-key': API_KEY,
+            },
+        });
+        console.log('Offices fetched:', response.data);
+        officeList.value = response.data.map(office => ({ id: office.id, office_name: office.office_name }));
+    } catch (error) {
+        console.error('Error fetching offices:', error);
+    }
+}
+
+onMounted(() => {
+    fetchBorrowers();
+    fetchOffices();
+});
+
+// for search function
+const searchQuery = ref("");
+
+const filteredBorrowers = computed(() => {
+    return borrowersList.value.filter((borrower) => {
+        const office = officeList.value.find((office) => office.id === borrower.office_id);
+        const borrowerName = borrower.borrowers_name.toLowerCase();
+        const contactNumber = borrower.borrowers_contact.toLowerCase();
+        const officeName = office ? office.office_name.toLowerCase() : 'unknown';
+        const searchQueryValue = searchQuery.value.toLowerCase();
+        return (
+            borrowerName.includes(searchQueryValue) ||
+            contactNumber.includes(searchQueryValue) ||
+            officeName.includes(searchQueryValue)
+        );
+    }).map((borrower) => {
+        const office = officeList.value.find((office) => office.id === borrower.office_id);
+        return {
+            id: borrower.id,
+            borrowers_name: borrower.borrowers_name,
+            contact_number: borrower.borrowers_contact,
+            office_name: office ? office.office_name : 'Unknown',
+        };
+    });
+});
+
+// Reset to first page when searching
+watch(searchQuery, () => {
+    currentPage.value = 1;
+});
+
+// for pagination
+const currentPage = ref(1);
+const itemsPerPage = ref(5);
+
+const totalPages = computed(() => {
+    return Math.ceil(filteredBorrowers.value.length / itemsPerPage.value);
+});
+
+// Get paginated transactions
+const paginatedBorrowers = computed(() => {
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+
+    return filteredBorrowers.value.slice(start, end);
+});
+
+// Pagination controls
+const nextPage = () => {
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
+};
+
+const prevPage = () => {
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
+};
+
+const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
+};
 
 </script>
 
@@ -8,7 +116,7 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch 
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <!-- Search Box -->
             <div class="w-full md:w-4/5">
-                <form class="flex items-center" >
+                <form class="flex items-center">
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -38,17 +146,17 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch 
                 </tr>
             </thead>
             <tbody>
-                <tr 
+                <tr v-for="borrowers in paginatedBorrowers" :key="borrowers.id"
                     class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 border-b border-gray-700">1</td>
+                    <td class="px-4 py-3 border-b border-gray-700">{{ borrowers.id }}</td>
                     <td class="px-4 py-3 border-b border-gray-700">
-                        Rafael Martin Aquino
+                        {{ borrowers.borrowers_name }}
                     </td>
                     <td class="px-4 py-3 border-b border-gray-700">
-                        1234567890
+                        {{ borrowers.contact_number }}
                     </td>
                     <td class="px-4 py-3 border-b border-gray-700">
-                        911
+                        {{ borrowers.office_name }}
                     </td>
                     <td class="px-4 py-3 border-b border-gray-700">
                         Napipindot na button
@@ -57,6 +165,59 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch 
                 </tr>
             </tbody>
         </table>
+        <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+            aria-label="Table navigation">
+            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                Showing
+                <span class="font-semibold text-gray-900 dark:text-white">
+                    {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                    {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
+                </span>
+                of
+                <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
+                }}</span>
+            </span>
+
+            <ul class="inline-flex items-stretch -space-x-px">
+                <li>
+                    <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
+                     hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
+                     dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="sr-only">Previous</span>
+                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </li>
+
+                <li v-for="page in totalPages" :key="page">
+                    <button @click="goToPage(page)"
+                        :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
+                            page === currentPage
+                                ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                                : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
+                        {{ page }}
+                    </button>
+                </li>
+
+                <li>
+                    <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
+                     hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
+                     dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                        <span class="sr-only">Next</span>
+                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </li>
+            </ul>
+        </nav>
     </div>
 
 </template>
