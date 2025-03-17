@@ -1,13 +1,17 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
 import axiosClient from "../../axios";
+import { ClAddPlus } from '@kalimahapps/vue-icons';
+import { ChMenuMeatball } from "@kalimahapps/vue-icons";
+import AddBorrowerModal from './Modals/AddBorrowerModal.vue';
+import UpdateBorrowerModal from './Modals/UpdateBorrowerModal.vue';
+import DeleteConfirmationModal from '../ConfirmationModal.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const borrowersList = ref([])
 
 const fetchBorrowers = async () => {
-    console.log('Fetching borrowers...');
     try {
         const response = await axiosClient.get('api/borrowers', {
             headers: {
@@ -109,13 +113,42 @@ const goToPage = (page) => {
     }
 };
 
+// FOR THE ADD BORROWER MODAL
+const isOpenAddBorrowerModal = ref(false);
+
+const OpenAddBorrowerModal = () => {
+    isOpenAddBorrowerModal.value = true;
+}
+
+// Action Dropdown
+const openDropdownId = ref(null);
+
+const toggleDropdown = (borrowerId) => {
+    openDropdownId.value = openDropdownId.value === borrowerId ? null : borrowerId;
+};
+
+// FOR THE UPDATE BORROWER MODAL
+const isOpenUpdateBorrowerModal = ref(false);
+
+const OpenUpdateBorrowerModal = () => {
+    isOpenUpdateBorrowerModal.value = true;
+}
+
+// FOR DELETE
+const showDeleteConfirmationModal = ref(false)
+
+const confirmDeleteBorrower = (confirmed) => {
+    if (confirmed) {
+        // INSERT DELETE FUNCTION DITO
+    }
+}
 </script>
 
 <template>
     <div class="overflow-x-auto">
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <!-- Search Box -->
-            <div class="w-full md:w-4/5">
+            <div class="w-full md:w-8/9">
                 <form class="flex items-center">
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
@@ -133,10 +166,16 @@ const goToPage = (page) => {
                     </div>
                 </form>
             </div>
+            <!-- ADD BUTTON -->
+            <button @click.stop="OpenAddBorrowerModal()"
+                class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-8" />
+                <p class="ml-1">Add Borrower</p>
+            </button>
         </div>
-        <table class="w-full border-collapse text-sm text-gray-300 rounded-lg">
+        <table class="w-full border-collapse text-sm  text-center text-gray-300 rounded-lg">
             <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs rounded-lg">
+                <tr class="bg-gray-700 text-gray-200 uppercase text-xs rounded-lg">
                     <th class="px-4 py-2 border-b border-gray-600">ID</th>
                     <th class="px-4 py-2 border-b border-gray-600">Borrower Name</th>
                     <th class="px-4 py-2 border-b border-gray-600">Contact Number</th>
@@ -146,22 +185,55 @@ const goToPage = (page) => {
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="borrowers in paginatedBorrowers" :key="borrowers.id"
+                <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
                     class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 border-b border-gray-700">{{ borrowers.id }}</td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ borrowers.borrowers_name }}
+                    <td class="px-4 py-3 ">{{ borrower.id }}</td>
+                    <td class="px-4 py-3 ">
+                        {{ borrower.borrowers_name }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ borrowers.contact_number }}
+                    <td class="px-4 py-3 ">
+                        {{ borrower.contact_number }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ borrowers.office_name }}
+                    <td class="px-4 py-3 ">
+                        {{ borrower.office_name }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
+                    <td class="px-4 py-3 ">
                         Napipindot na button
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">...</td>
+                    <td class="px-4 py-3 flex items-center justify-center relative">
+                        <button @click.stop="toggleDropdown(borrower.id)"
+                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                            type="button">
+                            <ChMenuMeatball class="w-5 h-5" />
+                        </button>
+
+                        <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
+                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                            <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click.stop="OpenUpdateBorrowerModal()" class="w-full text-start px-4 py-2">
+                                        Update
+                                    </button>
+
+                                    <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
+                                        v-model="isOpenUpdateBorrowerModal" :borrower="borrower" :officeList="officeList" @click.stop />
+                                </li>
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click="showDeleteConfirmationModal = true"
+                                        class="w-full text-start px-4 py-2">
+                                        Delete
+                                    </button>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                        title="Confirm Deletion" :message="`You are about to delete this borrower.`"
+                                        :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
+                                        cancelText="Cancel" confirmText="Confirm Deleting"
+                                        @confirm="confirmDeleteBorrower" />
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -218,6 +290,8 @@ const goToPage = (page) => {
                 </li>
             </ul>
         </nav>
+
+        <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList" @click.stop />
     </div>
 
 </template>
