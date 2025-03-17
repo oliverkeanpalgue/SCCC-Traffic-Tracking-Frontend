@@ -18,7 +18,7 @@ const isLoading = ref(false)
 const props = defineProps({
     modelValue: Boolean,
     officeList: Object,
-    borrower: Object
+    borrower: Object,
 })
 
 const showConfirmationModal = ref(false)
@@ -51,10 +51,6 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-const borrowerName = ref('')
-const borrowerContact = ref('')
-const selectedOffice = ref('')
-
 const confirmAddCopy = async () => {
     try {
         emitter.emit("show-toast", { message: "Borrower added successfully!", type: "success" });
@@ -78,7 +74,7 @@ const confirmAddCopy = async () => {
         <div v-else ref="modalContainer"
             class="w-full max-w-[650px] max-h-[90vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
             <h3 class="text-3xl font-semibold mb-4">
-                Add Borrower
+                Update Borrower
             </h3>
 
             <!-- QUANTITY INPUT -->
@@ -133,7 +129,7 @@ const confirmAddCopy = async () => {
                 <div class="w-1/2 px-3">
                     <button @click="showConfirmationModal = true"
                         class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
-                        Add Borrower
+                        Update Borrower
                     </button>
                 </div>
             </div>
