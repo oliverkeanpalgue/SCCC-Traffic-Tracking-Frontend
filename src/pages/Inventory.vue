@@ -15,6 +15,7 @@ import UpdateSelectedSupply from "../components/Inventory/Modals/UpdateSelectedS
 import IncreaseSupplyQty from "../components/Inventory/Modals/IncreaseSupplyQty.vue";
 import { FlFilledGrid } from '@kalimahapps/vue-icons';
 import { BxTable } from '@kalimahapps/vue-icons';
+import FullInventoryTable from "../components/Inventory/Tables/FullInventoryTable.vue";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -325,19 +326,19 @@ const handleTableViewChange = () => {
   <div class="">
     <!-- HEADER -->
     <header class="shadow">
-      <div class="flex p-4 md:px-6 md:py-6 sm:px-6">
+      <div class="flex md:px-6 md:py-4 sm:px-6">
         <h1 class="text-3xl w-10/12 font-bold tracking-tight dark:text-gray-200">Inventory</h1>
         <!-- TOGGLE OF TABLE OR GRID -->
         <label class="justify-end relative inline-flex cursor-pointer select-none items-center">
           <input type="checkbox" class="sr-only" @change="handleTableViewChange" :checked="tableView" />
-          <label>Grid View</label>
+          <label class="text-lg mr-2 font-bold" :class="{ 'text-blue-600': !tableView, 'text-gray-500 dark:text-gray-500': tableView }">Grid</label>
 
           <span
-            class="slider flex h-12 w-[75px] p-1 items-center rounded-full bg-gray-400 duration-200 relative overflow-hidden"
+            class="slider flex h-12 w-[75px] p-1 items-center rounded-full bg-gray-700 duration-200 relative overflow-hidden"
             :class="{ 'bg-blue-400': tableView }">
             <!-- Grid Icon (Shows when tableView is false) -->
             <div class="transition-transform duration-300"
-              :class="{ 'translate-x-[30px] translate-y-[-13px] opacity-100 text-red-700': tableView, 'z-10 translate-x-[6px] translate-y-[-13px] opacity-100 text-red-700': !tableView }">
+              :class="{ 'translate-x-[30px] translate-y-[-13px] opacity-100 text-blue-600': tableView, 'z-10 translate-x-[6px] translate-y-[-13px] opacity-100 text-blue-600': !tableView }">
               <FlFilledGrid class="absolute w-7 h-7 " />
             </div>
 
@@ -346,12 +347,12 @@ const handleTableViewChange = () => {
               :class="{ 'translate-x-[28px]': tableView, 'translate-x-0': !tableView }">
               <!-- Table Icon (Appears inside the button when tableView is true) -->
             <div class="transition-transform duration-400"
-                :class="{ 'opacity-100 text-red-700': tableView, 'translate-x-[-7px] opacity-0 text-red-700': !tableView }">
+                :class="{ 'opacity-100 text-blue-600': tableView, 'translate-x-[-7px] opacity-0 text-blue-600': !tableView }">
                 <BxTable class="w-7 h-7" />
               </div>
             </span>
           </span>
-          <label>Table View</label>
+          <label class="text-lg ml-2 font-bold" :class="{ 'text-blue-600': tableView, 'text-gray-500 dark:text-gray-500': !tableView }">Table</label>
         </label>
       </div>
     </header>
@@ -424,9 +425,9 @@ const handleTableViewChange = () => {
       <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
         <Loading />
       </div>
-      <div class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
+      <div v-if="!isLoading && !tableView" class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
-        <div v-if="!isLoading"
+        <div 
           class="grid gap-4 max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'hidden md:grid md:grid-cols-1 xl:grid-cols-2' : 'grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
@@ -570,6 +571,9 @@ const handleTableViewChange = () => {
             </div>
           </div>
         </div>
+      </div>
+      <div v-if="!isLoading && tableView" class="h-[71vh] ">
+        <FullInventoryTable :filteredInventory="filteredInventory" />
       </div>
     </div>
 
