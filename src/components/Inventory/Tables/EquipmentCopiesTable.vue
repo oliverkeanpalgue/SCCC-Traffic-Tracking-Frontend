@@ -122,10 +122,6 @@ onMounted(() => {
     document.addEventListener('click', handleClickOutside);
 });
 
-onUnmounted(() => {
-    document.removeEventListener('click', handleClickOutside);
-});
-
 </script>
 
 <template>
@@ -234,7 +230,7 @@ onUnmounted(() => {
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredEquipmentCopies.length
-                        }}</span>
+                    }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
