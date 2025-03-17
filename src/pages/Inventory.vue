@@ -346,7 +346,7 @@ const handleTableViewChange = () => {
               :class="{ 'translate-x-[28px]': tableView, 'translate-x-0': !tableView }">
               <!-- Table Icon (Appears inside the button when tableView is true) -->
             <div class="transition-transform duration-400"
-                :class="{ 'opacity-100 text-red-700': tableView, 'translate-x-[-30px] opacity-0 text-red-700': !tableView }">
+                :class="{ 'opacity-100 text-red-700': tableView, 'translate-x-[-7px] opacity-0 text-red-700': !tableView }">
                 <BxTable class="w-7 h-7" />
               </div>
             </span>

@@ -1,8 +1,19 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
 import axiosClient from "../../axios";
-
+import { ClAddPlus } from '@kalimahapps/vue-icons';
+import { ChMenuMeatball } from "@kalimahapps/vue-icons";
+import AddCategoryModal from './Modals/AddCategoryModal.vue';
+import UpdateCategoryModal from './Modals/UpdateCategoryModal.vue';
+import DeleteConfirmationModal from '../ConfirmationModal.vue';
 const API_KEY = import.meta.env.VITE_API_KEY;
+
+// FOR THE ADD CATEGORY MODAL
+const isOpenAddCategoryModal = ref(false);
+
+const OpenAddCategoryModal = () => {
+    isOpenAddCategoryModal.value = true;
+}
 
 // fetching categories
 const categoryList = ref([])
@@ -75,13 +86,35 @@ const goToPage = (page) => {
     }
 };
 
+// Action Dropdown
+const openDropdownId = ref(null);
+
+const toggleDropdown = (transactionId) => {
+    openDropdownId.value = openDropdownId.value === transactionId ? null : transactionId;
+};
+
+// FOR THE UPDATE CATEGORY MODAL
+const isOpenUpdateCategoryModal = ref(false);
+
+const OpenUpdateCategoryModal = () => {
+    isOpenUpdateCategoryModal.value = true;
+}
+
+// FOR DELETE
+const showDeleteConfirmationModal = ref(false)
+
+const confirmDeleteCategory = (confirmed) => {
+    if (confirmed) {
+        // INSERT DELETE FUNCTION DITO
+    }
+}
 </script>
 
 <template>
     <div class="overflow-x-auto">
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <!-- Search Box -->
-            <div class="w-full md:w-4/5">
+            <div class="w-full md:w-8/9">
                 <form class="flex items-center">
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
@@ -99,27 +132,66 @@ const goToPage = (page) => {
                     </div>
                 </form>
             </div>
+
+            <button @click.stop="OpenAddCategoryModal()"
+                class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                <ClAddPlus class="w-8 h-8" />
+                <p class="ml-1">Add Category</p>
+            </button>
         </div>
         <table class="w-full border-collapse text-sm text-gray-300 rounded-lg">
             <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs rounded-lg">
+                <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
                     <th class="px-4 py-2 border-b border-gray-600">ID</th>
                     <th class="px-4 py-2 border-b border-gray-600">Category Name</th>
                     <th class="px-4 py-2 border-b border-gray-600">Items</th>
                     <th class="px-4 py-2 border-b border-gray-600">Actions</th>
                 </tr>
             </thead>
-            <tbody class = 'overflow-auto'>
-                <tr v-for="categories in paginatedCategories" :key="categories.id"
+            <tbody class='overflow-auto text-center'>
+                <tr v-for="category in paginatedCategories" :key="category.id"
                     class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 border-b border-gray-700">{{ categories.id }}</td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ categories.category_name }}
+                    <td class="px-4 py-3 ">{{ category.id }}</td>
+                    <td class="px-4 py-3">
+                        {{ category.category_name }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
+                    <td class="px-4 py-3 ">
                         Napipindot na button
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">...</td>
+                    <td class="px-4 py-3 flex items-center justify-center relative">
+                        <button @click.stop="toggleDropdown(category.id)"
+                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                            type="button">
+                            <ChMenuMeatball class="w-5 h-5" />
+                        </button>
+
+                        <div v-if="openDropdownId === category.id" ref="dropdownRefs"
+                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-42 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                            <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click.stop="OpenUpdateCategoryModal()" class="w-full text-start px-4 py-2">
+                                        Update
+                                    </button>
+
+                                    <UpdateCategoryModal v-if="isOpenUpdateCategoryModal"
+                                        v-model="isOpenUpdateCategoryModal" :category="category" @click.stop />
+                                </li>
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click="showDeleteConfirmationModal = true"
+                                        class="w-full text-start px-4 py-2">
+                                        Delete
+                                    </button>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                        title="Confirm Deletion" :message="`You are about to delete this category.`"
+                                        :messageData="`\nCategory Name: ${category.category_name}`"
+                                        cancelText="Cancel" confirmText="Confirm Deleting"
+                                        @confirm="confirmDeleteCategory" />
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
@@ -176,6 +248,7 @@ const goToPage = (page) => {
                 </li>
             </ul>
         </nav>
-    </div>
 
+        <AddCategoryModal v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal" @click.stop />
+    </div>
 </template>
