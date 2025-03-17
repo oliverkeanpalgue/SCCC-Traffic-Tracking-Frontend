@@ -6,6 +6,7 @@ import { ChMenuMeatball } from "@kalimahapps/vue-icons";
 import AddCategoryModal from './Modals/AddCategoryModal.vue';
 import UpdateCategoryModal from './Modals/UpdateCategoryModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
+import emitter from '../../eventBus';
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 // FOR THE ADD CATEGORY MODAL
@@ -80,6 +81,7 @@ const prevPage = () => {
     }
 };
 
+
 const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
@@ -103,11 +105,26 @@ const OpenUpdateCategoryModal = () => {
 // FOR DELETE
 const showDeleteConfirmationModal = ref(false)
 
-const confirmDeleteCategory = (confirmed) => {
+const confirmDeleteCategory = async (confirmed, categoryId) => {
     if (confirmed) {
-        // INSERT DELETE FUNCTION DITO
+        try {
+            await axiosClient.delete(`api/categories/${categoryId}`, {
+                headers: { 'x-api-key': API_KEY },
+            });
+
+            // Remove the deleted category from the list
+            categoryList.value = categoryList.value.filter(category => category.id !== categoryId);
+            console.log(`Category deleted successfully.`);
+        } catch (error) {
+            console.error('Error deleting category:', error);
+            emitter.emit("show-toast", { message: "Error deleting category. Please try again.", type: "error" });
+        } finally {
+            emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
+            showDeleteConfirmationModal.value = false; // Close the modal
+        }
     }
 }
+
 </script>
 
 <template>
@@ -185,9 +202,9 @@ const confirmDeleteCategory = (confirmed) => {
                                     <!-- Delete Confirmation Modal -->
                                     <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
                                         title="Confirm Deletion" :message="`You are about to delete this category.`"
-                                        :messageData="`\nCategory Name: ${category.category_name}`"
-                                        cancelText="Cancel" confirmText="Confirm Deleting"
-                                        @confirm="confirmDeleteCategory" />
+                                        :messageData="`\nCategory Name: ${category.category_name}`" cancelText="Cancel"
+                                        confirmText="Confirm Deleting"
+                                        @confirm="() => confirmDeleteCategory(true, category.id)" />
                                 </li>
                             </ul>
                         </div>
@@ -205,7 +222,7 @@ const confirmDeleteCategory = (confirmed) => {
                 </span>
                 of
                 <span class="font-semibold text-gray-900 dark:text-white">{{ filteredCategories.length
-                    }}</span>
+                }}</span>
             </span>
 
             <ul class="inline-flex items-stretch -space-x-px">

@@ -3,6 +3,7 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { BsBoxFill } from '@kalimahapps/vue-icons';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
+import axiosClient from '../../../axios';
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -19,7 +20,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmAddCopy()
+        confirmAddCategory()
     }
 }
 
@@ -47,11 +48,31 @@ onUnmounted(() => {
 
 const categoryName = ref('')
 
-const confirmAddCopy = async () => {
+const confirmAddCategory = async () => {
     try {
+        isLoading.value = true
+
+        const addCategory = {
+            category_name: categoryName.value
+        }
+
+        console.log("Add copy data sent: ", addCategory)
+
+        const response = await axiosClient.post(
+            `/api/categories/`,
+            addCategory,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+        console.log('Add Category API response:', response);
         emitter.emit("show-toast", { message: "Category added successfully!", type: "success" });
-        // closeModal()
+        closeModal()
     } catch (error) {
+        console.error('Error adding category:', error);
+        console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error adding category. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;
@@ -70,7 +91,7 @@ const confirmAddCopy = async () => {
         <div v-else ref="modalContainer"
             class="w-full max-w-[650px] max-h-[90vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
             <h3 class="text-3xl font-semibold mb-4">
-                Add Category    
+                Add Category
             </h3>
 
             <!-- QUANTITY INPUT -->
@@ -104,9 +125,9 @@ const confirmAddCopy = async () => {
             </div>
 
             <!-- Confirmation Modal -->
-            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition" :message="`You are about to add this category.`"
-                :messageData="`\nCategory Name: ${categoryName}`" cancelText="Cancel"
-                confirmText="Confirm Adding" @confirm="confirmAction" />
+            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition"
+                :message="`You are about to add this category.`" :messageData="`\nCategory Name: ${categoryName}`"
+                cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmAction" />
         </div>
     </div>
 </template>
