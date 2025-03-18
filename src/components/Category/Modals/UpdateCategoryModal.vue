@@ -26,7 +26,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmUpdateCopy()
+        confirmUpdateCategory()
     }
 }
 
@@ -59,7 +59,7 @@ watch(() => props.category, (categories) => {
 }, { immediate: true })
 
 
-const confirmUpdateCopy = async () => {
+const confirmUpdateCategory = async () => {
     try {
         isLoading.value = true
 

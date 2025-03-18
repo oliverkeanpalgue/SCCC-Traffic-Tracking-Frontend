@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch } from 'vue'
 import axiosClient from '../../../axios';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { BsBoxFill } from '@kalimahapps/vue-icons';
@@ -25,7 +25,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmAddCopy()
+        confirmUpdateBorrower()
     }
 }
 
@@ -51,12 +51,47 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-const confirmAddCopy = async () => {
+const borrowerName = ref('')
+const borrowerContact = ref('')
+const selectedOffice = ref(null)
+
+watch(() => props.borrower, (borrowers) => {
+  if (borrowers) {
+    borrowerName.value = borrowers.borrowers_name;
+    borrowerContact.value = borrowers.contact_number;
+    const matchingOffice = props.officeList.find(office => office.office_name === borrowers.office_name);
+    selectedOffice.value = matchingOffice ? matchingOffice.id : null;
+  }
+}, { immediate: true })
+
+const confirmUpdateBorrower = async () => {
     try {
-        emitter.emit("show-toast", { message: "Borrower added successfully!", type: "success" });
-        // closeModal()
+        isLoading.value = true
+
+        const updateBorrower = {
+            borrowers_name: borrowerName.value,
+            borrowers_contact: borrowerContact.value,
+            office_id: selectedOffice.value
+        }
+
+        console.log("Add copy data sent: ", updateBorrower)
+
+        const response = await axiosClient.put(
+            `/api/borrowers/${props.borrower.id}`,
+            updateBorrower,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+        console.log('Update Borrower API response:', response);
+        emitter.emit("show-toast", { message: "Borrower updated successfully!", type: "success" });
+        closeModal()
     } catch (error) {
-        emitter.emit("show-toast", { message: "Error adding borrower. Please try again.", type: "error" });
+        console.error('Error updating borrower:', error);
+        console.error('Error details:', error.response?.data);
+        emitter.emit("show-toast", { message: "Error borrower category. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;
     }
@@ -110,7 +145,8 @@ const confirmAddCopy = async () => {
                     <div class="pr-2">
                         <select v-model="selectedOffice"
                             class="border rounded-lg ml-2 w-full text-sm pl-9  dark:text-gray-100 h-10 dark:bg-gray-700 dark:border-gray-600 ">
-                            <option v-for="office in props.officeList" :key="office.id" :value="office.id" class="hover:bg-gray-100">
+                            <option v-for="office in props.officeList" :key="office.id" :value="office.id"
+                                class="hover:bg-gray-100">
                                 {{ office.office_name }}
                             </option>
                         </select>

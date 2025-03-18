@@ -53,7 +53,9 @@ const confirmAddCategory = async () => {
         isLoading.value = true
 
         const addCategory = {
-            category_name: categoryName.value
+            category_name: categoryName.value,
+            is_deleted: 0,
+            deleted_by: null
         }
 
         console.log("Add copy data sent: ", addCategory)
