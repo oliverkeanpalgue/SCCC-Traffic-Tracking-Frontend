@@ -315,10 +315,14 @@ const selectedCopies = computed(() => {
 })
 
 
-const tableView = ref(false);
+import { useViewStore } from "../stores/viewStore";
+import { storeToRefs } from "pinia";
 
-const handleTableViewChange = () => {
-  tableView.value = !tableView.value;
+const viewStore = useViewStore();
+const { tableView } = storeToRefs(viewStore); 
+
+const toggleTableView = () => {
+  viewStore.toggleTableView();
 };
 </script>
 
@@ -330,7 +334,7 @@ const handleTableViewChange = () => {
         <h1 class="text-3xl w-10/12 font-bold tracking-tight dark:text-gray-200">Inventory</h1>
         <!-- TOGGLE OF TABLE OR GRID -->
         <label class="justify-end relative inline-flex cursor-pointer select-none items-center">
-          <input type="checkbox" class="sr-only" @change="handleTableViewChange" :checked="tableView" />
+          <input type="checkbox" class="sr-only" @click="toggleTableView" :checked="tableView" />
           <label class="text-lg mr-2 font-bold" :class="{ 'text-blue-600': !tableView, 'text-gray-500 dark:text-gray-500': tableView }">Grid</label>
 
           <span
@@ -573,13 +577,15 @@ const handleTableViewChange = () => {
         </div>
       </div>
       <div v-if="!isLoading && tableView" class="h-[71vh] ">
-        <FullInventoryTable :filteredInventory="filteredInventory" />
+        <FullInventoryTable :filteredInventory="filteredInventory" :equipmentCopies="equipmentCopies" />
       </div>
     </div>
 
     <AddItemModal v-if="isOpenAddItemModal" v-model="isOpenAddItemModal" :categories="categoryList" @click.stop />
+
     <UpdateSelectedSupply v-if="isOpenUpdateSelectedSupplyModal" v-model="isOpenUpdateSelectedSupplyModal"
       :selectedItems="selectedItem" :categories="categoryList" @click.stop />
+
     <UpdateSelectedEquipment v-if="isOpenUpdateSelectedEquipmentModal" v-model="isOpenUpdateSelectedEquipmentModal"
       :selectedItems="selectedItem" :categories="categoryList" :selectedCopy="selectedCopies" @click.stop />
 

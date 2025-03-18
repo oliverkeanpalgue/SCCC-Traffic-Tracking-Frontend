@@ -6,8 +6,12 @@ import UpdateSelectedSupply from '../Modals/UpdateSelectedSupply.vue';
 
 const props = defineProps({
     filteredInventory: Object,
+    equipmentCopies: Object,
 })
 
+const getEquipmentCopyCount = (itemId) => {
+    return props.equipmentCopies.filter(ec => ec.item_id === itemId).length;
+};
 </script>
 
 <template>
@@ -18,7 +22,7 @@ const props = defineProps({
                     <th class="px-4 py-2 border-b border-gray-600">Name</th>
                     <th class="px-4 py-2 border-b border-gray-600">Description</th>
                     <th class="px-4 py-2 border-b border-gray-600">Category</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Quantity</th>
+                    <th class="px-4 py-2 border-b border-gray-600">Quantity / Copy</th>
                     <th class="px-4 py-2 border-b border-gray-600">Actions</th>
                 </tr>
             </thead>
@@ -27,7 +31,8 @@ const props = defineProps({
                     <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_name || item.supply_name }}</td>
                     <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_description || item.supply_description }}</td>
                     <td class="px-4 py-3 border-b border-gray-700">{{ item.category_id }}</td>
-                    <td class="px-4 py-3 border-b border-gray-700">{{ item.supply_quantity }}</td>
+                    <td v-if="item.type === 'Office Equipment'" class="px-4 py-3 border-b border-gray-700">{{ getEquipmentCopyCount(item.id) }}</td>
+                    <td v-if="item.type === 'Office Supply'" class="px-4 py-3 border-b border-gray-700">{{ item.supply_quantity || 0 }}</td>
                     <td class="px-4 py-3 border-b border-gray-700">q</td>
                 </tr>
             </tbody>
