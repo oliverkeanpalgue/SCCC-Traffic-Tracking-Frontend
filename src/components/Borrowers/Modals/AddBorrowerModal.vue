@@ -24,7 +24,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmAddCopy()
+        confirmAddBorrower()
     }
 }
 
@@ -52,13 +52,37 @@ onUnmounted(() => {
 
 const borrowerName = ref('')
 const borrowerContact = ref('')
-const selectedOffice = ref('')
+const selectedOffice = ref(null)
 
-const confirmAddCopy = async () => {
+const confirmAddBorrower = async () => {
     try {
+        isLoading.value = true
+
+        const addBorrower = {
+            borrowers_name: borrowerName.value,
+            borrowers_contact: borrowerContact.value,
+            office_id: selectedOffice.value,
+            is_deleted: 0,
+            deleted_by: null
+        }
+
+        console.log("Add copy data sent: ", addBorrower)
+
+        const response = await axiosClient.post(
+            `/api/borrowers/`,
+            addBorrower,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+        console.log('Add Borrower API response:', response);
         emitter.emit("show-toast", { message: "Borrower added successfully!", type: "success" });
-        // closeModal()
+        closeModal()
     } catch (error) {
+        console.error('Error adding borrower:', error);
+        console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error adding borrower. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;

@@ -6,6 +6,7 @@ import { ChMenuMeatball } from "@kalimahapps/vue-icons";
 import AddBorrowerModal from './Modals/AddBorrowerModal.vue';
 import UpdateBorrowerModal from './Modals/UpdateBorrowerModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
+import emitter from '../../eventBus';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -51,7 +52,9 @@ onMounted(() => {
 const searchQuery = ref("");
 
 const filteredBorrowers = computed(() => {
-    return borrowersList.value.filter((borrower) => {
+    
+    return borrowersList.value.filter((borrower) => !borrower.is_deleted) 
+    .filter((borrower) => {
         const office = officeList.value.find((office) => office.id === borrower.office_id);
         const borrowerName = borrower.borrowers_name.toLowerCase();
         const contactNumber = borrower.borrowers_contact.toLowerCase();
@@ -137,11 +140,32 @@ const OpenUpdateBorrowerModal = () => {
 // FOR DELETE
 const showDeleteConfirmationModal = ref(false)
 
-const confirmDeleteBorrower = (confirmed) => {
+const confirmDeleteBorrower = async (confirmed, borrowerId) => {
     if (confirmed) {
-        // INSERT DELETE FUNCTION DITO
+        try {
+            const deleteBorrower = {
+                is_deleted: 1
+            }
+            const response = await axiosClient.put(`api/borrowers/${borrowerId}`, deleteBorrower, {
+                headers: { 'x-api-key': API_KEY },
+            });
+
+            borrowersList.value = borrowersList.value.filter(b => b.id !== borrowerId);
+
+            console.log('Delete Borrower API response:', response);
+
+            console.log(`Borrower deleted successfully.`);
+
+            // Emit success toast only after a successful delete
+            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
+        } catch (error) {
+            console.error('Error deleting borrower:', error);
+            emitter.emit("show-toast", { message: "Error deleting borrower. Please try again.", type: "error" });
+        } finally {
+            showDeleteConfirmationModal.value = false; // Close the modal
+        }
     }
-}
+};
 </script>
 
 <template>
@@ -229,7 +253,7 @@ const confirmDeleteBorrower = (confirmed) => {
                                         title="Confirm Deletion" :message="`You are about to delete this borrower.`"
                                         :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
                                         cancelText="Cancel" confirmText="Confirm Deleting"
-                                        @confirm="confirmDeleteBorrower" />
+                                        @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
                                 </li>
                             </ul>
                         </div>

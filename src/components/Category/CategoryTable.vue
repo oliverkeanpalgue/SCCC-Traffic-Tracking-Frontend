@@ -28,7 +28,7 @@ const fetchCategories = async () => {
             },
         });
         console.log('Categories fetched:', response.data);
-        categoryList.value = response.data;
+        categoryList.value = response.data
     } catch (error) {
         console.error('Error fetching categories:', error);
     }
@@ -42,7 +42,9 @@ onMounted(() => {
 const searchQuery = ref("");
 
 const filteredCategories = computed(() => {
-    return categoryList.value.filter(category =>
+    return categoryList.value
+    .filter((category) => !category.is_deleted) 
+    .filter(category =>
         category.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())
     );
 });
@@ -108,18 +110,25 @@ const showDeleteConfirmationModal = ref(false)
 const confirmDeleteCategory = async (confirmed, categoryId) => {
     if (confirmed) {
         try {
-            await axiosClient.delete(`api/categories/${categoryId}`, {
+            const deleteCategory = {
+                is_deleted: 1
+            }
+
+            const response = await axiosClient.put(`api/categories/${categoryId}`, deleteCategory,
+            {
                 headers: { 'x-api-key': API_KEY },
             });
 
-            // Remove the deleted category from the list
+            console.log('Delete Category API response:', response);
+
             categoryList.value = categoryList.value.filter(category => category.id !== categoryId);
+
             console.log(`Category deleted successfully.`);
+            emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
         } catch (error) {
             console.error('Error deleting category:', error);
             emitter.emit("show-toast", { message: "Error deleting category. Please try again.", type: "error" });
         } finally {
-            emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
             showDeleteConfirmationModal.value = false; // Close the modal
         }
     }
@@ -266,6 +275,10 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
             </ul>
         </nav>
 
-        <AddCategoryModal v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal" @click.stop />
+        <AddCategoryModal 
+        
+        v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal"
+         @click.
+        stop />
     </div>
 </template>
