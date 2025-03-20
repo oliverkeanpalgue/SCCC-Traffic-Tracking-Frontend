@@ -57,6 +57,7 @@ const selectedItem = ref(null);
 const searchQuery = ref("");
 const categoryList = ref([]);
 const isLoading = ref(true);
+const fetchedDataCount = ref(0);
 
 const inventoryFilter = ref(false);
 const filterButtonRef = ref(null);
@@ -98,6 +99,7 @@ const fetchData = () => {
           quantity: equipment_item.quantity || null,
           type: equipment_item.type || "Office Equipment",
         }));
+        fetchedDataCount.value += 1;
 
         // console.log("Office Equipments:", officeEquipments.value);
       })
@@ -116,6 +118,7 @@ const fetchData = () => {
           ...supply_item, // Spread existing data
           type: supply_item.type || "Office Supply",
         }));
+        fetchedDataCount.value += 1;
 
         // console.log("Office Supplies:", officeSupplies.value);
       })
@@ -131,6 +134,7 @@ const fetchData = () => {
       })
       .then((response) => {
         equipmentCopies.value = response.data;
+        fetchedDataCount.value += 1;
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -144,6 +148,7 @@ const fetchData = () => {
       })
       .then((response) => {
         categoryList.value = response.data;
+        fetchedDataCount.value += 1;
         // console.log("Office Names:", categoryList.value);
       })
       .catch((error) => {
@@ -158,6 +163,7 @@ const fetchData = () => {
       })
       .then((response) => {
         transactionItems.value = response.data;
+        fetchedDataCount.value += 1;
         // console.log("Transaction History:", transactionItems.value);
       })
       .catch((error) => {
@@ -172,6 +178,7 @@ const fetchData = () => {
       })
       .then((response) => {
         transactionHistory.value = response.data;
+        fetchedDataCount.value += 1;
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -185,6 +192,7 @@ const fetchData = () => {
       })
       .then((response) => {
         users.value = response.data;
+        fetchedDataCount.value += 1;
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -198,6 +206,7 @@ const fetchData = () => {
       })
       .then((response) => {
         borrowers.value = response.data;
+        fetchedDataCount.value += 1;
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -211,6 +220,7 @@ const fetchData = () => {
       })
       .then((response) => {
         officeList.value = response.data;
+        fetchedDataCount.value += 1;
       })
       .catch((error) => {
         console.error("Error fetching office names:", error);
@@ -426,8 +436,9 @@ const toggleTableView = () => {
 
     <!-- MAIN CONTAINER -->
     <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-      <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
+      <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
         <Loading />
+        <p class="text-gray-500 dark:text-gray-500">{{ fetchedDataCount }}/9 items fetched</p>
       </div>
       <div v-if="!isLoading && !tableView" class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
