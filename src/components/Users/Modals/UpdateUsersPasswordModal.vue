@@ -19,7 +19,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 const isLoading = ref(false)
 
 const password = ref('')
-const confirmPassword = ref()
+const confirmPassword = ref('')
 
 const props = defineProps({
     modelValue: Boolean,
@@ -30,7 +30,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmUpdateCategory()
+        confirmUpdatePassword()
     }
 }
 
@@ -56,43 +56,50 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-watch(() => props.category, (categories) => {
-  if (categories) {
-    categoryName.value = categories.category_name
-  }
-}, { immediate: true })
+const passwordError = ref('')
 
-
-const confirmUpdateCategory = async () => {
+const confirmUpdatePassword = async () => {
     try {
         isLoading.value = true
 
-        const updateCategory = {
-            category_name: categoryName.value
+        if (password.value !== confirmPassword.value) {
+            passwordError.value = 'Passwords do not match';
+            return;
         }
 
-        console.log("Add copy data sent: ", updateCategory)
+        const updatePassword = {
+            firstName: props.user.firstName,
+            middleName: props.user.middleName,
+            lastName: props.user.lastName,
+            email: props.user.email,
+            is_deleted: props.user.is_deleted,
+            password: password.value
+        }
+
+        console.log("Add password data sent: ", updatePassword)
 
         const response = await axiosClient.put(
-            `/api/categories/${props.category.id}`,
-            updateCategory,
+            `/api/users/${props.user.id}`,
+            updatePassword,
             {
                 headers: {
                     "x-api-key": API_KEY,
                 },
             }
         );
-        console.log('Update Category API response:', response);
-        emitter.emit("show-toast", { message: "Copy/Copies updated successfully!", type: "success" });
+        console.log('Update Password API response:', response);
+        emitter.emit("show-toast", { message: "Password updated successfully!", type: "success" });
         closeModal()
     } catch (error) {
-        console.error('Error updating category:', error);
+        console.error('Error updating password:', error);
         console.error('Error details:', error.response?.data);
-        emitter.emit("show-toast", { message: "Error updating category. Please try again.", type: "error" });
+        emitter.emit("show-toast", { message: "Error updating password. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;
     }
 }
+
+
 </script>
 
 <template>
@@ -130,6 +137,7 @@ const confirmUpdateCategory = async () => {
                         class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                         placeholder="Enter password again">
                 </div>
+                <div v-if="passwordError" style="color: red">{{ passwordError }}</div>
             </div>
 
             <!-- Action Buttons -->
@@ -150,7 +158,8 @@ const confirmUpdateCategory = async () => {
 
             <!-- Confirmation Modal -->
             <ConfirmationModal v-model="showConfirmationModal" title="Change Password"
-                :message="`You are about to update this user's password.`" :messageData="`\nFirst Name: ${props.user.firstName}\nMiddle Name: ${props.user.middleName}\nLast Name: ${props.user.lastName}\nEmail: ${props.user.email}`"
+                :message="`You are about to update this user's password.`"
+                :messageData="`\nFirst Name: ${props.user.firstName}\nMiddle Name: ${props.user.middleName}\nLast Name: ${props.user.lastName}\nEmail: ${props.user.email}`"
                 cancelText="Cancel" confirmText="Change Password" @confirm="confirmAction" />
         </div>
     </div>
