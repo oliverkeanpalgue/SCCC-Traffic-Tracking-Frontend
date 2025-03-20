@@ -43,10 +43,10 @@ const searchQuery = ref("");
 
 const filteredCategories = computed(() => {
     return categoryList.value
-    .filter((category) => !category.is_deleted) 
-    .filter(category =>
-        category.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())
-    );
+        .filter((category) => !category.is_deleted)
+        .filter(category =>
+            category.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())
+        );
 });
 
 // Reset to first page when searching
@@ -115,9 +115,9 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
             }
 
             const response = await axiosClient.put(`api/categories/${categoryId}`, deleteCategory,
-            {
-                headers: { 'x-api-key': API_KEY },
-            });
+                {
+                    headers: { 'x-api-key': API_KEY },
+                });
 
             console.log('Delete Category API response:', response);
 
@@ -231,7 +231,7 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
                 </span>
                 of
                 <span class="font-semibold text-gray-900 dark:text-white">{{ filteredCategories.length
-                }}</span>
+                    }}</span>
             </span>
 
             <ul class="inline-flex items-stretch -space-x-px">
@@ -275,10 +275,6 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
             </ul>
         </nav>
 
-        <AddCategoryModal 
-        
-        v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal"
-         @click.
-        stop />
+        <AddCategoryModal v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal" @click. stop />
     </div>
 </template>
