@@ -31,7 +31,7 @@ const showConfirmationModal = ref(false)
 
 const confirmAction = (confirmed) => {
     if (confirmed) {
-        confirmUpdateCategory()
+        confirmUpdateUsers()
     }
 }
 
@@ -57,39 +57,46 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
-watch(() => props.category, (categories) => {
-  if (categories) {
-    categoryName.value = categories.category_name
-  }
+watch(() => props.user, (users) => {
+    if (users) {
+        firstName.value = users.firstName
+        middleName.value = users.middleName
+        lastName.value = users.lastName
+        email.value = users.email
+    }
 }, { immediate: true })
 
 
-const confirmUpdateCategory = async () => {
+const confirmUpdateUsers = async () => {
     try {
         isLoading.value = true
 
-        const updateCategory = {
-            category_name: categoryName.value
+        const updateUser = {
+            firstName: firstName.value,
+            middleName: middleName.value,
+            lastName: lastName.value,
+            email: email.value,
+            is_deleted: props.user.is_deleted,
         }
 
-        console.log("Add copy data sent: ", updateCategory)
+        console.log("Update user data sent: ", updateUser)
 
         const response = await axiosClient.put(
-            `/api/categories/${props.category.id}`,
-            updateCategory,
+            `/api/users/${props.user.id}`,
+            updateUser,
             {
                 headers: {
                     "x-api-key": API_KEY,
                 },
             }
         );
-        console.log('Update Category API response:', response);
-        emitter.emit("show-toast", { message: "Copy/Copies updated successfully!", type: "success" });
+        console.log('Update Users API response:', response);
+        emitter.emit("show-toast", { message: "User updated successfully!", type: "success" });
         closeModal()
     } catch (error) {
-        console.error('Error updating category:', error);
+        console.error('Error updating user:', error);
         console.error('Error details:', error.response?.data);
-        emitter.emit("show-toast", { message: "Error updating category. Please try again.", type: "error" });
+        emitter.emit("show-toast", { message: "Error updating user. Please try again.", type: "error" });
     } finally {
         isLoading.value = false;
     }
@@ -171,7 +178,8 @@ const confirmUpdateCategory = async () => {
 
             <!-- Confirmation Modal -->
             <ConfirmationModal v-model="showConfirmationModal" title="Confirm Update"
-                :message="`You are about to update this user.`" :messageData="`\nFirst Name: ${firstName}\nMiddle Name: ${middleName}\nLast Name: ${lastName}\nEmail: ${email}`"
+                :message="`You are about to update this user.`"
+                :messageData="`\nFirst Name: ${firstName}\nMiddle Name: ${middleName}\nLast Name: ${lastName}\nEmail: ${email}`"
                 cancelText="Cancel" confirmText="Confirm Update" @confirm="confirmAction" />
         </div>
     </div>

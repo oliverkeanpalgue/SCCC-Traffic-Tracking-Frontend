@@ -6,6 +6,7 @@ import { ClAddPlus } from '@kalimahapps/vue-icons';
 import UpdateUsersModal from "./Modals/UpdateUsersModal.vue";
 import UpdateUsersPasswordModal from "./Modals/UpdateUsersPasswordModal.vue";
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
+import emitter from '../../eventBus';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -108,6 +109,34 @@ const OpenUpdateUsersPasswordModal = () => {
 
 // FOR DELETE
 const showDeleteConfirmationModal = ref(false)
+
+const confirmDeleteUser = async (confirmed, userId) => {
+    if (confirmed) {
+        try {
+            const deleteUser = {
+                is_deleted: 1
+            }
+
+            const response = await axiosClient.put(`api/users/${userId}`, deleteUser,
+                {
+                    headers: { 'x-api-key': API_KEY },
+                });
+
+            console.log('Delete User API response:', response);
+
+            userList.value = userList.value.filter(user => user.id !== userId);
+
+            console.log(`User deleted successfully.`);
+            emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
+        } catch (error) {
+            console.error('Error deleting user:', error);
+            emitter.emit("show-toast", { message: "Error deleting user. Please try again.", type: "error" });
+        } finally {
+            showDeleteConfirmationModal.value = false; // Close the modal
+        }
+    }
+}
+
 </script>
 
 <template>
