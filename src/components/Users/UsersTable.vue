@@ -1,6 +1,11 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
 import axiosClient from "../../axios";
+import { ChMenuMeatball } from "@kalimahapps/vue-icons";
+import { ClAddPlus } from '@kalimahapps/vue-icons';
+import UpdateUsersModal from "./Modals/UpdateUsersModal.vue";
+import UpdateUsersPasswordModal from "./Modals/UpdateUsersPasswordModal.vue";
+import DeleteConfirmationModal from '../ConfirmationModal.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -80,13 +85,36 @@ const goToPage = (page) => {
     }
 };
 
+// Action Dropdown
+const openDropdownId = ref(null);
+
+const toggleDropdown = (userId) => {
+    openDropdownId.value = openDropdownId.value === userId ? null : userId;
+};
+
+// FOR THE UPDATE USER MODAL
+const isOpenUpdateUsersModal = ref(false);
+
+const OpenUpdateUsersModal = () => {
+    isOpenUpdateUsersModal.value = true;
+}
+
+// FOR THE UPDATE USER PASSWORD MODAL
+const isOpenUpdateUsersPasswordModal = ref(false);
+
+const OpenUpdateUsersPasswordModal = () => {
+    isOpenUpdateUsersPasswordModal.value = true;
+}
+
+// FOR DELETE
+const showDeleteConfirmationModal = ref(false)
 </script>
 
 <template>
     <div class="overflow-x-auto">
         <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <!-- Search Box -->
-            <div class="w-full md:w-4/5">
+            <div class="w-full md:w-9/9">
                 <form class="flex items-center">
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
@@ -105,38 +133,79 @@ const goToPage = (page) => {
                 </form>
             </div>
         </div>
-        <table class="w-full border-collapse text-sm text-gray-300 rounded-lg">
+        <table class="w-full border-collapse text-sm text-center text-gray-300 rounded-lg">
             <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-left text-xs rounded-lg">
-                    <th class="px-4 py-2 border-b border-gray-600">ID</th>
-                    <th class="px-4 py-2 border-b border-gray-600">First Name</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Middle Name</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Last Name</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Email</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Transactions</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Actions</th>
+                <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                    <th class="px-4 py-2 ">ID</th>
+                    <th class="px-4 py-2 ">First Name</th>
+                    <th class="px-4 py-2 ">Middle Name</th>
+                    <th class="px-4 py-2 ">Last Name</th>
+                    <th class="px-4 py-2 ">Email</th>
+                    <th class="px-4 py-2 ">Transactions</th>
+                    <th class="px-4 py-2 ">Actions</th>
                 </tr>
             </thead>
             <tbody>
-                <tr v-for="users in paginatedUsers" :key="users.id"
+                <tr v-for="user in paginatedUsers" :key="user.id"
                     class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 border-b border-gray-700">{{ users.id }}</td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ users.fistName }}
+                    <td class="px-4 py-3 ">{{ user.id }}</td>
+                    <td class="px-4 py-3 ">
+                        {{ user.firstName }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ users.middleName }}
+                    <td class="px-4 py-3 ">
+                        {{ user.middleName }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ users.lastName }}
+                    <td class="px-4 py-3 ">
+                        {{ user.lastName }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
-                        {{ users.email }}
+                    <td class="px-4 py-3 ">
+                        {{ user.email }}
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">
+                    <td class="px-4 py-3 ">
                         Napipindot na button
                     </td>
-                    <td class="px-4 py-3 border-b border-gray-700">...</td>
+                    <td class="px-4 py-3 flex items-center justify-center relative">
+                        <button @click.stop="toggleDropdown(user.id)"
+                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                            type="button">
+                            <ChMenuMeatball class="w-5 h-5" />
+                        </button>
+
+                        <div v-if="openDropdownId === user.id" ref="dropdownRefs"
+                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                            <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click.stop="OpenUpdateUsersModal()" class="w-full text-start px-4 py-2">
+                                        Update
+                                    </button>
+
+                                    <UpdateUsersModal v-if="isOpenUpdateUsersModal"
+                                        v-model="isOpenUpdateUsersModal" :user="user" @click.stop />
+                                </li>
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click.stop="OpenUpdateUsersPasswordModal()" class="w-full text-start px-4 py-2">
+                                        Change Password
+                                    </button>
+
+                                    <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
+                                        v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
+                                </li>
+                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <button @click="showDeleteConfirmationModal = true"
+                                        class="w-full text-start px-4 py-2">
+                                        Delete
+                                    </button>
+
+                                    <!-- Delete Confirmation Modal -->
+                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                        title="Confirm Deletion" :message="`You are about to delete this user.`"
+                                        :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`" cancelText="Cancel"
+                                        confirmText="Confirm Deleting"
+                                        @confirm="() => confirmDeleteUser(true, user.id)" />
+                                </li>
+                            </ul>
+                        </div>
+                    </td>
                 </tr>
             </tbody>
         </table>
