@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import axiosClient from "../axios";
+import { useDatabaseStore } from "../stores/databaseStore";
 import image from "./../../src/assets/baguio-logo.png";
 import Loading from "../components/Loading.vue";
 import AddItemModal from "../components/Inventory/Modals/AddItemModal.vue";
@@ -44,19 +45,58 @@ const isOpenIncreaseSupplyQtyModal = ref(false);
 const OpenIncreaseSupplyQtyModal = () => {
   isOpenIncreaseSupplyQtyModal.value = true;
 }
-// Sample images (Replace with actual data)
-const transactionItems = ref([]);
-const transactionHistory = ref([]);
-const officeEquipments = ref([]);
-const officeSupplies = ref([]);
-const officeList = ref([]);
-const users = ref([]);
-const borrowers = ref([]);
-const equipmentCopies = ref([]);
+
+// fetching data
+const databaseStore = useDatabaseStore()
+
+onMounted(() => {
+  databaseStore.fetchData()
+  // Optionally, set an interval to auto-refresh:
+  refreshInterval = setInterval(() => {
+    databaseStore.fetchData()
+  }, 30000)
+})
+
+const transactionItems = computed(() => {
+    return databaseStore.transactionItems
+});
+
+const transactionHistory = computed(() => {
+    return databaseStore.transactionHistory
+});
+
+const officeEquipments = computed(() => {
+    return databaseStore.officeEquipments
+});
+
+const officeSupplies = computed(() => {
+    return databaseStore.officeSupplies
+});
+
+const officeList = computed(() => {
+    return databaseStore.officeList
+});
+
+const users = computed(() => {
+    return databaseStore.users
+});
+
+const borrowers = computed(() => {
+    return databaseStore.borrowers
+});
+
+const equipmentCopies = computed(() => {
+    return databaseStore.equipmentCopies
+});
+
+const categoryList = computed(() => {
+    return databaseStore.categoryList
+});
+
+
 const selectedItem = ref(null);
 const searchQuery = ref("");
-const categoryList = ref([]);
-const isLoading = ref(true);
+const isLoading = ref(false);
 const fetchedDataCount = ref(0);
 
 const inventoryFilter = ref(false);
@@ -84,156 +124,6 @@ const handleCheckboxChange = (id, event) => {
 
 let refreshInterval = null;
 
-const fetchData = () => {
-  Promise.all([
-    axiosClient
-      .get("/api/office_equipments", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        officeEquipments.value = response.data.map((equipment_item) => ({
-          ...equipment_item, // Spread existing data
-          serial_number: equipment_item.serial_number || null,
-          quantity: equipment_item.quantity || null,
-          type: equipment_item.type || "Office Equipment",
-        }));
-        fetchedDataCount.value += 1;
-
-        // console.log("Office Equipments:", officeEquipments.value);
-      })
-      .catch((error) => {
-        console.error("Error fetching office eqipments:", error);
-      }),
-
-    axiosClient
-      .get("/api/office_supplies", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        officeSupplies.value = response.data.map((supply_item) => ({
-          ...supply_item, // Spread existing data
-          type: supply_item.type || "Office Supply",
-        }));
-        fetchedDataCount.value += 1;
-
-        // console.log("Office Supplies:", officeSupplies.value);
-      })
-      .catch((error) => {
-        console.error("Error fetching Office Supplies:", error);
-      }),
-
-    axiosClient
-      .get("/api/equipment_copies", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        equipmentCopies.value = response.data;
-        fetchedDataCount.value += 1;
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/categories", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        categoryList.value = response.data;
-        fetchedDataCount.value += 1;
-        // console.log("Office Names:", categoryList.value);
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/borrow_transaction_items", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        transactionItems.value = response.data;
-        fetchedDataCount.value += 1;
-        // console.log("Transaction History:", transactionItems.value);
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/borrow_transactions", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        transactionHistory.value = response.data;
-        fetchedDataCount.value += 1;
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/users", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        users.value = response.data;
-        fetchedDataCount.value += 1;
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/borrowers", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        borrowers.value = response.data;
-        fetchedDataCount.value += 1;
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-
-    axiosClient
-      .get("/api/offices", {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      })
-      .then((response) => {
-        officeList.value = response.data;
-        fetchedDataCount.value += 1;
-      })
-      .catch((error) => {
-        console.error("Error fetching office names:", error);
-      }),
-  ])
-    .catch((error) => {
-      console.error("Error fetching data:", error);
-    })
-    .finally(() => {
-      isLoading.value = false; // Set loading to false after all requests finish
-    });
-};
-
 const handleClickOutside = (event) => {
   if (
     inventoryFilter.value &&
@@ -243,18 +133,6 @@ const handleClickOutside = (event) => {
     inventoryFilter.value = false;
   }
 };
-
-onMounted(() => {
-  fetchData();
-  refreshInterval = setInterval(fetchData, 30000);
-
-  document.addEventListener('click', handleClickOutside);
-});
-
-onUnmounted(() => {
-  clearInterval(refreshInterval);
-  document.removeEventListener('click', handleClickOutside);
-});
 
 const allInventory = computed(() => {
   return [...officeEquipments.value, ...officeSupplies.value].map((item, index) => ({
