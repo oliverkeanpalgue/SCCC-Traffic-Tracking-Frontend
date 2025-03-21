@@ -58,7 +58,6 @@ watch(() => props.category, (categories) => {
   }
 }, { immediate: true })
 
-
 const confirmUpdateCategory = async () => {
     try {
         isLoading.value = true

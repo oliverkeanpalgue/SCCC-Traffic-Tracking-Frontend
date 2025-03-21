@@ -66,7 +66,6 @@ watch(() => props.user, (users) => {
     }
 }, { immediate: true })
 
-
 const confirmUpdateUsers = async () => {
     try {
         isLoading.value = true

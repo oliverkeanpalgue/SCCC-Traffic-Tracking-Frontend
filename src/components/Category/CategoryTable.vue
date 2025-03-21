@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
+import { useDatabaseStore } from '../../stores/databaseStore'
 import axiosClient from "../../axios";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { ChMenuMeatball } from "@kalimahapps/vue-icons";
@@ -14,36 +15,22 @@ const isOpenAddCategoryModal = ref(false);
 
 const OpenAddCategoryModal = () => {
     isOpenAddCategoryModal.value = true;
+
 }
 
-// fetching categories
-const categoryList = ref([])
-
-const fetchCategories = async () => {
-    console.log('Fetching categories...');
-    try {
-        const response = await axiosClient.get('api/categories', {
-            headers: {
-                'x-api-key': API_KEY,
-            },
-        });
-        console.log('Categories fetched:', response.data);
-        categoryList.value = response.data
-    } catch (error) {
-        console.error('Error fetching categories:', error);
-    }
-};
+// fetching data
+const databaseStore = useDatabaseStore()
 
 onMounted(() => {
-    fetchCategories();
-});
+  databaseStore.fetchData()
+})
 
 // for search function
 const searchQuery = ref("");
 
 const filteredCategories = computed(() => {
-    return categoryList.value
-        .filter((category) => !category.is_deleted)
+    return databaseStore.categoryList
+        .filter((category) => !category.is_deleted) 
         .filter(category =>
             category.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
@@ -121,7 +108,7 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
 
             console.log('Delete Category API response:', response);
 
-            categoryList.value = categoryList.value.filter(category => category.id !== categoryId);
+            databaseStore.categoryList = databaseStore.categoryList.filter(category => category.id !== categoryId);
 
             console.log(`Category deleted successfully.`);
             emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
