@@ -172,7 +172,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-800">
+    <div class="h-full border-2 p-4 md:px-6 items-center bg-white rounded-lg shadow-sm dark:bg-gray-950 dark:border-gray-700">
             <div ref="lineChart" id="line-chart" ></div>
         </div>
 </template>

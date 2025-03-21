@@ -38,12 +38,12 @@ onMounted(() => {
             <DateRangePicker @dateRangeSelected="updateDateRange" class="px-4 col-span-2 md:col-span-1 dark:text-gray-200"/>
             
             <div class="grid grid-cols-2 items-center text-center">
-                <div class="bg-gray-700 p-2 pb-5 rounded-lg mx-1 md:mx-5">
+                <div class="border border-2 p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-gray-300 dark:bg-gray-950 dark:border-gray-700">
                     <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
                         Borrowed</h5>
                     <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">418</p>
                 </div>
-                <div class="bg-gray-700 p-2 pb-5 rounded-lg mx-1 md:mx-5">
+                <div class="border border-2 p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-gray-300 dark:bg-gray-950 dark:border-gray-700">
                     <h5 class="inline-flex items-center text-gray-500 dark:text-gray-400 leading-none font-normal mb-2">
                         Returned</h5>
                     <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">399</p>

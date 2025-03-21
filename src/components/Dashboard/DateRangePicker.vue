@@ -1,6 +1,6 @@
 <template>
 
-    <div class="">
+    <div class=" ">
         <label class="mb-[10px] block text-base font-medium text-dark dark:text-gray-200">
             Select Date Range:
         </label>
@@ -47,7 +47,7 @@
                 </span>
 
                 <input id="datepicker" type="text" placeholder="Pick a date"
-                    class="w-full rounded-lg border border-stroke bg-transparent py-2.5 pl-[50px] pr-8 text-dark-2 outline-none transition focus:border-primary dark:border-dark-3 dark:focus:border-primary"
+                    class="w-full rounded-lg border border-2 border-stroke dark:bg-gray-950 dark:border-gray-700 py-2.5 pl-[50px] pr-8 text-dark-2 outline-none transition focus:border-primary dark:border-dark-3 dark:focus:border-primary"
                     :value="updateInput()" @click="toggleDatepicker" readonly />
                 <span class="absolute right-0 cursor-pointer pr-4 text-dark-5" @click="toggleDatepicker">
                     <svg class="fill-current stroke-current" width="16" height="16" viewBox="0 0 16 16" fill="none"
@@ -60,7 +60,7 @@
             </div>
 
             <div v-if="isOpen" id="datepicker-container"
-                class="shadow-datepicker absolute z-50 mt-2 rounded-xl border border-stroke bg-white pt-5 dark:border-gray-700 dark:bg-gray-800">
+                class="shadow-datepicker absolute z-50 mt-2 rounded-xl border-2 border-stroke bg-white pt-5 dark:border-gray-700 dark:bg-gray-950 dark:border-gray-600">
                 <div class="flex items-center justify-between px-5">
                     <button id="prevMonth"
                         class="rounded-md px-2 py-2 text-dark hover:bg-gray-200 dark:text-white dark:hover:bg-gray-200"

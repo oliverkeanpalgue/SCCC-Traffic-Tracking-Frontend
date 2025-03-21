@@ -8,6 +8,8 @@ import { ChMenuMeatball } from "@kalimahapps/vue-icons";
 import { FlFilledClipboardBulletList } from "@kalimahapps/vue-icons";
 import { CaDotMark } from "@kalimahapps/vue-icons";
 import { GlQuestion } from "@kalimahapps/vue-icons";
+import { IcSolidFilter } from '@kalimahapps/vue-icons';
+import { MdOutlinedArrowDropDown } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -323,13 +325,13 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="w-full mt-5">
+  <div class="w-full mt-3">
     <section class="bg-gray-50 dark:bg-gray-900 w-full">
-      <div class="px-4 w-full">
+      <div class="mx-4 px-3 py-2 border-2 rounded-lg dark:bg-gray-950 dark:border-gray-700">
         <!-- Start coding here -->
-        <div class="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+        <div class="relative shadow-md sm:rounded-lg overflow-hidden">
           <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-            <div class="w-full md:w-1/2">
+            <div class="w-full md:w-8/9">
               <form class="flex items-center" @submit.prevent>
                 <label for="simple-search" class="sr-only">Search</label>
                 <div class="relative w-full">
@@ -374,10 +376,10 @@ onUnmounted(() => {
                         <div class="text-center">
                           <div class="relative inline-block text-left">
                             <button @click="toggleofficeDropDown" ref="officeDropDownButtonRef"
-                              class="flex items-center rounded-[5px] px-5 py-[13px] bg-dark dark:bg-dark-2 text-base font-medium text-white">
-                              <span class="material-icons pl-4">filter_alt</span>
+                              class="flex items-center rounded-lg px-10 py-2 bg-dark dark:bg-gray-700 text-base font-medium text-white">
+                              <IcSolidFilter class="w-5 h-5 mr-1"/>
                               Filter
-                              <span class="material-icons pl-4">arrow_drop_down</span>
+                              <MdOutlinedArrowDropDown class="w-5 h-5"/>
                             </button>
                             <div v-show="officeDropDownFilter" ref="officeDropDownMenuRef"
                               class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
@@ -418,7 +420,7 @@ onUnmounted(() => {
               </div>
             </div>
           </div>
-          <div class="">
+          <div class="dark:bg-gray-900 ">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
               <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
