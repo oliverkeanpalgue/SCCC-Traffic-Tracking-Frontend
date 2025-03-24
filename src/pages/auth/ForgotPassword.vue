@@ -1,10 +1,15 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import axiosClient from "../../axios.js";
 import router from "../../router.js";
 import logo from "../../assets/baguio-logo.png";
 import { useDatabaseStore } from "../../stores/databaseStore.js";
 import { MdNavigateNext } from '@kalimahapps/vue-icons';
+import emitter from "../../eventBus.js";
+
+const API_KEY = import.meta.env.VITE_API_KEY;
+
+const isLoading = ref(false);
 
 // fetching data
 const databaseStore = useDatabaseStore()
@@ -23,6 +28,7 @@ const computedProperties = {
   users: "users",
 };
 
+
 const {
   users,
 } = Object.fromEntries(
@@ -38,19 +44,63 @@ const data = ref({
 const errors = ref({
   email: [],
   password: [],
+  password_confirmation: [],
 })
 
-function submit() {
-  axiosClient.get('/sanctum/csrf-cookie').then(response => {
-    axiosClient.post("/register", data.value)
-      .then(response => {
-        router.push({ name: 'Login' })
-      })
-      .catch(error => {
-        console.log(error.response.data)
-        errors.value = error.response.data.errors;
-      })
-  });
+// fetching user data if there is a email in the users database and getting it's data
+const foundUser = ref(null)
+
+const checkEmailExists = () => {
+  const userMatch = users.value.find(user => user.email === data.value.email);
+  if (userMatch) {
+    foundUser.value = userMatch;
+    console.log("Found user:", foundUser.value);
+    return true;
+  } else {
+    errors.value.email = ['Email not found in our records'];
+    return false;
+  }
+}
+
+const forgotPassword = async () => {
+  try {
+    isLoading.value = true
+
+    if (data.value.password !== data.value.password_confirmation) {
+      errors.value.password_confirmation = ['Passwords do not match'];
+      return;
+    }
+
+    const updatePassword = {
+      firstName: foundUser.value.firstName,
+      middleName: foundUser.value.middleName,
+      lastName: foundUser.value.lastName,
+      email: foundUser.value.email,
+      is_deleted: foundUser.value.is_deleted,
+      password: data.value.password
+    }
+
+    console.log("Forgot password data sent: ", updatePassword)
+
+    const response = await axiosClient.put(
+      `/api/users/${foundUser.value.id}`,
+      updatePassword,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+    console.log('Forgot Password API response:', response);
+    emitter.emit("show-toast", { message: "Password updated successfully!", type: "success" });
+    router.push('/login')
+  } catch (error) {
+    console.error('Error updating password:', error);
+    console.error('Error details:', error.response?.data);
+    emitter.emit("show-toast", { message: "Error updating password. Please try again.", type: "error" });
+  } finally {
+    isLoading.value = false;
+  }
 }
 
 const breadcrumbItems = ref([
@@ -65,7 +115,9 @@ const phaseOne = () => {
 }
 
 const phaseTwo = () => {
-  phaseNum.value = 2
+  if (checkEmailExists()) {
+    phaseNum.value = 2;
+  }
 }
 </script>
 
@@ -96,7 +148,8 @@ const phaseTwo = () => {
 
       <!-- FOR PHASE 1 -->
       <div v-if="phaseNum === 1">
-        <div class="bg-gray-100 mb-4 px-6 rounded-xl shadow-lg min-w-[900px] min-h-[21vh] flex justify-center items-center w-full">
+        <div
+          class="bg-gray-100 mb-4 px-6 rounded-xl shadow-lg min-w-[900px] min-h-[21vh] flex justify-center items-center w-full">
 
           <div class="w-full">
             <label for="email" class="block text-md font-medium text-gray-700">Enter Email</label>
@@ -141,7 +194,7 @@ const phaseTwo = () => {
         <div class="flex gap-2">
           <button @click="phaseOne"
             class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Back</button>
-          <button @click="phaseTwo"
+          <button @click="forgotPassword"
             class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Change
             Password</button>
         </div>
