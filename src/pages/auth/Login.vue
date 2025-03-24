@@ -72,7 +72,8 @@ function submit() {
         </div>
 
         <div class="text-sm text-center mt-2">
-          <button @click="handleForgotPassword" class="text-md text-blue-600 hover:underline">Forgot Password?</button>
+          <RouterLink :to="{ name: 'ForgotPassword' }" class="text-md text-blue-600 hover:underline">Forgot Password?
+          </RouterLink>
         </div>
       </div>
     </div>

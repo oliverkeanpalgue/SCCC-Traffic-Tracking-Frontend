@@ -1,19 +1,22 @@
 <script setup>
-import { ref } from "vue";
-import Loading from "../components/Loading.vue";
-import UsersTable from "../components/Users/UsersTable.vue";
+import { useRouter } from 'vue-router';
 
-const isLoading = ref(false);
+const router = useRouter();
 
-const API_KEY = import.meta.env.VITE_API_KEY;
+const goHome = () => {
+    router.push('/');
+};
 </script>
 
 <template>
-    <div class="dark:bg-gray-950">
-        
+    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-950 text-gray-900 dark:text-gray-200">
+        <h1 class="text-6xl font-bold">404</h1>
+        <p class="text-xl mt-2">Oops! The page you're looking for doesn't exist.</p>
+        <button 
+            @click="goHome"
+            class="mt-4 px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+        >
+            Go Home
+        </button>
     </div>
 </template>
-
-<style scoped>
-/* Additional styling if needed */
-</style>

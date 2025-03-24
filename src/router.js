@@ -15,6 +15,7 @@ import Categories from "./pages/Categories.vue";
 import Borrowers from "./pages/Borrowers.vue";
 import Users from "./pages/Users.vue";
 import NotFoundPage from "./pages/NotFound.vue";
+import ForgotPassword from "./pages/auth/ForgotPassword.vue";
 
 const routes = [
   {
@@ -50,6 +51,11 @@ const routes = [
     path: '/signup',
     name: 'Signup',
     component: Signup,
+  },
+  {
+    path: '/forgotpassword',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
   },
   {
     path: '/:pathMatch(.*)*',

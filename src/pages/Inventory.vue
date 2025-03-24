@@ -57,41 +57,31 @@ onMounted(() => {
   }, 30000)
 })
 
-const transactionItems = computed(() => {
-    return databaseStore.transactionItems
-});
+const computedProperties = {
+    transactionItems: "transactionItems",
+    transactionHistory: "transactionHistory",
+    officeEquipments: "officeEquipments",
+    officeSupplies: "officeSupplies",
+    officeList: "officeList",
+    users: "users",
+    borrowers: "borrowers",
+    equipmentCopies: "equipmentCopies",
+    categoryList: "categoryList",
+};
 
-const transactionHistory = computed(() => {
-    return databaseStore.transactionHistory
-});
-
-const officeEquipments = computed(() => {
-    return databaseStore.officeEquipments
-});
-
-const officeSupplies = computed(() => {
-    return databaseStore.officeSupplies
-});
-
-const officeList = computed(() => {
-    return databaseStore.officeList
-});
-
-const users = computed(() => {
-    return databaseStore.users
-});
-
-const borrowers = computed(() => {
-    return databaseStore.borrowers
-});
-
-const equipmentCopies = computed(() => {
-    return databaseStore.equipmentCopies
-});
-
-const categoryList = computed(() => {
-    return databaseStore.categoryList
-});
+const { 
+    transactionItems, 
+    transactionHistory, 
+    officeEquipments, 
+    officeSupplies, 
+    officeList, 
+    users, 
+    borrowers, 
+    equipmentCopies, 
+    categoryList 
+} = Object.fromEntries(
+    Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
+);
 
 
 const selectedItem = ref(null);
