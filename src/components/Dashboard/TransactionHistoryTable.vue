@@ -10,6 +10,8 @@ import { CaDotMark } from "@kalimahapps/vue-icons";
 import { GlQuestion } from "@kalimahapps/vue-icons";
 import { IcSolidFilter } from '@kalimahapps/vue-icons';
 import { MdOutlinedArrowDropDown } from '@kalimahapps/vue-icons';
+import { AkCheck } from '@kalimahapps/vue-icons';
+import { AkCross } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -116,11 +118,11 @@ const filteredTransactions = computed(() => {
     return (
       officeMatch &&
       (borrowerName.includes(searchTerm) ||
-      transactionId.includes(searchTerm) ||
-      lender.includes(searchTerm) ||
-      returnDate.includes(searchTerm) ||
-      borrowDate.includes(searchTerm) ||
-      itemsMatch)
+        transactionId.includes(searchTerm) ||
+        lender.includes(searchTerm) ||
+        returnDate.includes(searchTerm) ||
+        borrowDate.includes(searchTerm) ||
+        itemsMatch)
     );
   });
 });
@@ -377,9 +379,9 @@ onUnmounted(() => {
                           <div class="relative inline-block text-left">
                             <button @click="toggleofficeDropDown" ref="officeDropDownButtonRef"
                               class="flex items-center rounded-lg px-10 py-2 bg-dark dark:bg-gray-700 text-base font-medium text-white">
-                              <IcSolidFilter class="w-5 h-5 mr-1"/>
+                              <IcSolidFilter class="w-5 h-5 mr-1" />
                               Filter
-                              <MdOutlinedArrowDropDown class="w-5 h-5"/>
+                              <MdOutlinedArrowDropDown class="w-5 h-5" />
                             </button>
                             <div v-show="officeDropDownFilter" ref="officeDropDownMenuRef"
                               class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
@@ -461,23 +463,28 @@ onUnmounted(() => {
                     <ul v-if="transaction.borrow_transaction_items.length">
                       <li v-for="item in transaction.borrow_transaction_items" :key="item.id"
                         class="flex flex-row justify-center items-center">
-                        <div class="mr-1">
-                          <CaDotMark />
+                        <div>
+                          <span v-if="item.item_type === 'Office Supply'"
+                            class="flex flex-row justify-center items-center" :class="item.returned_date ? 'text-green-600' : 'text-red-600'">
+                            <AkCheck v-if="item.returned_date" class="mr-0.5 w-4 h-4" />
+                            <AkCross v-else class="mr-0.5 w-4 h-4" />
+                            {{
+                              officeSupplies.find(
+                                (supply) => Number(supply.id) === Number(item.item_copy_id)
+                              )?.supply_name || "Unknown Supply"
+                            }}
+                          </span>
+                          <span v-if="item.item_type === 'Equipment Copy'"
+                            class="flex flex-row justify-center items-center" :class="item.returned_date ? 'text-green-600' : 'text-red-600'">
+                            <AkCheck v-if="item.returned_date" class="mr-0.5 w-4 h-4" />
+                            <AkCross v-else class="mr-0.5 w-4 h-4" />
+                            {{officeEquipments.find(equipment => Number(equipment.id) ===
+                              Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                                Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
+                            #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                              Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
+                          </span>
                         </div>
-                        <span v-if="item.item_type === 'Office Supply'" class="col-span-2">
-                          {{
-                            officeSupplies.find(
-                              (supply) => Number(supply.id) === Number(item.item_copy_id)
-                            )?.supply_name || "Unknown Supply"
-                          }}
-                        </span>
-                        <span v-if="item.item_type === 'Equipment Copy'" class="col-span-2">
-                          {{officeEquipments.find(equipment => Number(equipment.id) ===
-                            Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                              Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
-                          #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                            Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
-                        </span>
                       </li>
                     </ul>
                     <span v-else class="flex flex-row justify-center items-center text-yellow-600">

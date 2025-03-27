@@ -18,8 +18,6 @@ import { FlFilledGrid } from '@kalimahapps/vue-icons';
 import { BxTable } from '@kalimahapps/vue-icons';
 import FullInventoryTable from "../components/Inventory/Tables/FullInventoryTable.vue";
 
-const API_KEY = import.meta.env.VITE_API_KEY;
-
 const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const isOpenAddItemModal = ref(false);

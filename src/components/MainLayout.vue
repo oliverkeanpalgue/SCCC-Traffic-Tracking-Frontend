@@ -62,31 +62,31 @@ const profileSettingsDropdownOpen = ref(false)
 const profileSettingsDropdownButtonRef = ref(null)
 
 const toggleProfileSettingsDropdown = () => {
-  profileSettingsDropdownOpen.value = !profileSettingsDropdownOpen.value
+    profileSettingsDropdownOpen.value = !profileSettingsDropdownOpen.value
 }
 
 // Custom composition function to handle click outside
 const handleClickOutside = (event) => {
-  if (
-    profileSettingsDropdownButtonRef.value &&
-    !profileSettingsDropdownButtonRef.value.contains(event.target)
-  ) {
-    profileSettingsDropdownOpen.value = false
-  }
+    if (
+        profileSettingsDropdownButtonRef.value &&
+        !profileSettingsDropdownButtonRef.value.contains(event.target)
+    ) {
+        profileSettingsDropdownOpen.value = false
+    }
 }
 
 onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
+    document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
+    document.removeEventListener('click', handleClickOutside)
 })
 </script>
 
 <template>
     <div>
-        <nav class="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-black dark:border-black">
+        <nav class="fixed top-0 z-50 w-full bg-slate-200 border-b-2 border-slate-400/70 dark:bg-black dark:border-black">
             <div class="px-3 py-3 lg:px-5 lg:pl-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
@@ -108,9 +108,9 @@ onUnmounted(() => {
                         </a>
                     </div>
 
-                    <section class="bg-white dark:bg-black">
+                    <section class="">
                         <div class="">
-                            <div class="relative inline-block min-w-30 rounded-xl px-4 py-1 bg-white dark:bg-gray-800 ">
+                            <div class="relative inline-block min-w-30 rounded-xl px-4 py-1 bg-red-500 dark:bg-gray-800 ">
                                 <button @click="toggleProfileSettingsDropdown" ref="profileSettingsDropdownButtonRef"
                                     class="flex items-center text-left">
                                     <div class="relative mr-4 h-9 w-9 rounded-full">
@@ -143,16 +143,16 @@ onUnmounted(() => {
         </nav>
 
         <aside id="logo-sidebar"
-            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform  bg-white border-r border-gray-200 lg:translate-x-0 dark:bg-black dark:border-black"
+            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform  bg-slate-200 border-r-2 border-slate-400/70 lg:translate-x-0 dark:bg-black dark:border-black"
             :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
-            <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-black">
+            <div class="h-full px-3 pb-4 overflow-y-auto bg-slate-200 dark:bg-black">
                 <ul class="space-y-2 font-medium">
                     <li>
                         <RouterLink v-for='item in navigation' :to="item.to" :key="item.name"
-                            :class="[$route.name === item.to.name ? 'text-gray-700 bg-gray-300 hover:text-gray-700 hover:bg-gray-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            :class="[$route.name === item.to.name ? 'text-gray-900 bg-slate-400 hover:text-gray-800 hover:bg-slate-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
                             @click="closeSidebar()">
                             <span
-                                :class="[$route.name === item.to.name ? 'text-gray-700 group-hover:text-gray-700 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-500 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                :class="[$route.name === item.to.name ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
                                 {{ item.icon }}
                             </span>
                             <span class="ms-3">{{ item.name }}</span>
@@ -163,12 +163,12 @@ onUnmounted(() => {
         </aside>
 
 
-        <div class="min-h-screen max-h-full pt-14 p-4 lg:ml-64 dark:bg-gray-900 dark:text-gray-200">
+        <div class="min-h-screen max-h-full pt-14 p-4 lg:ml-64 bg-slate-300 dark:bg-gray-900 dark:text-gray-200">
             <!-- MAIN CONTENT -->
             <router-view class="" />
 
             <!-- SIGN OUT modal -->
-            <div v-if="!signout_visible" 
+            <div v-if="!signout_visible"
                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
                 <div class="relative p-4 w-full max-w-md max-h-full">
                     <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">

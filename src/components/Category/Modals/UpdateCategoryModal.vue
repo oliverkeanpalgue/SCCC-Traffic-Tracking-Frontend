@@ -100,7 +100,7 @@ const confirmUpdateCategory = async () => {
         <div v-else ref="modalContainer"
             class="w-full max-w-[650px] max-h-[90vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
             <h3 class="text-3xl font-semibold mb-4">
-                Update Category
+                Update Category 
             </h3>
 
             <!-- QUANTITY INPUT -->
