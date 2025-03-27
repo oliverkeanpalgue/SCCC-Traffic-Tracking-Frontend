@@ -18,7 +18,6 @@ let refreshInterval = null;
 
 onMounted(() => {
   databaseStore.fetchData()
-  // Optionally, set an interval to auto-refresh:
   refreshInterval = setInterval(() => {
     databaseStore.fetchData()
   }, 30000)
@@ -27,7 +26,6 @@ onMounted(() => {
 const computedProperties = {
   users: "users",
 };
-
 
 const {
   users,

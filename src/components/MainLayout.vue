@@ -1,6 +1,6 @@
 <script setup>
 
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import useUserStore from "../stores/user.js";
 import axiosClient from "../axios.js";
 
@@ -57,6 +57,31 @@ function logout() {
         window.location.reload();
     });
 }
+
+const profileSettingsDropdownOpen = ref(false)
+const profileSettingsDropdownButtonRef = ref(null)
+
+const toggleProfileSettingsDropdown = () => {
+  profileSettingsDropdownOpen.value = !profileSettingsDropdownOpen.value
+}
+
+// Custom composition function to handle click outside
+const handleClickOutside = (event) => {
+  if (
+    profileSettingsDropdownButtonRef.value &&
+    !profileSettingsDropdownButtonRef.value.contains(event.target)
+  ) {
+    profileSettingsDropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <template>
@@ -65,8 +90,7 @@ function logout() {
             <div class="px-3 py-3 lg:px-5 lg:pl-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
-                        <button @click="toggleSidebar" 
-                            aria-controls="logo-sidebar" type="button"
+                        <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button"
                             class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
                             <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
@@ -78,62 +102,49 @@ function logout() {
                         </button>
                         <a href="#" class="flex ms-2 md:me-24">
                             <img src="../assets/baguio-logo.png" class="h-10 me-3" alt="Smart City Baguio" />
-                            <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">SCCC-Inventory System</span>
+                            <span
+                                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">SCCC-Inventory
+                                System</span>
                         </a>
                     </div>
 
-                    <div class="flex items-center">
-                        <div class="flex items-center ms-3">
-
-                            <div>
-                                <button type="button"
-                                    class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-                                    aria-expanded="false" data-dropdown-toggle="dropdown-user">
-                                    <span class="sr-only">Open user menu</span>
-                                    <img class="w-8 h-8 rounded-full"
-                                        src="https://flowbite.com/docs/images/people/profile-picture-5.jpg"
-                                        alt="user photo">
+                    <section class="bg-white dark:bg-black">
+                        <div class="">
+                            <div class="relative inline-block min-w-30 rounded-xl px-4 py-1 bg-white dark:bg-gray-800 ">
+                                <button @click="toggleProfileSettingsDropdown" ref="profileSettingsDropdownButtonRef"
+                                    class="flex items-center text-left">
+                                    <div class="relative mr-4 h-9 w-9 rounded-full">
+                                        <img src="https://cdn.tailgrids.com/2.2/assets/core-components/images/avatar/image-05.jpg"
+                                            alt="avatar"
+                                            class="h-full w-full rounded-full object-cover object-center" />
+                                    </div>
+                                    <span class="text-base font-medium text-dark dark:text-white"> {{ user.firstName }}
+                                    </span>
                                 </button>
-                            </div>
-                            <div class="z-50 w-40 hidden my-4 text-base list-none bg-white divide-y divide-gray-100 rounded-sm shadow-sm dark:bg-gray-700 dark:divide-gray-600"
-                                id="dropdown-user">
-                                <div class="px-4 py-3" role="none">
-                                    <p class="text-sm text-gray-900 dark:text-white" role="none">
-                                        {{ user?.firstname || 'Guest' }}
-                                    </p>
-                                    <p class="text-sm font-medium text-gray-900 truncate dark:text-gray-300"
-                                        role="none">
-                                        {{ user?.email || 'No email' }}
-                                    </p>
+                                <div v-show="profileSettingsDropdownOpen"
+                                    class="absolute right-0 top-full z-40 w-[200px] space-y-1 mt-1 rounded-xl bg-white p-2 shadow-card border-2 dark:bg-gray-800 dark:shadow-box-dark dark:border-gray-700">
+                                    <button @click="toggleTheme"
+                                        class="block w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <div v-if="theme === 'light'">🌞 Light Mode</div>
+                                        <div v-else>🌙 Dark Mode</div>
+                                    </button>
+                                    <button @click="signout_visible = true" data-modal-target="popup-modal"
+                                        data-modal-toggle="popup-modal"
+                                        class="w-full text-start block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                                        type="button">
+                                        Sign out
+                                    </button>
                                 </div>
-                                <ul class="py-1" role="none">
-                                    <li>
-                                        <button @click="toggleTheme"
-                                            class="block w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
-                                            <div v-if="theme === 'light'">🌞 Light Mode</div>
-                                            <div v-else>🌙 Dark Mode</div>
-                                        </button>
-                                    </li>
-                                    <li>
-                                        <button @click="signout_visible = true" data-modal-target="popup-modal"
-                                            data-modal-toggle="popup-modal"
-                                            class="w-full text-start block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                                            type="button">
-                                            Sign out
-                                        </button>
-                                    </li>
-                                </ul>
                             </div>
                         </div>
-                    </div>
+                    </section>
                 </div>
             </div>
         </nav>
 
         <aside id="logo-sidebar"
             class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform  bg-white border-r border-gray-200 lg:translate-x-0 dark:bg-black dark:border-black"
-            :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'"
-            aria-label="Sidebar">
+            :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
             <div class="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-black">
                 <ul class="space-y-2 font-medium">
                     <li>
@@ -151,12 +162,13 @@ function logout() {
             </div>
         </aside>
 
+
         <div class="min-h-screen max-h-full pt-14 p-4 lg:ml-64 dark:bg-gray-900 dark:text-gray-200">
             <!-- MAIN CONTENT -->
-            <router-view class=""/>
+            <router-view class="" />
 
             <!-- SIGN OUT modal -->
-            <div id="popup-modal" tabindex="-1"
+            <div v-if="!signout_visible" 
                 class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
                 <div class="relative p-4 w-full max-w-md max-h-full">
                     <div class="relative bg-white rounded-lg shadow-sm dark:bg-gray-700">
