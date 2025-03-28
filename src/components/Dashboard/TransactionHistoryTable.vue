@@ -12,6 +12,9 @@ import { IcSolidFilter } from '@kalimahapps/vue-icons';
 import { MdOutlinedArrowDropDown } from '@kalimahapps/vue-icons';
 import { AkCheck } from '@kalimahapps/vue-icons';
 import { AkCross } from '@kalimahapps/vue-icons';
+import { BsQuestion } from '@kalimahapps/vue-icons';
+import { BsCheck } from '@kalimahapps/vue-icons';
+import { BsX } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -306,7 +309,7 @@ const formatDate = (dateString) => {
   if (!dateString) return "N/A"; // Handle null values
   const date = new Date(dateString);
   return date.toLocaleString("en-US", {
-    month: "long",
+    month: "short",
     day: "numeric",
     year: "numeric",
     hour: "numeric",
@@ -328,10 +331,11 @@ onUnmounted(() => {
 
 <template>
   <div class="w-full mt-3">
-    <section class="bg-gray-50 dark:bg-gray-900 w-full">
-      <div class="mx-4 px-3 py-2 border-2 rounded-lg dark:bg-gray-950 dark:border-gray-700">
+    <section class="bg-gray-200 dark:bg-gray-900 w-full">
+      <div
+        class="shadow-lg mx-4 px-3 py-2 border-2 rounded-lg bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
         <!-- Start coding here -->
-        <div class="relative shadow-md sm:rounded-lg overflow-hidden">
+        <div class="relative shadow-md sm:rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
           <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
             <div class="w-full md:w-8/9">
               <form class="flex items-center" @submit.prevent>
@@ -378,7 +382,7 @@ onUnmounted(() => {
                         <div class="text-center">
                           <div class="relative inline-block text-left">
                             <button @click="toggleofficeDropDown" ref="officeDropDownButtonRef"
-                              class="flex items-center rounded-lg px-10 py-2 bg-dark dark:bg-gray-700 text-base font-medium text-white">
+                              class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
                               <IcSolidFilter class="w-5 h-5 mr-1" />
                               Filter
                               <MdOutlinedArrowDropDown class="w-5 h-5" />
@@ -424,12 +428,13 @@ onUnmounted(() => {
           </div>
           <div class="dark:bg-gray-900 ">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-              <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+              <thead class="text-xs text-gray-800 uppercase bg-gray-300 dark:bg-gray-700 dark:text-gray-300">
                 <tr>
-                  <th scope="col" class="">Transaction ID</th>
+                  <th scope="col" class="">ID</th>
                   <th scope="col" class="py-3">Borrower</th>
                   <th scope="col" class="py-3">Office</th>
                   <th scope="col" class="py-3">Lender</th>
+                  <th scope="col" class="py-3">AREE/ISC</th>
                   <th scope="col" class="py-3">Items</th>
                   <th scope="col" class="py-3">Return Date & Time</th>
                   <th scope="col" class="py-3">Borrow Date & Time</th>
@@ -437,9 +442,9 @@ onUnmounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr class="border-b dark:border-gray-700" v-for="transaction in paginatedTransactions"
-                  :key="transaction.id">
-                  <th scope="row" class="px-4 py-3 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
+                  v-for="transaction in paginatedTransactions" :key="transaction.id">
+                  <th scope="row" class="px-4 py-3 whitespace-nowrap ">
                     {{ transaction.id }}
                   </th>
                   <td class="px-4 py-3">
@@ -459,15 +464,19 @@ onUnmounted(() => {
                       )?.firstName
                     }}
                   </td>
+                  <td class="px-4 py-3">
+                    {{ transaction.borrowers?.ics }} ARE?ICS?
+                  </td>
                   <td>
                     <ul v-if="transaction.borrow_transaction_items.length">
                       <li v-for="item in transaction.borrow_transaction_items" :key="item.id"
-                        class="flex flex-row justify-center items-center">
+                        class="flex flex-row pl-2 justify-start items-center font-bold dark:font-semibold ">
                         <div>
                           <span v-if="item.item_type === 'Office Supply'"
-                            class="flex flex-row justify-center items-center" :class="item.returned_date ? 'text-green-600' : 'text-red-600'">
-                            <AkCheck v-if="item.returned_date" class="mr-0.5 w-4 h-4" />
-                            <AkCross v-else class="mr-0.5 w-4 h-4" />
+                            class="flex flex-row justify-center items-center"
+                            :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                            <BsCheck v-if="item.returned_date" class="w-7 h-7" />
+                            <BsX v-else class="w-7 h-7" />
                             {{
                               officeSupplies.find(
                                 (supply) => Number(supply.id) === Number(item.item_copy_id)
@@ -475,9 +484,10 @@ onUnmounted(() => {
                             }}
                           </span>
                           <span v-if="item.item_type === 'Equipment Copy'"
-                            class="flex flex-row justify-center items-center" :class="item.returned_date ? 'text-green-600' : 'text-red-600'">
-                            <AkCheck v-if="item.returned_date" class="mr-0.5 w-4 h-4" />
-                            <AkCross v-else class="mr-0.5 w-4 h-4" />
+                            class="flex flex-row justify-center items-center"
+                            :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                            <BsCheck v-if="item.returned_date" class="w-7 h-7" />
+                            <BsX v-else class="w-7 h-7" />
                             {{officeEquipments.find(equipment => Number(equipment.id) ===
                               Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
                                 Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
@@ -487,19 +497,26 @@ onUnmounted(() => {
                         </div>
                       </li>
                     </ul>
-                    <span v-else class="flex flex-row justify-center items-center text-yellow-600">
-                      <GlQuestion class="mr-1" />
+                    <span v-else
+                      class="flex flex-row pl-2 justify-start items-center font-bold text-yellow-700 dark:font-semibold dark:text-yellow-600">
+                      <BsQuestion class="w-7 h-7" />
                       No items found
                     </span>
                   </td>
 
-                  <td class="px-4 py-3">
-                    {{
-                      transaction.return_date
-                        ? transaction.return_date
-                        : "Not yet returned"
-                    }}
+                  <td class="max-w-min" :class="transaction.return_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                    <div class="flex flex-row justify-start items-center">
+                      <BsCheck v-if="transaction.return_date" class="w-7 h-7" />
+                      <BsX v-else class="w-7 h-7" />
+                      <span v-if="transaction.return_date">
+                        {{ formatDate(transaction.return_date) }}
+                      </span>
+                      <span v-else>
+                        Not yet returned
+                      </span>
+                    </div>
                   </td>
+
                   <td class="px-4 py-3">{{ formatDate(transaction.borrow_date) }}</td>
                   <td class="px-4 py-3 flex items-center justify-center relative">
                     <button @click.stop="toggleDropdown(transaction.id)"
