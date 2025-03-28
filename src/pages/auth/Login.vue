@@ -5,17 +5,25 @@ import axiosClient from "../../axios.js";
 import { ref } from "vue";
 import router from "../../router.js";
 import logo from '../../assets/baguio-logo.png';
+import Loading from "../../components/Loading.vue";
+import emitter from "../../eventBus.js";
 
 const data = ref({
   email: '',
   password: '',
 })
+
 const errorMessage = ref('')
 
+const isLoading = ref(false);
+
 function submit() {
+  isLoading.value = true
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/login", data.value)
       .then(response => {
+        isLoading.value = false
+        emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
         router.push({ name: 'Dashboard' })
       })
       .catch(error => {
@@ -29,9 +37,12 @@ function submit() {
 
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+    <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+        <Loading />
+      </div>
 
     <!-- Main Container -->
-    <div class="flex flex-col md:flex-row items-center gap-2 z-10">
+    <div v-else class="flex flex-col md:flex-row items-center gap-2 z-10">
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
