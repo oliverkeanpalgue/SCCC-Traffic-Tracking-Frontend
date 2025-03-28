@@ -74,42 +74,98 @@ const confirmUpdate = async () => {
     }
   } catch (error) {
     console.error("Error updating items:", error);
+  } finally {
+    const allItemsChecked = transactionItems.value.every(item => item.isChecked);
+
+    if (allItemsChecked) {
+      updateBorrowTransaction(new Date());
+    } else {
+      updateBorrowTransaction(null);
+    }
   }
 };
 
 const updateOfficeSupply = async (newQuantity, item) => {
-  const updateTransactionItems = {
-    supply_quantity: newQuantity,
-  };
+  try {
+    const updateTransactionItems = {
+      supply_quantity: newQuantity,
+    };
 
-  const response = await axiosClient.put(
-    `/api/office_supplies/${item.item_copy_id}`,
-    updateTransactionItems,
-    {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    }
-  );
-  console.log("Updated Office Supply successfully:", response.data);
+    const response = await axiosClient.put(
+      `/api/office_supplies/${item.item_copy_id}`,
+      updateTransactionItems,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+    console.log("Updated Office Supply successfully:", response.data);
+  } catch (error) {
+    console.error('Error updating office supply:', error);
+    console.error('Error details:', error.response?.data);
+  }
 }
 
 const updateEquipment = async (availability, item) => {
-  const updateTransactionItems = {
-    is_available: availability,
-  };
+  try {
 
-  const response = await axiosClient.put(
-    `/api/equipment_copies/${item.item_copy_id}`,
-    updateTransactionItems,
-    {
-      headers: {
-        "x-api-key": API_KEY,
-      },
+    const updateTransactionItems = {
+      is_available: availability,
+    };
+
+    const response = await axiosClient.put(
+      `/api/equipment_copies/${item.item_copy_id}`,
+      updateTransactionItems,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+
+    console.log("Updated Equipment Copy successfully:", response.data);
+
+  } catch (error) {
+    console.error('Error updating item copy:', error);
+    console.error('Error details:', error.response?.data);
+  }
+}
+
+const updateBorrowTransaction = async (date) => {
+  try {
+
+    const formattedDate = date instanceof Date
+      ? new Date(date).toLocaleString('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
+      : date;
+
+    const updateTransactions = {
+      return_date: formattedDate
     }
-  );
 
-  console.log("Updated Equipment Copy successfully:", response.data);
+    const response = await axiosClient.put(
+      `/api/borrow_transactions/${props.transaction.id}`,
+      updateTransactions,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+    console.log("Updated Transaction Item successfully:", response.data);
+  } catch (error) {
+    console.error('Error updating transaction item:', error);
+    console.error('Error details:', error.response?.data);
+  }
 }
 
 const updateItems = async (date, returned, item) => {
@@ -130,10 +186,11 @@ const updateItems = async (date, returned, item) => {
       }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
       : date;
 
+
     // Simplify the update data structure
     const updateData = {
+      returned: returned,
       returned_date: formattedDate,
-      returned: returned
     };
 
     console.log('Sending update request with data:', updateData);
@@ -164,8 +221,6 @@ const updateItems = async (date, returned, item) => {
       status: error.response?.status
     });
     emitter.emit("show-toast", { message: `Error updating transaction: ${error.response?.data?.message || error.message}`, type: "error" });
-  } finally {
-    isLoading.value = false;
   }
 };
 
