@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed, watch } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch, toRaw } from "vue";
 import axiosClient from "../../axios";
 import UpdateModal from "./Modal/UpdateTransactionModal.vue";
 import DeleteModal from "./Modal/DeleteTransactionModal.vue";
@@ -18,11 +18,11 @@ import { BsX } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-const transactionHistories = ref([]);
+// const transactionHistories = ref([]);
 const officeSupplies = ref([]);
 const officeEquipments = ref([]);
 const equipmentCopies = ref([]);
-const officeList = ref([]);
+// const officeList = ref([]);
 const categoryList = ref([]);
 
 const searchQuery = ref("");
@@ -31,9 +31,23 @@ const selectedTransaction = ref(null);
 
 const isUpdateModalOpen = ref(false);
 
+// FETCH DATA FROM PROPS
+const props = defineProps({
+  transactionItems: Array,
+  transactionHistory: Array,
+  officeEquipments: Array,
+  officeSupplies: Array,
+  officeList: Array,
+  users: Array,
+  borrowers: Array,
+  equipmentCopies: Array,
+  categoryList: Array,
+  transactionHistories: Array,
+})
+
 const openUpdateModal = (transaction) => {
   const lender =
-    transactionHistories.value.users?.find((user) => user.id === transaction.lender_id)
+    props.users?.find((user) => user.id === transaction.lender_id)
       ?.firstName || "Unknown";
 
   selectedTransaction.value = {
@@ -49,7 +63,7 @@ const isDeleteModalOpen = ref(false);
 
 const openDeleteModal = (transaction) => {
   const lender =
-    transactionHistories.value.users?.find((user) => user.id === transaction.lender_id)
+    props.users?.find((user) => user.id === transaction.lender_id)
       ?.firstName || "Unknown";
 
   selectedTransaction.value = {
@@ -68,46 +82,63 @@ const getActiveOfficeIds = () => {
 };
 
 const filteredTransactions = computed(() => {
-  if (!transactionHistories.value.borrow_transactions) return [];
+  if (!props.transactionHistory) return [];
 
   const searchTerm = searchQuery.value.toLowerCase();
   const activeOfficeIds = getActiveOfficeIds();
 
-  return transactionHistories.value.borrow_transactions.filter((transaction) => {
+  return props.transactionHistory.filter((transaction) => {
+    // DELETED
     if (transaction.is_deleted) return false;
-
-    const borrowerName = transaction.borrowers?.borrowers_name?.toLowerCase() || "";
+    // BORROWER NAME
+    const borrowerName =
+      props.borrowers
+        ?.find((borrower) => borrower.id === transaction.borrower_id)
+        ?.borrowers_name?.toLowerCase() || "";
+    // TRANSACTION ID
     const transactionId = transaction.id?.toString().toLowerCase() || "";
+    // LENDER NAME
     const lender =
-      transactionHistories.value.users
+      props.users
         ?.find((user) => user.id === transaction.lender_id)
         ?.firstName?.toLowerCase() || "";
+    // RETURN DATE
     const returnDate = transaction.return_date
       ? transaction.return_date.toLowerCase()
       : "";
+    // BORROW DATE
     const borrowDate = transaction.borrow_date
       ? transaction.borrow_date.toLowerCase()
       : "";
 
-    const itemsMatch = transaction.borrow_transaction_items?.some(item => {
+    // FETCH ITEMS OF THE TRANSACTION
+    const selectedTransactionItems = props.transactionItems?.filter(item => item.transaction_id === transaction.id) || [];
+    
+    if (!selectedTransactionItems.length){
+      console.log("NO ITEMS, RETURNING FALSE")
+    return false;
+    }  
+
+    // ITEMS MATCH
+    const itemsMatch = selectedTransactionItems.some(item => {
       if (item.item_type === 'Office Supply') {
-        const supplyName = officeSupplies.value.find(
+        const supplyName = props.officeSupplies.find(
           (supply) => Number(supply.id) === Number(item.item_copy_id)
         )?.supply_name?.toLowerCase() || "";
         return supplyName.includes(searchTerm);
       } else if (item.item_type === 'Equipment Copy') {
-        const equipmentName = officeEquipments.value.find(
+        const equipmentName = props.officeEquipments.find(
           (equipment) =>
             Number(equipment.id) ===
             Number(
-              equipmentCopies.value.find(
+              props.equipmentCopies.find(
                 (equipment_copy) =>
                   Number(equipment_copy.id) === Number(item.item_copy_id)
               )?.item_id
             )
         )?.equipment_name?.toLowerCase() || "";
 
-        const equipmentId = equipmentCopies.value.find(
+        const equipmentId = props.equipmentCopies.find(
           (equipment_copy) => Number(equipment_copy.id) === Number(item.item_copy_id)
         )?.item_id?.toString()?.toLowerCase() || "";
 
@@ -116,7 +147,24 @@ const filteredTransactions = computed(() => {
       return false;
     }) || false;
 
-    const officeMatch = activeOfficeIds.includes(transaction.borrowers?.office_id);
+    const borrowerOfficeId =
+      props.borrowers
+        ?.find((borrower) => borrower.id === transaction.borrower_id)
+        ?.office_id || "";
+        
+    const officeMatch =
+      props.officeList
+        ?.find((office) => office.id === borrowerOfficeId)
+        ?.office_name?.toLowerCase() || "";
+
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ borrowerName:", borrowerName)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ transactionId:", transactionId)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ lender:", lender)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ officeMatch:", officeMatch)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ returnDate:", returnDate)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ borrowDate:", borrowDate)
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ selectedTransactionItems:", toRaw(selectedTransactionItems))
+    console.log("🚀 ~ returnprops.transactionHistory.filter ~ itemsMatch:", itemsMatch)
 
     return (
       officeMatch &&
@@ -175,99 +223,12 @@ const openDropdownId = ref(null);
 
 const dropdownRefs = ref([]);
 
-onMounted(() => {
-  document.addEventListener("click", handleClickOutside);
-
-  axiosClient
-    .get("/api/transaction_history", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      transactionHistories.value = response.data;
-      console.log("Transaction histories:", transactionHistories.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching transactions:", error);
-    });
-
-  axiosClient
-    .get("/api/office_supplies", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      officeSupplies.value = response.data;
-      console.log("Office Supplies:", officeSupplies.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching office supplies:", error);
-    });
-
-  axiosClient
-    .get("/api/office_equipments", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      officeEquipments.value = response.data;
-      console.log("Office Equipments:", officeEquipments.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching office equipments:", error);
-    });
-
-  axiosClient
-    .get("/api/equipment_copies", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      equipmentCopies.value = response.data;
-      console.log("Equipment Copies:", equipmentCopies.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching equipment copies:", error);
-    });
-
-  axiosClient
-    .get("/api/offices", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      officeList.value = response.data;
-      console.log("Office Names:", officeList.value);
-
-      // Update officeDropDownItems based on fetched office data
-      officeDropDownItems.value = officeList.value.map((office) => ({
-        id: office.id,
-        type: office.office_name,
-        isActive: true,
-      }));
-    })
-    .catch((error) => {
-      console.error("Error fetching office names:", error);
-    });
-
-  axiosClient
-    .get("/api/categories", {
-      headers: {
-        "x-api-key": API_KEY,
-      },
-    })
-    .then((response) => {
-      categoryList.value = response.data;
-      console.log("Category Names:", categoryList.value);
-    })
-    .catch((error) => {
-      console.error("Error fetching category names:", error);
-    });
+watch(() => props.officeList, () => {
+  officeDropDownItems.value = props.officeList.map((office) => ({
+    id: office.id,
+    type: office.office_name,
+    isActive: true,
+  }));
 });
 
 const toggleDropdown = (transactionId) => {
@@ -442,114 +403,118 @@ onUnmounted(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
-                  v-for="transaction in paginatedTransactions" :key="transaction.id">
-                  <th scope="row" class="px-4 py-3 whitespace-nowrap ">
-                    {{ transaction.id }}
-                  </th>
-                  <td class="px-4 py-3">
-                    {{ transaction.borrowers?.borrowers_name }}
-                  </td>
-                  <td class="px-4 py-3">
-                    {{
-                      officeList?.find(
-                        (office) => office.id === transaction.borrowers?.office_id
-                      )?.office_name
-                    }}
-                  </td>
-                  <td class="px-4 py-3">
-                    {{
-                      transactionHistories.users?.find(
-                        (user) => user.id === transaction.lender_id
-                      )?.firstName
-                    }}
-                  </td>
-                  <td class="px-4 py-3">
-                    {{ transaction.borrowers?.ics }} ARE?ICS?
-                  </td>
-                  <td>
-                    <ul v-if="transaction.borrow_transaction_items.length">
-                      <li v-for="item in transaction.borrow_transaction_items" :key="item.id"
-                        class="flex flex-row pl-2 justify-start items-center font-bold dark:font-semibold ">
-                        <div>
-                          <span v-if="item.item_type === 'Office Supply'"
-                            class="flex flex-row justify-center items-center"
-                            :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
-                            <BsCheck v-if="item.returned_date" class="w-7 h-7" />
-                            <BsX v-else class="w-7 h-7" />
-                            {{
-                              officeSupplies.find(
-                                (supply) => Number(supply.id) === Number(item.item_copy_id)
-                              )?.supply_name || "Unknown Supply"
-                            }}
-                          </span>
-                          <span v-if="item.item_type === 'Equipment Copy'"
-                            class="flex flex-row justify-center items-center"
-                            :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
-                            <BsCheck v-if="item.returned_date" class="w-7 h-7" />
-                            <BsX v-else class="w-7 h-7" />
-                            {{officeEquipments.find(equipment => Number(equipment.id) ===
-                              Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                                Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'}}
-                            #{{equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
-                              Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
-                          </span>
-                        </div>
-                      </li>
-                    </ul>
-                    <span v-else
-                      class="flex flex-row pl-2 justify-start items-center font-bold text-yellow-700 dark:font-semibold dark:text-yellow-600">
-                      <BsQuestion class="w-7 h-7" />
-                      No items found
-                    </span>
-                  </td>
-
-                  <td class="max-w-min" :class="transaction.return_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
-                    <div class="flex flex-row justify-start items-center">
-                      <BsCheck v-if="transaction.return_date" class="w-7 h-7" />
-                      <BsX v-else class="w-7 h-7" />
-                      <span v-if="transaction.return_date">
-                        {{ formatDate(transaction.return_date) }}
-                      </span>
-                      <span v-else>
-                        Not yet returned
-                      </span>
-                    </div>
-                  </td>
-
-                  <td class="px-4 py-3">{{ formatDate(transaction.borrow_date) }}</td>
-                  <td class="px-4 py-3 flex items-center justify-center relative">
-                    <button @click.stop="toggleDropdown(transaction.id)"
-                      class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                      type="button">
-                      <ChMenuMeatball class="w-5 h-5" />
-                    </button>
-
-                    <div v-if="openDropdownId === transaction.id" ref="dropdownRefs"
-                      class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-10 mt-2">
-                      <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
-                        <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                          <button @click.stop="openUpdateModal(transaction)" class="w-full text-start px-4 py-2">
-                            Update
-                          </button>
-
-                          <!-- Use the modal component and bind the v-model -->
-                          <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen"
-                            :transaction="selectedTransaction" :officeEquipments="officeEquipments"
-                            :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies" :officeList="officeList"
-                            :categoryList="categoryList" @click.stop />
-                        </li>
-                        <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                          <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">
-                            Delete
-                          </button>
-
-                          <!-- Use the modal component and bind the v-model -->
-                          <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen"
-                            :transaction="selectedTransaction" :officeSupplies="officeSupplies" @click.stop />
+                <template v-if="paginatedTransactions.length">
+                  <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
+                    v-for="transaction in paginatedTransactions" :key="transaction.id">
+                    <th scope="row" class="px-4 py-3 whitespace-nowrap ">
+                      {{ transaction.id }}
+                    </th>
+                    <td class="px-4 py-3">
+                      {{ transaction.borrowers?.borrowers_name || 'No data found' }}
+                    </td>
+                    <td class="px-4 py-3">
+                      {{
+                        props.officeList?.find(
+                          (office) => office.id === transaction.borrowers?.office_id
+                        )?.office_name || 'No data found'
+                      }}
+                    </td>
+                    <td class="px-4 py-3">
+                      {{
+                        (props.users?.find(user => user.id === transaction.lender_id)?.firstName || '') +
+                        " " +
+                        (props.users?.find(user => user.id === transaction.lender_id)?.lastName || 'No data found')
+                      }}
+                    </td>
+                    <td class="px-4 py-3">
+                      {{ transaction.isc || 'No data found' }}
+                    </td>
+                    <td>
+                      <ul>
+                          <li v-for="item in props.transactionItems" :key="item.id"
+                          class="flex flex-row pl-2 justify-start items-center font-bold dark:font-semibold ">
+                          <div v-if="item.transaction_id === transaction.id">
+                            <!-- OFFICE SUPPLY ITEM -->
+                            <span v-if="item.item_type === 'Office Supply'"
+                              class="flex flex-row justify-center items-center"
+                              :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                              <BsCheck v-if="item.returned_date" class="w-7 h-7" />
+                              <BsX v-else class="w-7 h-7" />
+                              {{
+                                props.officeSupplies.find(
+                                  (supply) => Number(supply.id) === Number(item.item_copy_id)
+                                )?.supply_name || "Unknown Supply"
+                              }}
+                            </span>
+                            <!-- EQUIPMENT COPY ITEM -->
+                            <span v-if="item.item_type === 'Equipment Copy'"
+                              class="flex flex-row justify-center items-center"
+                              :class="item.returned_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                              <BsCheck v-if="item.returned_date" class="w-7 h-7" />
+                              <BsX v-else class="w-7 h-7" />
+                              {{
+                                props.officeEquipments.find(equipment => Number(equipment.id) ===
+                                  Number(props.equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                                    Number(item.item_copy_id))?.item_id))?.equipment_name || 'Unknown Equipment'
+                              }}
+                              #{{props.equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
+                                Number(item.item_copy_id))?.copy_num || 'Unknown Equipment'}}
+                            </span>
+                          </div>
                         </li>
                       </ul>
-                    </div>
+                    </td>
+
+                    <td class="max-w-min"
+                      :class="transaction.return_date ? 'text-green-700 dark:text-green-600' : 'text-red-700 dark:text-red-600'">
+                      <div class="flex flex-row justify-start items-center">
+                        <BsCheck v-if="transaction.return_date" class="w-7 h-7" />
+                        <BsX v-else class="w-7 h-7" />
+                        <span v-if="transaction.return_date">
+                          {{ formatDate(transaction.return_date) }}
+                        </span>
+                        <span v-else>
+                          Not yet returned
+                        </span>
+                      </div>
+                    </td>
+
+                    <td class="px-4 py-3">{{ formatDate(transaction.borrow_date) }}</td>
+                    <td class="px-4 py-3 flex items-center justify-center relative">
+                      <button @click.stop="toggleDropdown(transaction.id)"
+                        class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                        type="button">
+                        <ChMenuMeatball class="w-5 h-5" />
+                      </button>
+
+                      <div v-if="openDropdownId === transaction.id" ref="dropdownRefs"
+                        class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-10 mt-2">
+                        <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
+                          <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                            <button @click.stop="openUpdateModal(transaction)" class="w-full text-start px-4 py-2">
+                              Update
+                            </button>
+                            <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen"
+                              :transaction="selectedTransaction" :officeEquipments="officeEquipments"
+                              :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies"
+                              :officeList="officeList" :categoryList="categoryList" @click.stop />
+                          </li>
+                          <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                            <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">
+                              Delete
+                            </button>
+                            <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen"
+                              :transaction="selectedTransaction" :officeSupplies="officeSupplies" @click.stop />
+                          </li>
+                        </ul>
+                      </div>
+                    </td>
+                  </tr>
+                </template>
+
+                <tr v-else>
+                  <td colspan="9" class="text-center py-4 text-gray-500 dark:text-gray-400">
+                    No data found
                   </td>
                 </tr>
               </tbody>

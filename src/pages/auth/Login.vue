@@ -27,6 +27,7 @@ function submit() {
         router.push({ name: 'Dashboard' })
       })
       .catch(error => {
+        isLoading.value = false
         console.log(error.response)
         errorMessage.value = error.response.data.message;
       })

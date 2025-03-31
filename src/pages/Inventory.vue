@@ -55,6 +55,10 @@ onMounted(() => {
   }, 30000)
 })
 
+onUnmounted(() => {
+  clearInterval(refreshInterval)
+})
+
 const computedProperties = {
     transactionItems: "transactionItems",
     transactionHistory: "transactionHistory",
