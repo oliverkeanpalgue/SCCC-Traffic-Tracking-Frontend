@@ -45,6 +45,89 @@ const errors = ref({
   password_confirmation: [],
 })
 
+// REGEX s
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!data.value.email) {
+    errors.value.email = ["Email is required"];
+    hasErrors = true;
+  } else if (!emailRegex.test(data.value.email)) {
+    errors.value.email = ["Please enter a valid email address"];
+    hasErrors = true;
+  }
+
+  if (!data.value.password) {
+      errors.value.password = ["Password is required"];
+      hasErrors = true;
+    } else {
+      if (!passwordRegex.test(data.value.password)) {
+        errors.value.password = ["Password must contain both letters and numbers"];
+        hasErrors = true;
+      }
+      if (data.value.password.length < 8) {
+        errors.value.password = ["Password must be at least 8 characters long"];
+        hasErrors = true;
+      }
+    }
+  
+    // Validate password confirmation
+    if (!data.value.password_confirmation) {
+      errors.value.password_confirmation = ["Password confirmation is required"];
+      hasErrors = true;
+    } else if (data.value.password !== data.value.password_confirmation) {
+      errors.value.password_confirmation = ["Passwords don't match"];
+      hasErrors = true;
+    }
+
+  if (hasErrors) {
+    return;
+  }
+}
+
+// watch effect for validation
+// Watch effects for real-time validation
+watch(() => data.value.email, (newValue) => {
+  if (!newValue) {
+    errors.value.email = ["Email is required"];
+  } else if (!emailRegex.test(newValue)) {
+    errors.value.email = ["Please enter a valid email address"];
+  } else {
+    errors.value.email = [];
+  }
+});
+
+watch(() => data.value.password, (newValue) => {
+  errors.value.password = [];
+  if (!newValue) {
+    errors.value.password = ["Password is required"];
+  } else {
+    if (!passwordRegex.test(newValue)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+    }
+    if (newValue.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+    }
+  }
+});
+
+watch(() => data.value.password_confirmation, (newValue) => {
+  if (!newValue) {
+    errors.value.password_confirmation = ["Password confirmation is required"];
+  } else if (newValue !== data.value.password) {
+    errors.value.password_confirmation = ["Passwords don't match"];
+  } else {
+    errors.value.password_confirmation = [];
+  }
+});
+
 // fetching user data if there is a email in the users database and getting it's data
 const foundUser = ref(null)
 
@@ -62,6 +145,11 @@ const checkEmailExists = () => {
 
 const forgotPassword = async () => {
   try {
+
+    if (!validateForm()) {
+        return;
+    }
+
     isLoading.value = true
 
     if (data.value.password !== data.value.password_confirmation) {
@@ -150,12 +238,13 @@ const phaseTwo = () => {
           class="bg-gray-100 mb-4 px-6 rounded-xl shadow-lg min-w-[900px] min-h-[21vh] flex justify-center items-center w-full">
 
           <div class="w-full">
-            <label for="email" class="block text-md font-medium text-gray-700">Enter Email</label>
+            <div class="flex flex-row">
+              <label for="email" class="block text-md font-medium text-gray-700">Enter Email</label>
+              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ? errors.email[0] : '' }}</p>
+            </div>
+            
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-sm mt-1 text-red-600">
-              {{ errors.email ? errors.email[0] : '' }}
-            </p>
           </div>
 
         </div>
@@ -170,21 +259,21 @@ const phaseTwo = () => {
         <div class="bg-white p-6 rounded-xl shadow-lg min-w-[900px] mb-4 min-h-[21vh]">
 
           <div class="">
-            <label for="password" class="block text-md font-medium text-gray-700">Password</label>
+            <div class="flex flex-row">
+              <label for="email" class="block text-md font-medium text-gray-700">Password</label>
+              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+            </div>
             <input type="password" name="password" id="password" v-model="data.password"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-sm mt-1 text-red-600">
-              {{ errors.password ? errors.password[0] : '' }}
-            </p>
           </div>
 
           <div class="">
-            <label for="confirmPassword" class="block text-md font-medium text-gray-700">Confirm Password</label>
+            <div class="flex flex-row">
+              <label for="email" class="block text-md font-medium text-gray-700">Confirm Password</label>
+              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ? errors.password_confirmation[0] : '' }}</p>
+            </div>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-sm mt-1 text-red-600">
-              {{ errors.password_confirmation ? errors.password_confirmation[0] : '' }}
-            </p>
           </div>
         </div>
 

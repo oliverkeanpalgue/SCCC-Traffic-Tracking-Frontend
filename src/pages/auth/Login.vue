@@ -8,6 +8,8 @@ import logo from '../../assets/baguio-logo.png';
 import Loading from "../../components/Loading.vue";
 import emitter from "../../eventBus.js";
 
+const isLoading = ref(false);
+
 const data = ref({
   email: '',
   password: '',
@@ -15,10 +17,52 @@ const data = ref({
 
 const errorMessage = ref('')
 
-const isLoading = ref(false);
+const errors = ref({
+  email: [],
+  password: []
+})
+
+// REGEXE s
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+
+
 
 function submit() {
+  Object.keys(errors.value).forEach(key => {
+    errors.value[key] = [];
+  });
+
+  let hasErrors = false;
+
+  if (!data.value.email) {
+    errors.value.email = ["Email is required"];
+    hasErrors = true;
+  } else if (!emailRegex.test(data.value.email)) {
+    errors.value.email = ["Please enter a valid email address"];
+    hasErrors = true;
+  }
+
+  if (!data.value.password) {
+    errors.value.password = ["Password is required"];
+    hasErrors = true;
+  } else {
+    if (!passwordRegex.test(data.value.password)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+      hasErrors = true;
+    }
+    if (data.value.password.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+      hasErrors = true;
+    }
+  }
+
+  if (hasErrors) {
+    return;
+  }
+
   isLoading.value = true
+
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/login", data.value)
       .then(response => {
@@ -38,8 +82,8 @@ function submit() {
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
-        <Loading />
-      </div>
+      <Loading />
+    </div>
 
     <!-- Main Container -->
     <div v-else class="flex flex-col md:flex-row items-center gap-2 z-10">
@@ -63,22 +107,30 @@ function submit() {
           </div>
           <div>
             <label for="email" class="block text-md font-medium text-gray-700">Email</label>
-            <input type="email" name="email" id="email" autocomplete="email" required="" v-model="data.email"
+            <input name="email" id="email" autocomplete="email" v-model="data.email"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p class="text-sm mt-1 text-red-600">
+              {{ errors.email ? errors.email[0] : '' }}
+            </p>
           </div>
 
           <div>
             <label for="password" class="block text-md font-medium text-gray-700">Password</label>
-            <input type="password" name="password" id="password" autocomplete="current-password" required=""
+            <input type="password" name="password" id="password" autocomplete="current-password"
               v-model="data.password"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <p class="text-sm mt-1 text-red-600">
+              {{ errors.password ? errors.password[0] : '' }}
+            </p>
           </div>
 
-          <button type="submit" class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Sign in</button>
+          <button type="submit"
+            class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Sign in</button>
         </form>
 
         <div class="text-sm text-center mt-4">
-          <RouterLink :to="{ name: 'Signup' }" class="text-md text-blue-600 hover:underline">Don't have an account? Sign up
+          <RouterLink :to="{ name: 'Signup' }" class="text-md text-blue-600 hover:underline">Don't have an account? Sign
+            up
           </RouterLink>
         </div>
 
