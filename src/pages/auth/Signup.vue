@@ -1,7 +1,7 @@
 <script setup>
 
 import GuestLayout from "../../components/GuestLayout.vue";
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import axiosClient from "../../axios.js";
 import router from "../../router.js";
 import logo from "../../assets/baguio-logo.png";
@@ -22,9 +22,120 @@ const errors = ref({
   lastName: [],
   email: [],
   password: [],
+  password_confirmation: [],
 })
 
+// REGEXE s
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+
+// Watch effects for real-time validation
+watch(() => data.value.email, (newValue) => {
+  if (!newValue) {
+    errors.value.email = ["Email is required"];
+  } else if (!emailRegex.test(newValue)) {
+    errors.value.email = ["Please enter a valid email address"];
+  } else {
+    errors.value.email = [];
+  }
+});
+
+watch(() => data.value.password, (newValue) => {
+  errors.value.password = [];
+  if (!newValue) {
+    errors.value.password = ["Password is required"];
+  } else {
+    if (!passwordRegex.test(newValue)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+    }
+    if (newValue.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+    }
+  }
+});
+
+watch(() => data.value.password_confirmation, (newValue) => {
+  if (!newValue) {
+    errors.value.password_confirmation = ["Password confirmation is required"];
+  } else if (newValue !== data.value.password) {
+    errors.value.password_confirmation = ["Passwords don't match"];
+  } else {
+    errors.value.password_confirmation = [];
+  }
+});
+
+// First name and last name validation
+watch(() => data.value.firstName, (newValue) => {
+  if (!newValue) {
+    errors.value.firstName = ["First name is required"];
+  } else {
+    errors.value.firstName = [];
+  }
+});
+
+watch(() => data.value.lastName, (newValue) => {
+  if (!newValue) {
+    errors.value.lastName = ["Last name is required"];
+  } else {
+    errors.value.lastName = [];
+  }
+});
+
+
 function submit() {
+
+  Object.keys(errors.value).forEach(key => {
+    errors.value[key] = [];
+  });
+
+  let hasErrors = false;
+
+  if (!data.value.firstName) {
+    errors.value.firstName = ["First name is required"];
+    hasErrors = true;
+  }
+
+  if (!data.value.lastName) {
+    errors.value.lastName = ["Last name is required"];
+    hasErrors = true;
+  }
+
+  if (!data.value.email) {
+    errors.value.email = ["Email is required"];
+    hasErrors = true;
+  } else if (!emailRegex.test(data.value.email)) {
+    errors.value.email = ["Please enter a valid email address"];
+    hasErrors = true;
+  }
+
+  if (!data.value.password) {
+    errors.value.password = ["Password is required"];
+    hasErrors = true;
+  } else {
+    if (!passwordRegex.test(data.value.password)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+      hasErrors = true;
+    }
+    if (data.value.password.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+      hasErrors = true;
+    }
+  }
+
+  // Validate password confirmation
+  if (!data.value.password_confirmation) {
+    errors.value.password_confirmation = ["Password confirmation is required"];
+    hasErrors = true;
+  } else if (data.value.password !== data.value.password_confirmation) {
+    errors.value.password_confirmation = ["Passwords don't match"];
+    hasErrors = true;
+  }
+
+  if (hasErrors) {
+    return;
+  }
+
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/register", data.value)
       .then(response => {
@@ -60,7 +171,7 @@ function submit() {
 
         <form @submit.prevent="submit" class="flex grid grid-cols-3 gap-4">
           <div>
-            <label for="firstName" class="block text-md font-medium text-gray-700">First Name</label>
+            <label for="firstName" class="block text-md font-medium text-gray-700">First Name *</label>
             <input type="text" name="firstName" id="firstName" v-model="data.firstName"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p class="text-sm mt-1 text-red-600">
@@ -76,7 +187,7 @@ function submit() {
             </p>
           </div>
           <div>
-            <label for="lastName" class="block text-md font-medium text-gray-700">Last Name</label>
+            <label for="lastName" class="block text-md font-medium text-gray-700">Last Name *</label>
             <input type="text" v-model="data.lastName" id="lastName"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <p class="text-sm mt-1 text-red-600">
@@ -84,7 +195,7 @@ function submit() {
             </p>
           </div>
           <div class="col-span-3">
-            <label for="email" class="block text-md font-medium text-gray-700">Email</label>
+            <label for="email" class="block text-md font-medium text-gray-700">Email *</label>
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p class="text-sm mt-1 text-red-600">
@@ -93,7 +204,7 @@ function submit() {
           </div>
 
           <div class="col-span-3">
-            <label for="password" class="block text-md font-medium text-gray-700">Password</label>
+            <label for="password" class="block text-md font-medium text-gray-700">Password *</label>
             <input type="password" name="password" id="password" v-model="data.password"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p class="text-sm mt-1 text-red-600">
@@ -102,7 +213,7 @@ function submit() {
           </div>
 
           <div class="col-span-3">
-            <label for="confirmPassword" class="block text-md font-medium text-gray-700">Confirm Password</label>
+            <label for="confirmPassword" class="block text-md font-medium text-gray-700">Confirm Password *</label>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
             <p class="text-sm mt-1 text-red-600">
