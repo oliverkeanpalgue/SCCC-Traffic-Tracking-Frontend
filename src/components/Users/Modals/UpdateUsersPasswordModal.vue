@@ -62,11 +62,6 @@ const confirmUpdatePassword = async () => {
     try {
         isLoading.value = true
 
-        if (password.value !== confirmPassword.value) {
-            passwordError.value = 'Passwords do not match';
-            return;
-        }
-
         const updatePassword = {
             firstName: props.user.firstName,
             middleName: props.user.middleName,
@@ -99,6 +94,83 @@ const confirmUpdatePassword = async () => {
     }
 }
 
+// validations
+const errors = ref({
+  password: [],
+  password_confirmation: [],
+})
+
+// REGEX s
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!password.value) {
+    errors.value.password = ["Password is required"];
+    hasErrors = true;
+  } else {
+    if (!passwordRegex.test(password.value)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+      hasErrors = true;
+    }
+    if (password.value.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+      hasErrors = true;
+    }
+  }
+
+  // Validate password confirmation
+  if (!confirmPassword.value) {
+    errors.value.password_confirmation = ["Password confirmation is required"];
+    hasErrors = true;
+  } else if (password.value !== confirmPassword.value) {
+    errors.value.password_confirmation = ["Passwords don't match"];
+    hasErrors = true;
+  }
+
+  if (hasErrors) {
+    return;
+  }
+}
+
+
+// watch for validation
+watch(() => password.value, (newValue) => {
+  errors.value.password = [];
+  if (!newValue) {
+    errors.value.password = ["Password is required"];
+  } else {
+    if (!passwordRegex.test(newValue)) {
+      errors.value.password = ["Password must contain both letters and numbers"];
+    }
+    if (newValue.length < 8) {
+      errors.value.password = ["Password must be at least 8 characters long"];
+    }
+  }
+});
+
+watch(() => confirmPassword.value, (newValue) => {
+  if (!newValue) {
+    errors.value.password_confirmation = ["Password confirmation is required"];
+  } else if (newValue !== password.value) {
+    errors.value.password_confirmation = ["Passwords don't match"];
+  } else {
+    errors.value.password_confirmation = [];
+  }
+});
+
+const isClickedShowConfirmationModal = () => {
+    if (!validateForm()) {
+        return;
+    } else {
+        showConfirmationModal = true
+    }
+}
 
 </script>
 
@@ -118,7 +190,11 @@ const confirmUpdatePassword = async () => {
             <!-- USER INPUT -->
             <div class="px-5 text-start max-h-[69vh] overflow-y-auto">
                 <!-- Password -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Password:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Password:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+                </div>
+                
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <ReLockPasswordLine />
@@ -128,7 +204,10 @@ const confirmUpdatePassword = async () => {
                         placeholder="Enter new password">
                 </div>
                 <!-- Password verification -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Confirm Password:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Confirm Password:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ? errors.password_confirmation[0] : '' }}</p>
+                </div>
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <ReLockPasswordLine />
@@ -149,7 +228,7 @@ const confirmUpdatePassword = async () => {
                     </button>
                 </div>
                 <div class="w-1/2 px-3">
-                    <button @click="showConfirmationModal = true"
+                    <button @click="isClickedShowConfirmationModal()"
                         class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
                         Change Password
                     </button>

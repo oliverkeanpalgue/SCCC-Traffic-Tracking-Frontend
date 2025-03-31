@@ -100,6 +100,81 @@ const confirmUpdateUsers = async () => {
         isLoading.value = false;
     }
 }
+
+// error validation
+const errors = ref({
+    firstName: [],
+    middleName: [],
+    lastName: [],
+    email: [],
+})
+
+// REGEXE s
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!firstName.value) {
+        errors.value.firstName = ["First name is required"];
+        hasErrors = true;
+    }
+
+    if (!lastName.value) {
+        errors.value.lastName = ["Last name is required"];
+        hasErrors = true;
+    }
+
+    if (!email.value) {
+        errors.value.email = ["Email is required"];
+        hasErrors = true;
+    } else if (!emailRegex.test(email.value)) {
+        errors.value.email = ["Please enter a valid email address"];
+        hasErrors = true;
+    }
+
+    return !hasErrors;
+}
+
+// watch effect for validation
+watch(() => firstName.value, (newValue) => {
+    if (!newValue) {
+        errors.value.firstName = ["First name is required"];
+    } else {
+        errors.value.firstName = [];
+    }
+});
+
+watch(() => lastName.value, (newValue) => {
+    if (!newValue) {
+        errors.value.lastName = ["Last name is required"];
+    } else {
+        errors.value.lastName = [];
+    }
+});
+
+
+watch(() => email.value, (newValue) => {
+    if (!newValue) {
+        errors.value.email = ["Email is required"];
+    } else if (!emailRegex.test(newValue)) {
+        errors.value.email = ["Please enter a valid email address"];
+    } else {
+        errors.value.email = [];
+    }
+});
+
+const isClickedShowConfirmationModal = () => {
+    if (!validateForm()) {
+        return;
+    } else {
+        showConfirmationModal = true
+    }
+}
 </script>
 
 <template>
@@ -118,7 +193,13 @@ const confirmUpdateUsers = async () => {
             <!-- USER INPUT -->
             <div class="px-5 text-start max-h-[69vh] overflow-y-auto">
                 <!-- First Name -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">First Name:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">First Name:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.firstName ?
+                        errors.firstName[0] :
+                        '' }}</p>
+                </div>
+
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <FlFilledBookContacts />
@@ -128,7 +209,7 @@ const confirmUpdateUsers = async () => {
                         placeholder="Ex. Leonardo">
                 </div>
                 <!-- MIDDLE NAME -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
+                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Middle Name:</label>
                 <div class="relative ml-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <FlFilledBookContacts />
@@ -138,7 +219,12 @@ const confirmUpdateUsers = async () => {
                         placeholder="Ex. Wilhelm">
                 </div>
                 <!-- LAST NAME -->
-                <label class="block mt-2 mb-2 text font-medium text-gray-900 dark:text-gray-200">Last Name:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Last Name:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.lastName ?
+                        errors.lastName[0] :
+                        '' }}</p>
+                </div>
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <FlFilledBookContacts />
@@ -148,7 +234,12 @@ const confirmUpdateUsers = async () => {
                         placeholder="Ex. DiCaprio">
                 </div>
                 <!-- EMAIL -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Email:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Email:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ?
+                        errors.email[0] :
+                        '' }}</p>
+                </div>
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <MdOutlinedAlternateEmail />
@@ -168,7 +259,7 @@ const confirmUpdateUsers = async () => {
                     </button>
                 </div>
                 <div class="w-1/2 px-3">
-                    <button @click="showConfirmationModal = true"
+                    <button @click="isClickedShowConfirmationModal()"
                         class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
                         Update
                     </button>

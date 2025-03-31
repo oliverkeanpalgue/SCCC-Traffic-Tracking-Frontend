@@ -53,9 +53,9 @@ onUnmounted(() => {
 })
 
 watch(() => props.category, (categories) => {
-  if (categories) {
-    categoryName.value = categories.category_name
-  }
+    if (categories) {
+        categoryName.value = categories.category_name
+    }
 }, { immediate: true })
 
 const confirmUpdateCategory = async () => {
@@ -88,6 +88,43 @@ const confirmUpdateCategory = async () => {
         isLoading.value = false;
     }
 }
+
+// error validation
+const errors = ref({
+    categoryName: [],
+})
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!categoryName.value) {
+        errors.value.categoryName = ["Category name is required"];
+        hasErrors = true;
+    }
+
+    return !hasErrors;
+}
+
+// watch effect for validation
+watch(() => categoryName.value, (newValue) => {
+    if (!newValue) {
+        errors.value.categoryName = ["Category name is required"];
+    } else {
+        errors.value.categoryName = [];
+    }
+});
+
+const isClickedShowConfirmationModal = () => {
+    if (!validateForm()) {
+        return;
+    } else {
+        showConfirmationModal = true
+    }
+}
 </script>
 
 <template>
@@ -100,13 +137,17 @@ const confirmUpdateCategory = async () => {
         <div v-else ref="modalContainer"
             class="w-full max-w-[650px] max-h-[90vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
             <h3 class="text-3xl font-semibold mb-4">
-                Update Category 
+                Update Category
             </h3>
 
             <!-- QUANTITY INPUT -->
             <div class="px-5 text-start max-h-[69vh] overflow-y-auto">
                 <!-- Category NAME -->
-                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Category Name:</label>
+                <div class="flex flex-row">
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Category Name:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.categoryName ? errors.categoryName[0] :
+                        '' }}</p>
+                </div>
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <BsBoxFill />
@@ -126,7 +167,7 @@ const confirmUpdateCategory = async () => {
                     </button>
                 </div>
                 <div class="w-1/2 px-3">
-                    <button @click="showConfirmationModal = true"
+                    <button @click="isClickedShowConfirmationModal()"
                         class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
                         Update
                     </button>

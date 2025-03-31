@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch } from 'vue'
 import { CaCategories, MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
 import QRCode from 'qrcode.vue'
@@ -72,6 +72,176 @@ const handleImageUpload = (event) => {
   selectedImage.value = event.target.files[0];
 };
 
+const errors = ref({
+  selectedImage: [],
+  selectedOffice: [],
+  selectedCategory: [],
+  equipmentName: [],
+  equipmentDescription: [],
+  supplyName: [],
+  supplyDescription: [],
+  serialNumber: [],
+  supplyQuantity: [],
+  equipmentQuantity: [],
+})
+
+// watch effect for validation
+watch(() => selectedImage.value, (newValue) => {
+  if (!newValue) {
+    errors.value.selectedImage = ["Image is required"];
+  } else {
+    errors.value.selectedImage = [];
+  }
+});
+
+watch(() => selectedOffice.vakye, (newValue) => {
+  if (!newValue) {
+    errors.value.selectedOffice = ["Office is required"];
+  } else {
+    errors.value.selectedOffice = [];
+  }
+});
+
+watch(() => selectedCategory.value, (newValue) => {
+  if (!newValue) {
+    errors.value.selectedCategory = ["Category is required"];
+  } else {
+    errors.value.selectedCategory = [];
+  }
+});
+
+watch(() => equipmentName.value, (newValue) => {
+  if (!newValue) {
+    errors.value.equipmentName = ["Equipment name is required"];
+  } else {
+    errors.value.equipmentName = [];
+  }
+});
+
+watch(() => equipmentDescription.value, (newValue) => {
+  if (!newValue) {
+    errors.value.equipmentDescription = ["Equipment description is required"];
+  } else {
+    errors.value.equipmentDescription = [];
+  }
+});
+
+watch(() => supplyName.value, (newValue) => {
+  if (!newValue) {
+    errors.value.supplyName = ["Supply name is required"];
+  } else {
+    errors.value.supplyName = [];
+  }
+});
+
+watch(() => supplyDescription.value, (newValue) => {
+  if (!newValue) {
+    errors.value.supplyDescription = ["Supply description is required"];
+  } else {
+    errors.value.supplyDescription = [];
+  }
+});
+
+watch(() => serialNumber.value, (newValue) => {
+  if (!newValue) {
+    errors.value.serialNumber = ["Serial number is required"];
+  } else {
+    errors.value.serialNumber = [];
+  }
+});
+
+watch(() => supplyQuantity.value, (newValue) => {
+  if (!newValue) {
+    errors.value.supplyQuantity = ["Supply quantity is required"];
+  } else {
+    errors.value.supplyQuantity = [];
+  }
+});
+
+watch(() => equipmentQuantity.value, (newValue) => {
+  if (!newValue) {
+    errors.value.equipmentQuantity = ["Equipment Quantity is required"];
+  } else {
+    errors.value.equipmentQuantity = [];
+  }
+});
+
+const validateForm = () => {
+  Object.keys(errors.value).forEach(key => {
+    errors.value[key] = [];
+  });
+
+  let hasErrors = false;
+
+  if (!selectedImage.value) {
+    errors.value.selectedImage = ["Image is required"];
+    hasErrors = true;
+  }
+
+  if (!selectedOffice.value) {
+    errors.value.selectedOffice = ["Office is required"];
+    hasErrors = true;
+  }
+
+  if (!selectedCategory.value) {
+    errors.value.selectedCategory = ["Category is required"];
+    hasErrors = true;
+  }
+
+  if (!equipmentName.value) {
+    errors.value.equipmentName = ["Equipment name is required"];
+    hasErrors = true;
+  }
+
+  if (!equipmentDescription.value) {
+    errors.value.equipmentDescription = ["Equipment description is required"];
+    hasErrors = true;
+  }
+
+  if (!supplyName.value) {
+    errors.value.supplyName = ["Supply name is required"];
+    hasErrors = true;
+  }
+
+  if (!supplyDescription.value) {
+    errors.value.supplyDescription = ["Supply description is required"];
+    hasErrors = true;
+  }
+
+  if (!serialNumber.value) {
+    errors.value.serialNumber = ["Serial number is required"];
+    hasErrors = true;
+  }
+
+  if (!supplyQuantity.value) {
+    errors.value.supplyQuantity = ["Supply quantity is required"];
+    hasErrors = true;
+  }
+
+  if (!equipmentQuantity.value) {
+    errors.value.equipmentQuantity = ["Equipment copy is required"];
+    hasErrors = true;
+  }
+
+  return !hasErrors;
+}
+
+const isClickedShowSupplyConfirmationModal = () => {
+  if (!validateForm()) {
+    return;
+  } else {
+    showSupplyConfirmationModal = true
+  }
+}
+
+const isClickShowSupplyConfirmationModal = () => {
+  if (!validateForm()) {
+    return;
+  } else {
+    showSupplyConfirmationModal = true
+  }
+}
+
 const addEquipmentCopies = async (equipmentId) => {
   try {
     const quantity = parseInt(equipmentQuantity.value);
@@ -97,6 +267,7 @@ const addEquipmentCopies = async (equipmentId) => {
 
 const confirmAddItem = async () => {
   try {
+
     console.log("🚀 ~ ADDING ITEM ~ isLoading:", isLoading)
     isLoading.value = true;
 
@@ -324,13 +495,22 @@ const confirmSupplyAction = (confirmed) => {
             <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Equipment Details</p>
               <!-- EQUIPMENT IMAGE -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedImage ? errors.selectedImage[0] : ''
+                  }}</p>
+              </div>
               <div class="relative ml-2">
                 <input type="file" @change="handleImageUpload" accept="image/*"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
               </div>
               <!-- EQUIPMENT NAME -->
-              <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
+              <div class="flex flex-row">
+                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentName ? errors.equipmentName[0] : ''
+                  }}</p>
+              </div>
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <BsBoxFill />
@@ -338,10 +518,15 @@ const confirmSupplyAction = (confirmed) => {
                 <input type="text" v-model="equipmentName"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="Ex. Printer, Chair, Stairs">
+
               </div>
               <!-- EQUIPMENT DESCRIPTION -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
-                Description:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
+                  Description:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentDescription ?
+                  errors.equipmentDescription[0] : '' }}</p>
+              </div>
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <FlFilledTextDescription />
@@ -349,10 +534,16 @@ const confirmSupplyAction = (confirmed) => {
                 <textarea type="text" v-model="equipmentDescription"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="Ex. Printer, Chair, Stairs"></textarea>
+
               </div>
               <!-- EQUIPMENT CATEGORY -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
-                Category:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
+                  Category:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedCategory ?
+                  errors.selectedCategory[0] : '' }}</p>
+              </div>
+
               <div class="relative">
                 <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
                   <BxSolidCategoryAlt />
@@ -367,8 +558,13 @@ const confirmSupplyAction = (confirmed) => {
                 </div>
               </div>
               <!-- EQUIPMENT QUANTITY -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
-                Quantity:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
+                  Quantity:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentQuantity ?
+                  errors.equipmentQuantity[0] : '' }}</p>
+              </div>
+
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <AnOutlinedNumber />
@@ -383,13 +579,22 @@ const confirmSupplyAction = (confirmed) => {
             <div class="px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70 text-start">
               <p class="text-3xl mb-8 text-center mt-8">Input Supply Details</p>
               <!-- SUPPLY IMAGE -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Image:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Supply Image:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedImage ? errors.selectedImage[0] : ''
+                  }}</p>
+              </div>
+
               <div class="relative ml-2">
                 <input type="file" @change="handleImageUpload" accept="image/*"
                   class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
               </div>
               <!-- SUPPLY NAME -->
-              <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
+              <div class="flex flex-row">
+                <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Name:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.supplyName ? errors.supplyName[0] : '' }}
+                </p>
+              </div>
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <BsBoxFill />
@@ -399,8 +604,12 @@ const confirmSupplyAction = (confirmed) => {
                   placeholder="Ex. Printer, Chair, Stairs">
               </div>
               <!-- SUPPLY DESCRIPTION -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply
-                Description:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Supply
+                  Description:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.supplyDescription ?
+                  errors.supplyDescription[0] : '' }}</p>
+              </div>
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <FlFilledTextDescription />
@@ -410,8 +619,11 @@ const confirmSupplyAction = (confirmed) => {
                   placeholder="Ex. Printer, Chair, Stairs"></textarea>
               </div>
               <!-- SUPPLY CATEGORY -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Category:</label>
-
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Supply Category:</label>
+                <p class="text-red-700 ml-2 font-semibold italic"> {{ errors.selectedCategory ?
+                  errors.selectedCategory[0] : '' }}</p>
+              </div>
               <div class="relative">
                 <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
                   <BxSolidCategoryAlt />
@@ -426,7 +638,11 @@ const confirmSupplyAction = (confirmed) => {
                 </div>
               </div>
               <!-- SERIAL NUMBER -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Number:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Supply Number:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.serialNumber ? errors.serialNumber[0] : ''
+                  }}</p>
+              </div>
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <BsBoxFill />
@@ -436,7 +652,12 @@ const confirmSupplyAction = (confirmed) => {
                   placeholder="Ex. Printer, Chair, Stairs">
               </div>
               <!-- EQUIPMENT QUANTITY -->
-              <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Supply Quantity:</label>
+              <div class="flex flex-row mt-4 mb-2">
+                <label class="block text font-medium text-gray-900 dark:text-gray-200">Supply Quantity:</label>
+                <p class="text-red-700 ml-2 font-semibold italic">{{ errors.supplyQuantity ? errors.supplyQuantity[0] :
+                  '' }}</p>
+              </div>
+
               <div class="relative ml-2">
                 <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                   <AnOutlinedNumber />
@@ -449,11 +670,11 @@ const confirmSupplyAction = (confirmed) => {
 
           <div class="flex flex-wrap ml-1 px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70  mt-6">
             <div class="w-full pl-1">
-              <button v-if="selectedBreadCrumbCategory === 'equipment'" @click="showEquipmentConfirmationModal = true"
+              <button v-if="selectedBreadCrumbCategory === 'equipment'" @click="isClickedShowSupplyConfirmationModal()"
                 class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
                 Add Equipment
               </button>
-              <button v-if="selectedBreadCrumbCategory === 'supply'" @click="showSupplyConfirmationModal = true"
+              <button v-if="selectedBreadCrumbCategory === 'supply'" @click="isClickShowSupplyConfirmationModal()"
                 class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
                 Add Supply
               </button>
