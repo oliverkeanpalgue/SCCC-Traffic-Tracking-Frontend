@@ -123,6 +123,35 @@ const allInventory = computed(() => {
     }));
 });
 
+// FOR SEARCH
+const searchQuery = ref("");
+
+const filteredInventory = computed(() => {
+    if (!searchQuery.value) return allInventory.value;
+
+    const searchTerm = searchQuery.value.toLowerCase();
+    return allInventory.value.filter((item) => {
+        const equipmentName = item.equipment_name?.toLowerCase() || "";
+        const equipmentDescription = item.equipment_description?.toLowerCase() || "";
+        const serialNumber = item.serial_number?.toString().toLowerCase() || "";
+        const supplyName = item.supply_name?.toLowerCase() || "";
+        const supplyDescription = item.supply_description?.toLowerCase() || "";
+        const id = item.id?.toString().toLowerCase() || "";
+        const newId = item.newId?.toLowerCase() || "";
+
+        return (
+            equipmentName.includes(searchTerm) ||
+            equipmentDescription.includes(searchTerm) ||
+            serialNumber.includes(searchTerm) ||
+            supplyName.includes(searchTerm) ||
+            supplyDescription.includes(searchTerm) ||
+            id.includes(searchTerm) ||
+            newId.includes(searchTerm)
+        );
+    });
+});
+
+
 // FOR THE ADD TRANSACTION ITEM MODAL
 const isOpenAddTransactionItemModal = ref(false);
 const selectedItem = ref(null);
@@ -164,7 +193,8 @@ const OpenAddTransactionItemModal = (item) => {
                                             clip-rule="evenodd" />
                                     </svg>
                                 </div>
-                                <input type="text" id="simple-search"
+                                <input type="text"
+                                v-model="searchQuery" id="simple-search"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                     placeholder="Search items..." />
                             </div>
@@ -174,7 +204,7 @@ const OpenAddTransactionItemModal = (item) => {
                     <!-- LIST OF ITEMS -->
                     <div
                         class="w-full rounded-xl px-4 py-2 mt-4 grid grid-cols-5 gap-4 items-center justify-center max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                        <div v-for="item in allInventory" :key="item.newId" class="w-full">
+                        <div v-for="item in filteredInventory" :key="item.newId" class="w-full">
                             <button @click.stop="OpenAddTransactionItemModal(item)"
                                 class="w-full min-h-40 cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold dark:border-gray-500 dark:bg-gray-950 dark:hover:bg-gray-800">
                                 <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image"
@@ -185,7 +215,8 @@ const OpenAddTransactionItemModal = (item) => {
                             </button>
                         </div>
                         <AddTransactionItemModal v-if="isOpenAddTransactionItemModal"
-                            v-model="isOpenAddTransactionItemModal" :item="selectedItem" :equipmentCopies="equipmentCopiesArray" @click.stop />
+                            v-model="isOpenAddTransactionItemModal" :item="selectedItem"
+                            :equipmentCopies="equipmentCopiesArray" @click.stop />
                     </div>
                 </div>
 
