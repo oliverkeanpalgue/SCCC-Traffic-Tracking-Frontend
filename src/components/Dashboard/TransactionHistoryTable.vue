@@ -15,6 +15,8 @@ import { AkCross } from '@kalimahapps/vue-icons';
 import { BsQuestion } from '@kalimahapps/vue-icons';
 import { BsCheck } from '@kalimahapps/vue-icons';
 import { BsX } from '@kalimahapps/vue-icons';
+import { AkPlus } from '@kalimahapps/vue-icons';
+import CreateTransactionModal from './Modal/CreateTransactionModal.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -113,11 +115,11 @@ const filteredTransactions = computed(() => {
 
     // FETCH ITEMS OF THE TRANSACTION
     const selectedTransactionItems = props.transactionItems?.filter(item => item.transaction_id === transaction.id) || [];
-    
-    if (!selectedTransactionItems.length){
+
+    if (!selectedTransactionItems.length) {
       console.log("NO ITEMS, RETURNING FALSE")
-    return false;
-    }  
+      return false;
+    }
 
     // ITEMS MATCH
     const itemsMatch = selectedTransactionItems.some(item => {
@@ -151,20 +153,11 @@ const filteredTransactions = computed(() => {
       props.borrowers
         ?.find((borrower) => borrower.id === transaction.borrower_id)
         ?.office_id || "";
-        
+
     const officeMatch =
       props.officeList
         ?.find((office) => office.id === borrowerOfficeId)
         ?.office_name?.toLowerCase() || "";
-
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ borrowerName:", borrowerName)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ transactionId:", transactionId)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ lender:", lender)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ officeMatch:", officeMatch)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ returnDate:", returnDate)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ borrowDate:", borrowDate)
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ selectedTransactionItems:", toRaw(selectedTransactionItems))
-    console.log("🚀 ~ returnprops.transactionHistory.filter ~ itemsMatch:", itemsMatch)
 
     return (
       officeMatch &&
@@ -287,7 +280,12 @@ onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
 });
 
+// FOR CREATE TRANSACTION MODAL
+const isOpenCreateTransactionModal = ref(false);
 
+const OpenCreateTransactionModal = () => {
+  isOpenCreateTransactionModal.value = true;
+}
 </script>
 
 <template>
@@ -334,6 +332,16 @@ onUnmounted(() => {
                       all</a>
                   </div>
                 </div>
+
+                <button @click.stop="OpenCreateTransactionModal()"
+                  class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
+                  <AkPlus class="w-5 h-5 mr-1" />
+                  New Transaction
+                </button>       
+
+                <!--CREATE TRANSACTION MODAL -->
+                <CreateTransactionModal v-if="isOpenCreateTransactionModal" v-model="isOpenCreateTransactionModal"
+                  @click.stop />
 
                 <!--OFFICE DROPDOWN -->
                 <section class="">
@@ -431,7 +439,7 @@ onUnmounted(() => {
                     </td>
                     <td>
                       <ul>
-                          <li v-for="item in props.transactionItems" :key="item.id"
+                        <li v-for="item in props.transactionItems" :key="item.id"
                           class="flex flex-row pl-2 justify-start items-center font-bold dark:font-semibold ">
                           <div v-if="item.transaction_id === transaction.id">
                             <!-- OFFICE SUPPLY ITEM -->
