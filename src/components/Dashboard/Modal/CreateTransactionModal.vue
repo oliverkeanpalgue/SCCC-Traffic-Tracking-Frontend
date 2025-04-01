@@ -180,12 +180,12 @@ const OpenAddTransactionItemModal = (item) => {
                                 <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image"
                                     class="w-full h-28 object-cover rounded-lg" />
                                 <p class="text-center mt-2 font-medium">
-                                    {{ item.equipment_name || item.supply_name }} adfadfda
+                                    {{ item.equipment_name || item.supply_name }}
                                 </p>
                             </button>
                         </div>
                         <AddTransactionItemModal v-if="isOpenAddTransactionItemModal"
-                            v-model="isOpenAddTransactionItemModal" :item="selectedItem" :equipmentCopies="equipmentCopiesArray" @click.stop />
+                            v-model="isOpenAddTransactionItemModal" :selectedItem="selectedItem" :equipmentCopies="equipmentCopiesArray" @click.stop />
                     </div>
                 </div>
 
