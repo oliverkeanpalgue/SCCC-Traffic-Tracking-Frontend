@@ -107,22 +107,23 @@ function submit() {
             {{ errorMessage }}
           </div>
           <div>
-            <label for="email" class="block text-md font-medium text-gray-700">Email</label>
+            <div class="flex flex-row">
+              <label for="email" class="block text-md font-medium text-gray-700">Email: </label>
+              <p class="text-red-700 ml-2 font-semibold italic">
+                {{ errors.email ? errors.email[0] : '' }}
+              </p>
+            </div>
             <input name="email" id="email" autocomplete="email" v-model="data.email"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-sm mt-1 text-red-600">
-              {{ errors.email ? errors.email[0] : '' }}
-            </p>
           </div>
-
           <div>
-            <label for="password" class="block text-md font-medium text-gray-700">Password</label>
-            <input type="password" name="password" id="password" autocomplete="current-password"
-              v-model="data.password"
+            <div class="flex flex-row">
+              <label for="password" class="block text-md font-medium text-gray-700">Password: </label>
+              <p class="color-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+            </div>
+
+            <input type="password" name="password" id="password" autocomplete="current-password" v-model="data.password"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-sm mt-1 text-red-600">
-              {{ errors.password ? errors.password[0] : '' }}
-            </p>
           </div>
 
           <button type="submit"
