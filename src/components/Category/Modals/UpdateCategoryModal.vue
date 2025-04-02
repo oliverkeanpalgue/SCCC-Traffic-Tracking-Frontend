@@ -122,9 +122,10 @@ const isClickedShowConfirmationModal = () => {
     if (!validateForm()) {
         return;
     } else {
-        showConfirmationModal = true
+        showConfirmationModal.value = true
     }
 }
+
 </script>
 
 <template>
