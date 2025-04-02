@@ -1,12 +1,12 @@
 <script setup>
 
-import GuestLayout from "../../components/GuestLayout.vue";
 import axiosClient from "../../axios.js";
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import router from "../../router.js";
 import logo from '../../assets/baguio-logo.png';
 import Loading from "../../components/Loading.vue";
 import emitter from "../../eventBus.js";
+import {useDatabaseStore} from "../../stores/databaseStore";
 
 const isLoading = ref(false);
 
@@ -25,8 +25,6 @@ const errors = ref({
 // REGEXE s
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
-
-
 
 function submit() {
   Object.keys(errors.value).forEach(key => {
@@ -66,17 +64,34 @@ function submit() {
   axiosClient.get('/sanctum/csrf-cookie').then(response => {
     axiosClient.post("/login", data.value)
       .then(response => {
-        isLoading.value = false
         emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
         router.push({ name: 'Dashboard' })
+        isLoading.value = false
       })
       .catch(error => {
-        isLoading.value = false
         console.log(error.response)
         errorMessage.value = error.response.data.message;
+        isLoading.value = false
       })
   });
 }
+
+// fetching data
+const databaseStore = useDatabaseStore()
+
+let refreshInterval = null;
+
+onMounted(() => {
+    databaseStore.fetchData()
+    // Optionally, set an interval to auto-refresh:
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
+})
 
 </script>
 
