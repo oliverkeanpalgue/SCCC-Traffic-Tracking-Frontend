@@ -134,6 +134,85 @@ const confirmAction = (confirmed) => {
     confirmUpdateEquipment()
   }
 }
+
+// error validation
+const errors = ref({
+  equipmentName: [],
+  equipmentDescription: [],
+  selectedCategory: [],
+  selectedImage: [],
+})
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!equipmentName.value) {
+        errors.value.equipmentName = ["Equipment Name is required"];
+        hasErrors = true;
+    }
+
+    if (!equipmentDescription.value) {
+        errors.value.equipmentDescription = ["Equipment Description is required"];
+        hasErrors = true;
+    }
+
+    if (!selectedCategory.value) {
+        errors.value.selectedCategory = ["Category is required"];
+        hasErrors = true;
+    }
+
+    if (!selectedImage.value) {
+        errors.value.selectedImage = ["Image is required"];
+        hasErrors = true;
+    }
+
+    return !hasErrors;
+}
+
+watch(() => equipmentName.value, (newValue) => {
+    if (!newValue) {
+        errors.value.equipmentName = ["Equipment name is required"];
+    } else {
+        errors.value.equipmentName = [];
+    }
+});
+
+watch(() => equipmentDescription.value, (newValue) => {
+    if (!newValue) {
+        errors.value.equipmentDescription = ["Equipment description is required"];
+    } else {
+        errors.value.equipmentDescription = [];
+    }
+});
+
+watch(() => selectedCategory.value, (newValue) => {
+    if (!newValue) {
+        errors.value.selectedCategory = ["Category is required"];
+    } else {
+        errors.value.selectedCategory = [];
+    }
+});
+
+watch(() => selectedImage.value, (newValue) => {
+    if (!newValue) {
+        errors.value.selectedImage = ["Image is required"];
+    } else {
+        errors.value.selectedImage = [];
+    }
+});
+
+const isClickedShowConfirmationModal = () => {
+    if (!validateForm()) {
+        return;
+    } else {
+        showConfirmationModal.value = true
+    }
+}
+
 </script>
 
 <template>
@@ -147,11 +226,20 @@ const confirmAction = (confirmed) => {
       </h3>
       <div class="flex flex-col text-start">
         <!-- IMAGE UPLOAD -->
-        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+        <div class="flex flex-row mt-4 mb-2">
+        <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedImage ? errors.selectedImage[0] :
+          '' }}</p>
+      </div>
         <input type="file" @change="handleImageUpload"
           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
         <!-- EQUIPMENT NAME -->
-        <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
+        <div class="flex flex-row">
+          <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment Name:</label>
+          <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentName ? errors.equipmentName[0] :
+            '' }}</p>
+        </div>
+        
         <div class="relative ml-2">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
             <BsBoxFill />
@@ -161,8 +249,12 @@ const confirmAction = (confirmed) => {
             placeholder="Ex. Printer, Chair, Stairs">
         </div>
         <!-- EQUIPMENT DESCRIPTION -->
-        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
-          Description:</label>
+        <div class="flex flex-row mt-4 mb-2">
+          <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
+            Description:</label>
+            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentDescription ? errors.equipmentDescription[0] :
+              '' }}</p>
+        </div>
         <div class="relative ml-2">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
             <FlFilledTextDescription />
@@ -172,8 +264,13 @@ const confirmAction = (confirmed) => {
             placeholder="Ex. Printer, Chair, Stairs"></textarea>
         </div>
         <!-- EQUIPMENT CATEGORY -->
-        <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Equipment
-          Category:</label>
+        <div class="flex flex-row mt-4 mb-2">
+          <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
+            Category:</label>
+            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedCategory ? errors.selectedCategory[0] :
+              '' }}</p>
+        </div>
+        
         <div class="relative">
           <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
             <BxSolidCategoryAlt />
@@ -197,7 +294,7 @@ const confirmAction = (confirmed) => {
           </button>
         </div>
         <div class="w-1/2 px-3">
-          <button @click="showConfirmationModal = true"
+          <button @click="isClickedShowConfirmationModal()"
             class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
             Update
           </button>

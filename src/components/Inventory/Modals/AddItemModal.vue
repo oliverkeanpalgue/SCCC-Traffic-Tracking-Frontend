@@ -166,7 +166,7 @@ watch(() => equipmentQuantity.value, (newValue) => {
   }
 });
 
-const validateForm = () => {
+const validateEquipmentForm = () => {
   Object.keys(errors.value).forEach(key => {
     errors.value[key] = [];
   });
@@ -198,6 +198,36 @@ const validateForm = () => {
     hasErrors = true;
   }
 
+  if (!equipmentQuantity.value) {
+    errors.value.equipmentQuantity = ["Equipment quantity is required"];
+    hasErrors = true;
+  }
+
+  return !hasErrors;
+}
+
+const validateSupplyForm = () => {
+  Object.keys(errors.value).forEach(key => {
+    errors.value[key] = [];
+  });
+
+  let hasErrors = false;
+
+  if (!selectedImage.value) {
+    errors.value.selectedImage = ["Image is required"];
+    hasErrors = true;
+  }
+
+  if (!selectedOffice.value) {
+    errors.value.selectedOffice = ["Office is required"];
+    hasErrors = true;
+  }
+
+  if (!selectedCategory.value) {
+    errors.value.selectedCategory = ["Category is required"];
+    hasErrors = true;
+  }
+
   if (!supplyName.value) {
     errors.value.supplyName = ["Supply name is required"];
     hasErrors = true;
@@ -218,27 +248,22 @@ const validateForm = () => {
     hasErrors = true;
   }
 
-  if (!equipmentQuantity.value) {
-    errors.value.equipmentQuantity = ["Equipment copy is required"];
-    hasErrors = true;
-  }
-
   return !hasErrors;
 }
 
-const isClickedShowSupplyConfirmationModal = () => {
-  if (!validateForm()) {
+const isClickedShowEquipmentConfirmationModal = () => {
+  if (!validateEquipmentForm()) {
     return;
   } else {
-    showSupplyConfirmationModal = true
+    showEquipmentConfirmationModal.value = true
   }
 }
 
 const isClickShowSupplyConfirmationModal = () => {
-  if (!validateForm()) {
+  if (!validateSupplyForm()) {
     return;
   } else {
-    showSupplyConfirmationModal = true
+    showSupplyConfirmationModal.value = true
   }
 }
 
@@ -670,7 +695,7 @@ const confirmSupplyAction = (confirmed) => {
 
           <div class="flex flex-wrap ml-1 px-5 sm:px-20 md:px-45 lg:px-55 xl:px-60 2xl:px-70  mt-6">
             <div class="w-full pl-1">
-              <button v-if="selectedBreadCrumbCategory === 'equipment'" @click="isClickedShowSupplyConfirmationModal()"
+              <button v-if="selectedBreadCrumbCategory === 'equipment'" @click="isClickedShowEquipmentConfirmationModal()"
                 class="block w-full rounded-md border p-2 text-center text-base font-medium text-white transition bg-emerald-700  border-emerald-600 hover:border-emerald-500 hover:bg-emerald-600 hover:text-white dark:text-white">
                 Add Equipment
               </button>

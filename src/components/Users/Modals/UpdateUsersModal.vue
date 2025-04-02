@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch, computed } from 'vue'
 import axiosClient from '../../../axios';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { BsBoxFill } from '@kalimahapps/vue-icons';
@@ -9,11 +9,35 @@ import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
 import { MdOutlinedAlternateEmail } from '@kalimahapps/vue-icons';
 import { FlFilledBookContacts } from '@kalimahapps/vue-icons';
+import { useDatabaseStore } from '../../../stores/databaseStore';
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
+
+// fetching users
+const databaseStore = useDatabaseStore()
+
+let refreshInterval = null;
+
+onMounted(() => {
+    databaseStore.fetchData()
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+const computedProperties = {
+    users: "users",
+};
+
+const {
+    users,
+} = Object.fromEntries(
+    Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
+);
+
 
 const isLoading = ref(false)
 
@@ -25,6 +49,7 @@ const email = ref('')
 const props = defineProps({
     modelValue: Boolean,
     user: Object,
+    users: Array
 })
 
 const showConfirmationModal = ref(false)
@@ -109,6 +134,26 @@ const errors = ref({
     email: [],
 })
 
+// fetching user data if there is a email in the users database and getting it's data
+const foundUser = ref(null)
+
+const checkEmailExists = () => {
+    const userMatch = users.value.find(user =>
+        user.email === email.value && user.id !== props.user.id
+    );
+
+    if (userMatch) {
+        foundUser.value = userMatch;
+        errors.value.email = ['Email is already registered by another user'];
+        return false;
+    }
+
+    foundUser.value = null;
+    errors.value.email = [];
+    return true;
+}
+
+
 // REGEXE s
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -134,6 +179,8 @@ const validateForm = () => {
         hasErrors = true;
     } else if (!emailRegex.test(email.value)) {
         errors.value.email = ["Please enter a valid email address"];
+        hasErrors = true;
+    } else if (!checkEmailExists()) {
         hasErrors = true;
     }
 
@@ -164,7 +211,10 @@ watch(() => email.value, (newValue) => {
     } else if (!emailRegex.test(newValue)) {
         errors.value.email = ["Please enter a valid email address"];
     } else {
-        errors.value.email = [];
+        // Directly handle the validation result
+        if (!checkEmailExists()) {
+            errors.value.email = ['Email is already registered by another user'];
+        }
     }
 });
 
@@ -172,7 +222,7 @@ const isClickedShowConfirmationModal = () => {
     if (!validateForm()) {
         return;
     } else {
-        showConfirmationModal = true
+        showConfirmationModal.value = true
     }
 }
 </script>
