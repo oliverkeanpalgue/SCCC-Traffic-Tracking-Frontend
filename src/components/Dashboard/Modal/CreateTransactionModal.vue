@@ -7,6 +7,21 @@ import { useDatabaseStore } from "../../../stores/databaseStore";
 import AddTransactionItemModal from './AddTransactionItemModal.vue';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
 import { MdRoundDeleteForever } from '@kalimahapps/vue-icons';
+import { BxSolidUser } from '@kalimahapps/vue-icons';
+import { AkTextAlignLeft } from '@kalimahapps/vue-icons';
+import useUserStore from "../../../stores/user.js";
+
+// storing inputs
+const borrowerInput = ref("")
+const lenderInput = ref("")
+const iscInput = ref("")
+const remarksInput = ref("")
+
+// User Store to get Lender
+const userStore = useUserStore();
+const loggedInUser = computed(() => userStore.user);
+lenderInput.value = loggedInUser.value.id
+
 
 // FETCHING DATA
 const databaseStore = useDatabaseStore()
@@ -78,12 +93,6 @@ const props = defineProps({
 
 const showConfirmationModal = ref(false)
 
-const confirmAction = (confirmed) => {
-    if (confirmed) {
-        confirmCreateTransaction()
-    }
-}
-
 const modalContainer = ref(null)
 
 const emit = defineEmits(['update:modelValue', 'confirmDelete'])
@@ -105,17 +114,6 @@ onMounted(() => {
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
-
-const confirmCreateTransaction = async () => {
-    try {
-        emitter.emit("show-toast", { message: "Copy/Copies added successfully!", type: "success" });
-        // closeModal()
-    } catch (error) {
-        emitter.emit("show-toast", { message: "Error adding copies. Please try again.", type: "error" });
-    } finally {
-        isLoading.value = false;
-    }
-}
 
 const allInventory = computed(() => {
     return [...officeEquipmentsArray.value, ...officeSuppliesArray.value].map((item, index) => ({
@@ -171,7 +169,7 @@ const handleConfirmAdd = (items) => {
 
         if (!exists) {
             selectedItems.value.push(item);
-        }else{
+        } else {
             if (item.item_type === 'Office Supply') {
                 selectedItems.value = selectedItems.value.filter(selected => selected.item_copy_id !== item.item_copy_id);
                 selectedItems.value.push(item);
@@ -182,10 +180,71 @@ const handleConfirmAdd = (items) => {
 
 // Remove selected item from the overall list
 const handleRemoveItem = (item) => {
-    selectedItems.value = selectedItems.value.filter(selected => selected.item_copy_id !== item.item_copy_id);
-    console.log("🚀 ~ handleRemoveItem ~ selectedItems.value:", selectedItems.value)
+    selectedItems.value = selectedItems.value.filter(selected => selected.item_copy_id !== item.item_copy_id)
 };
 
+// BORROWER LIST DROPDOWN
+const showBorrowerListDropdown = ref(false);
+
+// Filtered List for Searching
+const filteredBorrowers = computed(() => {
+    if (!borrowerInput.value) return borrowersArray.value;
+    return borrowersArray.value.filter((borrower) =>
+        borrower.borrowers_name.toLowerCase().includes(borrowerInput.value.toLowerCase())
+    );
+});
+
+// Select an Existing Borrower or Keep New Input
+const selectBorrower = (value) => {
+    borrowerInput.value = value;
+    showBorrowerListDropdown.value = false;
+};
+
+// Delay Hiding Dropdown to Allow Selection
+const hideBorrowerDropdownWithDelay = () => {
+    setTimeout(() => {
+        showBorrowerListDropdown.value = false;
+    }, 200);
+};
+
+// HANDLE OF CREATE TRANSACTION BUTTON
+const handleCreateTransactionButton = () => {
+    if (selectedItems.value.length) {
+        showConfirmationModal.value = true
+    } else{
+        // LAGAY ERROR DITO NO ITEMS SELECTED
+    }
+}
+
+// FOR THE CONFIRMATION MODAL
+const formattedMessageData = computed(() => {
+  if (!selectedItems.value.length) return "No items selected.";
+
+  return selectedItems.value
+    .map(
+      (item, index) =>
+        `\n${index + 1}. Equipment Name: ${item.item_name || "N/A"}\n   Copy to add: ${item.quantity || item.copy || "N/A"}`
+    )
+    .join("\n");
+});
+
+// IF CONFIRM CREATE TRANSACTION WAS PRESSED:
+const createTransactionConfirmed = () => {
+    console.log(borrowerInput.value, lenderInput.value, iscInput.value, remarksInput.value, selectedItems.value)
+    confirmCreateTransaction()
+}
+
+// SAVE DATA IN BACKEND
+const confirmCreateTransaction = async () => {
+    try {
+        emitter.emit("show-toast", { message: "Copy/Copies added successfully!", type: "success" });
+        // closeModal()
+    } catch (error) {
+        emitter.emit("show-toast", { message: "Error adding copies. Please try again.", type: "error" });
+    } finally {
+        isLoading.value = false;
+    }
+}
 </script>
 
 <template>
@@ -231,7 +290,11 @@ const handleRemoveItem = (item) => {
                         class="w-full rounded-xl px-4 py-2 mt-4 grid grid-cols-5 gap-4 items-center justify-center max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                         <div v-for="item in filteredInventory" :key="item.newId" class="w-full h-full">
                             <button @click.stop="OpenAddTransactionItemModal(item)"
-                                class="w-full h-full cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold dark:border-gray-500 dark:bg-gray-950 dark:hover:bg-gray-800">
+                                class="w-full h-full cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold "
+                                :class="{
+                                    'bg-gradient-to-b bg-green-500 dark:from-green-600 dark:via-green-950 dark:to-black dark:border-green-800 text-white dark:hover:from-emerald-400 dark:hover:via-emerald-900 dark:hover:to-black ': selectedItems.some(selected => selected.basis_id === item.id && selected.basis_type === item.type),
+                                    'bg-gray-300 dark:bg-gray-950 dark:border-gray-600 dark:hover:bg-green-800 dark:hover:text-white dark:hover:border-green-800': !selectedItems.some(selected => selected.basis_id === item.id && selected.basis_type === item.type)
+                                }">
                                 <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image"
                                     class="w-full h-28 object-cover rounded-lg" />
                                 <p class="text-center mt-2 font-medium">
@@ -249,33 +312,103 @@ const handleRemoveItem = (item) => {
                 <!-- SELECTED ITEMS -->
                 <div class="rounded-2xl border-2 p-4 text-start dark:bg-black dark:border-gray-600">
                     <p class="text-2xl font-bold pl-2 mb-2">Selected Item/s:</p>
-                    <div class="border-2">
-                        <table class="w-full text-center">
-                            <thead>
+                    <div
+                        class="border-2 h-[35vh] rounded-xl overflow-y-auto bg-gray-100 dark:bg-gray-950 dark:border-gray-600">
+                        <table class="w-full text-center ">
+                            <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
-                                    <th>Item</th>
-                                    <th>Quantity/Copy</th>
+                                    <th class="py-2">Item</th>
+                                    <th>Quantity</th>
                                     <th>Remove</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="item in selectedItems" :key="item.id">
-                                    <td>{{ item.item_name }}</td>
+                                <tr v-for="item in selectedItems" :key="item.id"
+                                    class="items-center border-b dark:border-gray-600">
+                                    <td class="py-2 ">{{ item.item_name }}</td>
                                     <td>{{ item.quantity || item.copy }}</td>
-                                    <td class="flex justify-center">
-                                        <MdRoundDeleteForever class="w-6 h-6" @click="handleRemoveItem(item)" />
+                                    <td class="flex py-2 justify-center items-center ">
+                                        <button>
+                                            <MdRoundDeleteForever class="w-7 h-7 text-red-500 hover:text-red-400" @click="handleRemoveItem(item)" />
+                                        </button>
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- BORROWER -->
+                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">
+                        Type Borrower:
+                    </label>
+                    <div class="relative ml-2">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                            <BxSolidUser />
+                        </div>
+
+                        <!-- Input Field -->
+                        <input type="text" v-model="borrowerInput" @focus="showBorrowerListDropdown = true"
+                            @blur="hideBorrowerDropdownWithDelay" @keydown.enter.prevent="selectBorrower(borrowerInput)"
+                            placeholder="Search or enter new borrower..."
+                            class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" />
+
+                        <!-- Dropdown List -->
+                        <ul v-if="showBorrowerListDropdown && filteredBorrowers.length"
+                            class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
+                            <li v-for="borrower in filteredBorrowers" :key="borrower.id"
+                                @mousedown="selectBorrower(borrower.borrowers_name)"
+                                class="p-2 hover:bg-blue-100 cursor-pointer">
+                                {{ borrower.borrowers_name }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ISC/AREE -->
+                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Type
+                        ISC/AREE:</label>
+                    <div class="relative ml-2">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                            <BxSolidUser />
+                        </div>
+                        <input type="text" v-model="iscInput"
+                            class="bg-gray-50  mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Search or enter new ICS/AREE...">
+                    </div>
+
+                    <!-- REMARKS -->
+                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Type
+                        Remarks:</label>
+                    <div class="relative ml-2">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                            <AkTextAlignLeft />
+                        </div>
+                        <textarea type="text" v-model="remarksInput"
+                            class="min-h-20 max-h-30 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Enter Remarks"></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="-mx-3 flex flex-wrap mt-4">
+                        <div class="w-1/2 px-3">
+                            <button @click="closeModal"
+                                class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-300 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">
+                                Cancel
+                            </button>
+                        </div>
+                        <div class="w-1/2 px-3">
+                            <button @click="handleCreateTransactionButton"
+                                class="block w-full rounded-md border bg-primary p-3 text-center text-base font-medium text-white transition bg-green-700 hover:border-green-600 hover:bg-green-600 hover:text-white dark:text-white dark:border-green-700 dark:hover:border-green-400">
+                                Create Transaction
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <!-- Confirmation Modal -->
-            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition" :message="`The Message Here.`"
-                :messageData="`\nEquipment Name: hehehehe\nCopy to add: hehehhe`" cancelText="Cancel"
-                confirmText="Confirm Adding" @confirm="confirmAction()" />
+            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Create Transaction" :message="`You are about to make a transaction with this items.`"
+                :messageData="formattedMessageData" cancelText="Cancel"
+                confirmText="Create Transaction" @confirm="createTransactionConfirmed()" />
         </div>
     </div>
 </template>

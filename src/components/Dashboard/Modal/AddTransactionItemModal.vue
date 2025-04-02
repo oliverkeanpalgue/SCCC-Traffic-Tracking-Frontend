@@ -41,6 +41,8 @@ const confirmAction = () => {
             item_name: `${props.selectedItem.equipment_name} #${e_copy.copy_num ?? "N/A"}`,
             item_copy_id: e_copy.id,
             item_type: "Equipment Copy",
+            basis_type: "Office Equipment",
+            basis_id: props.selectedItem.id,
             returned: false,
             quantity: 1,
         }));
@@ -50,6 +52,8 @@ const confirmAction = () => {
                 item_name: props.selectedItem.supply_name,
                 item_copy_id: props.selectedItem.id,
                 item_type: "Office Supply",
+                basis_type: "Office Supply",
+                basis_id: props.selectedItem.id,
                 returned: false,
                 quantity: quantityInput.value ?? 1,
             },
