@@ -6,6 +6,7 @@ import image from '../../../../src/assets/baguio-logo.png'
 import { useDatabaseStore } from "../../../stores/databaseStore";
 import AddTransactionItemModal from './AddTransactionItemModal.vue';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
+import { MdRoundDeleteForever } from '@kalimahapps/vue-icons';
 
 // FETCHING DATA
 const databaseStore = useDatabaseStore()
@@ -160,6 +161,31 @@ const OpenAddTransactionItemModal = (item) => {
     selectedItem.value = item;
     isOpenAddTransactionItemModal.value = true;
 }
+
+const selectedItems = ref([]);
+
+// Add selected item from the modal to the overall list
+const handleConfirmAdd = (items) => {
+    items.forEach(item => {
+        const exists = selectedItems.value.some(selected => selected.item_copy_id === item.item_copy_id);
+
+        if (!exists) {
+            selectedItems.value.push(item);
+        }else{
+            if (item.item_type === 'Office Supply') {
+                selectedItems.value = selectedItems.value.filter(selected => selected.item_copy_id !== item.item_copy_id);
+                selectedItems.value.push(item);
+            }
+        }
+    });
+};
+
+// Remove selected item from the overall list
+const handleRemoveItem = (item) => {
+    selectedItems.value = selectedItems.value.filter(selected => selected.item_copy_id !== item.item_copy_id);
+    console.log("🚀 ~ handleRemoveItem ~ selectedItems.value:", selectedItems.value)
+};
+
 </script>
 
 <template>
@@ -193,8 +219,7 @@ const OpenAddTransactionItemModal = (item) => {
                                             clip-rule="evenodd" />
                                     </svg>
                                 </div>
-                                <input type="text"
-                                v-model="searchQuery" id="simple-search"
+                                <input type="text" v-model="searchQuery" id="simple-search"
                                     class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                     placeholder="Search items..." />
                             </div>
@@ -204,9 +229,9 @@ const OpenAddTransactionItemModal = (item) => {
                     <!-- LIST OF ITEMS -->
                     <div
                         class="w-full rounded-xl px-4 py-2 mt-4 grid grid-cols-5 gap-4 items-center justify-center max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                        <div v-for="item in filteredInventory" :key="item.newId" class="w-full">
+                        <div v-for="item in filteredInventory" :key="item.newId" class="w-full h-full">
                             <button @click.stop="OpenAddTransactionItemModal(item)"
-                                class="w-full min-h-40 cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold dark:border-gray-500 dark:bg-gray-950 dark:hover:bg-gray-800">
+                                class="w-full h-full cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold dark:border-gray-500 dark:bg-gray-950 dark:hover:bg-gray-800">
                                 <img :src="item.image_path ? `${VITE_API_BASE_URL}/storage/${item.image_path}` : image"
                                     class="w-full h-28 object-cover rounded-lg" />
                                 <p class="text-center mt-2 font-medium">
@@ -215,7 +240,9 @@ const OpenAddTransactionItemModal = (item) => {
                             </button>
                         </div>
                         <AddTransactionItemModal v-if="isOpenAddTransactionItemModal"
-                            v-model="isOpenAddTransactionItemModal" :selectedItem="selectedItem" :equipmentCopies="equipmentCopiesArray" @click.stop />
+                            v-model="isOpenAddTransactionItemModal" :selectedItem="selectedItem"
+                            :equipmentCopies="equipmentCopiesArray" :currentlySelectedItems="selectedItems"
+                            @confirmAdd="handleConfirmAdd" @click.stop />
                     </div>
                 </div>
 
@@ -232,10 +259,12 @@ const OpenAddTransactionItemModal = (item) => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Potato</td>
-                                    <td>5</td>
-                                    <td>Remove</td>
+                                <tr v-for="item in selectedItems" :key="item.id">
+                                    <td>{{ item.item_name }}</td>
+                                    <td>{{ item.quantity || item.copy }}</td>
+                                    <td class="flex justify-center">
+                                        <MdRoundDeleteForever class="w-6 h-6" @click="handleRemoveItem(item)" />
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
