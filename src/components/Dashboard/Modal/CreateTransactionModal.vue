@@ -10,6 +10,10 @@ import { MdRoundDeleteForever } from '@kalimahapps/vue-icons';
 import { BxSolidUser } from '@kalimahapps/vue-icons';
 import { AkTextAlignLeft } from '@kalimahapps/vue-icons';
 import useUserStore from "../../../stores/user.js";
+import axiosClient from '../../../axios.js';
+const API_KEY = import.meta.env.VITE_API_KEY;
+
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // storing inputs
 const borrowerInput = ref("")
@@ -72,6 +76,7 @@ const computedArrays = (source) => computed(() => Object.values(source.value));
 
 const transactionItemsArray = computedArrays(transactionItems);
 const transactionHistoryArray = computedArrays(transactionHistory);
+console.log('Transaction History Array:', transactionHistoryArray.value);
 const officeEquipmentsArray = computedArrays(officeEquipments);
 const officeSuppliesArray = computedArrays(officeSupplies);
 const officeListArray = computedArrays(officeList);
@@ -155,6 +160,7 @@ const filteredInventory = computed(() => {
 const isOpenAddTransactionItemModal = ref(false);
 const selectedItem = ref(null);
 
+
 const OpenAddTransactionItemModal = (item) => {
     selectedItem.value = item;
     isOpenAddTransactionItemModal.value = true;
@@ -194,9 +200,15 @@ const filteredBorrowers = computed(() => {
     );
 });
 
+
+
 // Select an Existing Borrower or Keep New Input
-const selectBorrower = (value) => {
-    borrowerInput.value = value;
+const selectedBorrowerId = ref(null);
+
+
+const selectBorrower = (borrower) => {
+    borrowerInput.value = borrower.borrowers_name;
+    selectedBorrowerId.value = borrower.id;
     showBorrowerListDropdown.value = false;
 };
 
@@ -207,25 +219,46 @@ const hideBorrowerDropdownWithDelay = () => {
     }, 200);
 };
 
+// Filtered List for Searching ISC
+const showIscListDropdown = ref(false);
+
+const filteredIsc = computed(() => {
+    if (!iscInput.value) return transactionHistoryArray.value;
+    return transactionHistoryArray.value.filter((transaction) =>
+        transaction.isc?.toLowerCase().includes(iscInput.value.toLowerCase())
+    );
+});
+
+const selectIsc = (value) => {
+    iscInput.value = value;
+    showIscListDropdown.value = false;
+};
+
+const hideIscDropdownWithDelay = () => {
+    setTimeout(() => {
+        showIscListDropdown.value = false;
+    }, 200);
+};
+
 // HANDLE OF CREATE TRANSACTION BUTTON
 const handleCreateTransactionButton = () => {
     if (selectedItems.value.length) {
         showConfirmationModal.value = true
-    } else{
+    } else {
         // LAGAY ERROR DITO NO ITEMS SELECTED
     }
 }
 
 // FOR THE CONFIRMATION MODAL
 const formattedMessageData = computed(() => {
-  if (!selectedItems.value.length) return "No items selected.";
+    if (!selectedItems.value.length) return "No items selected.";
 
-  return selectedItems.value
-    .map(
-      (item, index) =>
-        `\n${index + 1}. Equipment Name: ${item.item_name || "N/A"}\n   Copy to add: ${item.quantity || item.copy || "N/A"}`
-    )
-    .join("\n");
+    return selectedItems.value
+        .map(
+            (item, index) =>
+                `\n${index + 1}. Equipment Name: ${item.item_name || "N/A"}\n   Copy to add: ${item.quantity || item.copy || "N/A"}`
+        )
+        .join("\n");
 });
 
 // IF CONFIRM CREATE TRANSACTION WAS PRESSED:
@@ -234,15 +267,151 @@ const createTransactionConfirmed = () => {
     confirmCreateTransaction()
 }
 
+const confirmUpdate = async () => {
+  try {
+    for (const item of selectedItems.value) {
+      if (item.item_type === "Equipment Copy") {
+          const availability = false;
+          updateEquipment(availability, item);
+      } else if (item.item_type === "Office Supply") {
+        const officeSupply = officeSupplies.value.find(
+          (office_supply) => office_supply.id === item.item_copy_id
+        );
+          const newQuantity = officeSupply.supply_quantity - item.quantity;
+          updateOfficeSupply(newQuantity, item);
+      }
+    }
+  } catch (error) {
+    console.error("Error updating items:", error);
+  }
+}
+
+const updateOfficeSupply = async (newQuantity, item) => {
+  try {
+    const updateTransactionItems = {
+      supply_quantity: newQuantity,
+    };
+
+    const response = await axiosClient.put(
+      `/api/office_supplies/${item.item_copy_id}`,
+      updateTransactionItems,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+    console.log("Updated Office Supply successfully:", response.data);
+  } catch (error) {
+    console.error('Error updating office supply:', error);
+    console.error('Error details:', error.response?.data);
+  }
+}
+
+const updateEquipment = async (availability, item) => {
+  try {
+
+    const updateTransactionItems = {
+      is_available: availability,
+    };
+
+    const response = await axiosClient.put(
+      `/api/equipment_copies/${item.item_copy_id}`,
+      updateTransactionItems,
+      {
+        headers: {
+          "x-api-key": API_KEY,
+        },
+      }
+    );
+
+    console.log("Updated Equipment Copy successfully:", response.data);
+
+  } catch (error) {
+    console.error('Error updating item copy:', error);
+    console.error('Error details:', error.response?.data);
+  }
+}
+
 // SAVE DATA IN BACKEND
+const formatDateForMySQL = (date) => {
+    return date instanceof Date
+      ? new Date(date).toLocaleString('en-US', {
+        timeZone: 'Asia/Manila',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
+      : date;
+};
+
 const confirmCreateTransaction = async () => {
     try {
-        emitter.emit("show-toast", { message: "Copy/Copies added successfully!", type: "success" });
-        // closeModal()
+        isLoading.value = true;
+
+        const currentDate = new Date();
+        const formattedDate = formatDateForMySQL(currentDate);
+
+        // First, create the borrow transaction
+        const transactionResponse = await axiosClient.post(
+            '/api/borrow_transactions',
+            {
+                borrower_id: selectedBorrowerId.value,
+                lender_id: lenderInput.value,
+                isc: iscInput.value,
+                remarks: remarksInput.value,
+                borrow_date: formattedDate
+            },
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+
+        // Get the transaction ID from the response
+        const transactionId = transactionResponse.data.data.id;
+
+        // Format items (remove the transaction_id property since we send it separately)
+        const formattedItems = selectedItems.value.map(item => ({
+            item_copy_id: item.item_copy_id,
+            returned: false,
+            returned_date: null,
+            item_type: item.item_type,
+            quantity: item.quantity || item.copy || 1
+        }));
+
+        // Create transaction items by sending transaction_id at the root level
+        await axiosClient.post(
+            '/api/borrow_transaction_items',
+            {
+                transaction_id: transactionId, // top-level field required by the controller
+                items: formattedItems
+            },
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+
+        emitter.emit("show-toast", { message: "Transaction created successfully!", type: "success" });
+        closeModal();
+        databaseStore.fetchData();
+
     } catch (error) {
-        emitter.emit("show-toast", { message: "Error adding copies. Please try again.", type: "error" });
+        console.error('Transaction error:', error);
+        console.error('Error details:', error.response?.data);
+        emitter.emit("show-toast", {
+            message: error.response?.data?.message || "Error creating transaction. Please try again.",
+            type: "error"
+        });
     } finally {
-        isLoading.value = false;
+        confirmUpdate()
     }
 }
 </script>
@@ -329,7 +498,8 @@ const confirmCreateTransaction = async () => {
                                     <td>{{ item.quantity || item.copy }}</td>
                                     <td class="flex py-2 justify-center items-center ">
                                         <button>
-                                            <MdRoundDeleteForever class="w-7 h-7 text-red-500 hover:text-red-400" @click="handleRemoveItem(item)" />
+                                            <MdRoundDeleteForever class="w-7 h-7 text-red-500 hover:text-red-400"
+                                                @click="handleRemoveItem(item)" />
                                         </button>
                                     </td>
                                 </tr>
@@ -356,23 +526,31 @@ const confirmCreateTransaction = async () => {
                         <ul v-if="showBorrowerListDropdown && filteredBorrowers.length"
                             class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
                             <li v-for="borrower in filteredBorrowers" :key="borrower.id"
-                                @mousedown="selectBorrower(borrower.borrowers_name)"
-                                class="p-2 hover:bg-blue-100 cursor-pointer">
+                                @mousedown="selectBorrower(borrower)" class="p-2 hover:bg-blue-100 cursor-pointer">
                                 {{ borrower.borrowers_name }}
                             </li>
                         </ul>
                     </div>
 
-                    <!-- ISC/AREE -->
                     <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Type
                         ISC/AREE:</label>
                     <div class="relative ml-2">
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <BxSolidUser />
                         </div>
-                        <input type="text" v-model="iscInput"
-                            class="bg-gray-50  mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Search or enter new ICS/AREE...">
+                        <input type="text" v-model="iscInput" @focus="showIscListDropdown = true"
+                            @blur="hideIscDropdownWithDelay" @keydown.enter.prevent="selectIsc(iscInput)"
+                            placeholder="Search or enter new ICS/AREE..."
+                            class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+
+                        <!-- Dropdown List -->
+                        <ul v-if="showIscListDropdown && filteredIsc.length"
+                            class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
+                            <li v-for="transaction in filteredIsc" :key="transaction.id"
+                                @mousedown="selectIsc(transaction.isc)" class="p-2 hover:bg-blue-100 cursor-pointer">
+                                {{ transaction.isc }}
+                            </li>
+                        </ul>
                     </div>
 
                     <!-- REMARKS -->
@@ -406,9 +584,9 @@ const confirmCreateTransaction = async () => {
             </div>
 
             <!-- Confirmation Modal -->
-            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Create Transaction" :message="`You are about to make a transaction with this items.`"
-                :messageData="formattedMessageData" cancelText="Cancel"
-                confirmText="Create Transaction" @confirm="createTransactionConfirmed()" />
+            <ConfirmationModal v-model="showConfirmationModal" title="Confirm Create Transaction"
+                :message="`You are about to make a transaction with this items.`" :messageData="formattedMessageData"
+                cancelText="Cancel" confirmText="Create Transaction" @confirm="createTransactionConfirmed()" />
         </div>
     </div>
 </template>
