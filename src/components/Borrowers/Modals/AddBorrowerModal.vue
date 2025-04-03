@@ -206,7 +206,7 @@ const isClickedShowConfirmationModal = () => {
                 <!-- BORROWER OFFICE -->
                 <div class="flex flex-row">
                     <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Borrower Office:</label>
-                    <p class="text-red-700 ml-1 font-semibold italic">{{ errors.selectedOffice ?
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedOffice ?
                         errors.selectedOffice[0] :
                         '' }}</p>
                 </div>
