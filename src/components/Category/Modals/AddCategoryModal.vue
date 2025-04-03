@@ -104,7 +104,7 @@ const validateForm = () => {
 // watch effect for validation
 watch(() => categoryName.value, (newValue) => {
     if (!newValue) {
-        errors.value.categoryName = ["Category name Quantity is required"];
+        errors.value.categoryName = ["Category name is required"];
     } else {
         errors.value.categoryName = [];
     }
@@ -114,7 +114,7 @@ const isClickedShowConfirmationModal = () => {
     if (!validateForm()) {
         return;
     } else {
-        showConfirmationModal = true
+        showConfirmationModal.value = true
     }
 }
 </script>

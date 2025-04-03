@@ -1,12 +1,35 @@
 <script setup>
 
 import GuestLayout from "../../components/GuestLayout.vue";
-import { ref, watch } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import axiosClient from "../../axios.js";
 import router from "../../router.js";
 import logo from "../../assets/baguio-logo.png";
 import emitter from "../../eventBus.js";
 import Loading from "../../components/Loading.vue";
+import { useDatabaseStore } from "../../stores/databaseStore.js";
+
+// fetching users
+const databaseStore = useDatabaseStore()
+
+let refreshInterval = null;
+
+onMounted(() => {
+  databaseStore.fetchData()
+  refreshInterval = setInterval(() => {
+    databaseStore.fetchData()
+  }, 30000)
+})
+
+const computedProperties = {
+  users: "users",
+};
+
+const {
+  users,
+} = Object.fromEntries(
+  Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
+);
 
 const data = ref({
   firstName: '',
@@ -27,6 +50,23 @@ const errors = ref({
   password_confirmation: [],
 })
 
+
+// fetching user data if there is a email in the users database and getting it's data
+const foundUser = ref(null)
+
+const checkEmailExists = () => {
+  const userMatch = users.value.find(user => user.email === data.value.email);
+  if (userMatch) {
+    foundUser.value = userMatch;
+    errors.value.email = ['Email is already registered'];
+    return false;
+  }
+  foundUser.value = null;
+  errors.value.email = [];
+  return true;
+}
+
+
 // REGEXE s
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
@@ -39,7 +79,9 @@ watch(() => data.value.email, (newValue) => {
   } else if (!emailRegex.test(newValue)) {
     errors.value.email = ["Please enter a valid email address"];
   } else {
-    errors.value.email = [];
+    if (!checkEmailExists()) {
+      errors.value.email = ['Email is already registered by another user'];
+    }
   }
 });
 
@@ -110,6 +152,8 @@ function submit() {
     hasErrors = true;
   } else if (!emailRegex.test(data.value.email)) {
     errors.value.email = ["Please enter a valid email address"];
+    hasErrors = true;
+  } else if (!checkEmailExists()) { // Add this condition
     hasErrors = true;
   }
 
