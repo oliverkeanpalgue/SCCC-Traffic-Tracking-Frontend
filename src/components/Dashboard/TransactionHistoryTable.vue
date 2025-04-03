@@ -48,6 +48,7 @@ const props = defineProps({
 })
 
 const openUpdateModal = (transaction) => {
+  console.log("🚀 ~ openUpdateModal ~ transaction:", transaction)
   const lender =
     props.users?.find((user) => user.id === transaction.lender_id)
       ?.firstName || "Unknown";
@@ -58,7 +59,6 @@ const openUpdateModal = (transaction) => {
   };
 
   isUpdateModalOpen.value = true;
-  console.log("🚀 ~ openDeleteModal ~ isUpdateModalOpen:", isUpdateModalOpen.value);
 };
 
 const isDeleteModalOpen = ref(false);
@@ -257,6 +257,7 @@ const handleClickOutside = (event) => {
   ) {
     officeDropDownFilter.value = false;
   }
+  openDropdownId.value = null;
 };
 
 const formatDate = (dateString) => {
@@ -488,7 +489,7 @@ const OpenCreateTransactionModal = () => {
                     </td>
 
                     <td class="px-4 py-3">{{ formatDate(transaction.borrow_date) }}</td>
-                    <td class="px-4 py-3 flex items-center justify-center relative">
+                    <td class="px-4 py-3">
                       <button @click.stop="toggleDropdown(transaction.id)"
                         class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                         type="button">
@@ -496,16 +497,17 @@ const OpenCreateTransactionModal = () => {
                       </button>
 
                       <div v-if="openDropdownId === transaction.id" ref="dropdownRefs"
-                        class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-10 mt-2">
+                        class="absolute z-[10] bg-white divide-gray-100 rounded-lg shadow-sm w-44 dark:bg-gray-700 right-12 -mt-15">
                         <ul class="py-2 text-sm text-gray-700 dark:text-gray-200">
                           <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                             <button @click.stop="openUpdateModal(transaction)" class="w-full text-start px-4 py-2">
                               Update
                             </button>
                             <UpdateModal v-if="isUpdateModalOpen" v-model="isUpdateModalOpen"
-                              :transaction="selectedTransaction" :officeEquipments="officeEquipments"
-                              :officeSupplies="officeSupplies" :equipmentCopies="equipmentCopies"
-                              :officeList="officeList" :categoryList="categoryList" @click.stop />
+                              :transaction="selectedTransaction" :officeEquipments="props.officeEquipments"
+                              :officeSupplies="props.officeSupplies" :equipmentCopies="props.equipmentCopies"
+                              :officeList="props.officeList" :categoryList="props.categoryList"
+                              :transactionItems="props.transactionItems" :borrowers="props.borrowers" @click.stop />
                           </li>
                           <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                             <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">

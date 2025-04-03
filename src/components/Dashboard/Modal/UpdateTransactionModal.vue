@@ -13,17 +13,17 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 const isLoading = ref(false);
 
 const props = defineProps({
-  modelValue: Boolean, // v-model binding for modal open state
-  transactionName: String, // Pass the transaction name
+  modelValue: Boolean,
+  transactionName: String,
   transaction: Object,
-  officeEquipments: Object,
-  officeSupplies: Object,
-  equipmentCopies: Object,
-  officeList: Object,
-  categoryList: Object
+  transactionItems: Array,
+  officeEquipments: Array,
+  officeSupplies: Array,
+  equipmentCopies: Array,
+  officeList: Array,
+  categoryList: Array,
+  borrowers: Array
 })
-
-console.log("transaction:", props.transaction)
 
 const transactionItems = ref([]);
 
@@ -230,14 +230,27 @@ const handleClickOutside = (event) => {
   }
 };
 
+const selectedTransactionItems = ref([]);
+
 onMounted(() => {
-  // console.log('transaction', props.transaction)
-  if (props.transaction?.borrow_transaction_items) {
-    transactionItems.value = props.transaction.borrow_transaction_items.map(item => ({
+  console.log('PROPS TRANSACTION ITEMS', props.transactionItems)
+  console.log('PROPS TRANSACTION ID', props.transaction.id)
+
+  selectedTransactionItems.value = props.transactionItems
+    .filter(item => props.transaction.id === item.transaction_id) // Filter only matching items
+    .map(item => ({
       ...item,
-      isChecked: item.returned_date ? true : false
+      isChecked: !!item.returned_date // Convert to boolean
+    }));
+  console.log("🚀 ~ onMounted ~ selectedTransactionItems:", selectedTransactionItems.value)
+
+  if (selectedTransactionItems.value.length) {
+    transactionItems.value = selectedTransactionItems.value.map(item => ({
+      ...item,
+      isChecked: !!item.returned_date
     }));
   }
+
   document.addEventListener("click", handleClickOutside);;
 });
 
@@ -322,7 +335,7 @@ const formatDate = (dateString) => {
               <AkCheck class="text-lg mr-1 font-bold" />Returned
             </p>
             <p v-else class="text-sm mb-1 flex flex-row bg-red-200 text-red-800 font-bold py-1 px-2 rounded-xl">
-              <RaCross2 class="text-xl mr-1 font-bold" />Items Not Returned
+              <RaCross2 class="text-xl mr-1 font-bold" />Items Not Yet Returned
             </p>
           </div>
           <p v-if="transaction.return_date" class="text-gray-300 mb-3 h-full">Return Date: {{
@@ -339,8 +352,9 @@ const formatDate = (dateString) => {
             <p class="text-lg font-bold mb-1 dark:text-white">Borrower Information:</p>
             <p class="font-bold">{{ transaction.borrowers?.borrowers_name }}</p>
             <p class="">{{ transaction.borrowers?.borrowers_contact }}</p>
-            <p class="">{{officeList.find(office => Number(office.id) ===
-              Number(transaction.borrowers?.office_id))?.office_name || 'Unknown Office'}}</p>
+            <p class="">{{props.officeList.find(office => Number(office.id) ===
+              (Number(props.borrowers.find(borrower => Number(borrower.id) ===
+                Number(transaction.borrower_id))?.office_id)))?.office_name || 'Unknown Office'}}</p>
           </div>
           <div class="">
             <p class="text-lg font-bold mb-1 dark:text-white">Lender Information:</p>
