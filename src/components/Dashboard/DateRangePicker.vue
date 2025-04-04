@@ -137,28 +137,29 @@ const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const emit = defineEmits(['dateRangeSelected']);
 
 const renderCalendar = () => {
-    const year = currentDate.value.getFullYear()
-    const month = currentDate.value.getMonth()
+    const year = currentDate.value.getFullYear();
+    const month = currentDate.value.getMonth();
+    const today = new Date(); // Get today's date
 
-    const firstDayOfMonth = new Date(year, month, 1).getDay()
-    const daysInMonth = new Date(year, month + 1, 0).getDate()
-    const daysArray = []
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysArray = [];
 
     for (let i = 0; i < firstDayOfMonth; i++) {
-        daysArray.push({ day: '', className: '', dayString: '' })
+        daysArray.push({ day: '', className: '', dayString: '' });
     }
 
     for (let i = 1; i <= daysInMonth; i++) {
-        const day = new Date(year, month, i)
-        const dayString = day.toLocaleDateString('en-US')
+        const day = new Date(year, month, i);
+        const dayString = day.toLocaleDateString('en-US');
         let className =
-            'flex items-center justify-center cursor-pointer w-[46px] h-[46px] rounded-full text-dark-3 dark:text-dark-6 my-0.5 hover:bg-blue-700 hover:text-white'
+            'flex items-center justify-center cursor-pointer w-[46px] h-[46px] rounded-full text-dark-3 dark:text-dark-6 my-0.5 hover:bg-blue-700 hover:text-white';
 
         if (selectedStartDate.value && dayString === selectedStartDate.value) {
-            className += ' bg-blue-700 text-white dark:text-white rounded-r-none'
+            className += ' bg-blue-700 text-white dark:text-white rounded-r-none';
         }
         if (selectedEndDate.value && dayString === selectedEndDate.value) {
-            className += ' bg-blue-700 text-white dark:text-white rounded-l-none'
+            className += ' bg-blue-700 text-white dark:text-white rounded-l-none';
         }
         if (
             selectedStartDate.value &&
@@ -166,28 +167,43 @@ const renderCalendar = () => {
             new Date(day) > new Date(selectedStartDate.value) &&
             new Date(day) < new Date(selectedEndDate.value)
         ) {
-            className += ' bg-blue-400 text-white rounded-none dark:bg-blue-500'
+            className += ' bg-blue-400 text-white rounded-none dark:bg-blue-500';
         }
 
-        daysArray.push({ day: i, className, dayString })
+        // **Disable future dates**
+        if (day > today) {
+            className += ' text-gray-400 cursor-not-allowed';
+        } else {
+            daysArray.push({ day: i, className, dayString });
+        }
     }
 
-    return daysArray
-}
+    return daysArray;
+};
+
 
 const handleDayClick = (selectedDay) => {
+    const selectedDate = new Date(selectedDay);
+    const today = new Date();
+
+    // Prevent selection of future dates
+    if (selectedDate > today) {
+        return;
+    }
+
     if (!selectedStartDate.value || (selectedStartDate.value && selectedEndDate.value)) {
-        selectedStartDate.value = selectedDay
-        selectedEndDate.value = null
+        selectedStartDate.value = selectedDay;
+        selectedEndDate.value = null;
     } else {
         if (new Date(selectedDay) < new Date(selectedStartDate.value)) {
-            selectedEndDate.value = selectedStartDate.value
-            selectedStartDate.value = selectedDay
+            selectedEndDate.value = selectedStartDate.value;
+            selectedStartDate.value = selectedDay;
         } else {
-            selectedEndDate.value = selectedDay
+            selectedEndDate.value = selectedDay;
         }
     }
-}
+};
+
 
 const updateInput = () => {
     if (selectedStartDate.value && selectedEndDate.value) {
