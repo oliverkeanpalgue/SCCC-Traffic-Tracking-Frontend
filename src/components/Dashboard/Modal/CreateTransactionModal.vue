@@ -242,10 +242,16 @@ const hideIscDropdownWithDelay = () => {
 
 // HANDLE OF CREATE TRANSACTION BUTTON
 const handleCreateTransactionButton = () => {
-    if (selectedItems.value.length) {
+    if (!validateForm()) {
+        return;
+    } else if (selectedItems.value.length) {
         showConfirmationModal.value = true
     } else {
-        // LAGAY ERROR DITO NO ITEMS SELECTED
+        // add an error if there is no selected items
+        emitter.emit("show-toast", {
+            message: "Please select at least one item to proceed.",
+            type: "error",
+        });
     }
 }
 
@@ -268,85 +274,85 @@ const createTransactionConfirmed = () => {
 }
 
 const confirmUpdate = async () => {
-  try {
-    for (const item of selectedItems.value) {
-      if (item.item_type === "Equipment Copy") {
-          const availability = false;
-          updateEquipment(availability, item);
-      } else if (item.item_type === "Office Supply") {
-        const officeSupply = officeSupplies.value.find(
-          (office_supply) => office_supply.id === item.item_copy_id
-        );
-          const newQuantity = officeSupply.supply_quantity - item.quantity;
-          updateOfficeSupply(newQuantity, item);
-      }
+    try {
+        for (const item of selectedItems.value) {
+            if (item.item_type === "Equipment Copy") {
+                const availability = false;
+                updateEquipment(availability, item);
+            } else if (item.item_type === "Office Supply") {
+                const officeSupply = officeSupplies.value.find(
+                    (office_supply) => office_supply.id === item.item_copy_id
+                );
+                const newQuantity = officeSupply.supply_quantity - item.quantity;
+                updateOfficeSupply(newQuantity, item);
+            }
+        }
+    } catch (error) {
+        console.error("Error updating items:", error);
     }
-  } catch (error) {
-    console.error("Error updating items:", error);
-  }
 }
 
 const updateOfficeSupply = async (newQuantity, item) => {
-  try {
-    const updateTransactionItems = {
-      supply_quantity: newQuantity,
-    };
+    try {
+        const updateTransactionItems = {
+            supply_quantity: newQuantity,
+        };
 
-    const response = await axiosClient.put(
-      `/api/office_supplies/${item.item_copy_id}`,
-      updateTransactionItems,
-      {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      }
-    );
-    console.log("Updated Office Supply successfully:", response.data);
-  } catch (error) {
-    console.error('Error updating office supply:', error);
-    console.error('Error details:', error.response?.data);
-  }
+        const response = await axiosClient.put(
+            `/api/office_supplies/${item.item_copy_id}`,
+            updateTransactionItems,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+        console.log("Updated Office Supply successfully:", response.data);
+    } catch (error) {
+        console.error('Error updating office supply:', error);
+        console.error('Error details:', error.response?.data);
+    }
 }
 
 const updateEquipment = async (availability, item) => {
-  try {
+    try {
 
-    const updateTransactionItems = {
-      is_available: availability,
-    };
+        const updateTransactionItems = {
+            is_available: availability,
+        };
 
-    const response = await axiosClient.put(
-      `/api/equipment_copies/${item.item_copy_id}`,
-      updateTransactionItems,
-      {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      }
-    );
+        const response = await axiosClient.put(
+            `/api/equipment_copies/${item.item_copy_id}`,
+            updateTransactionItems,
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
 
-    console.log("Updated Equipment Copy successfully:", response.data);
+        console.log("Updated Equipment Copy successfully:", response.data);
 
-  } catch (error) {
-    console.error('Error updating item copy:', error);
-    console.error('Error details:', error.response?.data);
-  }
+    } catch (error) {
+        console.error('Error updating item copy:', error);
+        console.error('Error details:', error.response?.data);
+    }
 }
 
 // SAVE DATA IN BACKEND
 const formatDateForMySQL = (date) => {
     return date instanceof Date
-      ? new Date(date).toLocaleString('en-US', {
-        timeZone: 'Asia/Manila',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-      }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
-      : date;
+        ? new Date(date).toLocaleString('en-US', {
+            timeZone: 'Asia/Manila',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }).replace(/(\d+)\/(\d+)\/(\d+),\s/, '$3-$1-$2 ')
+        : date;
 };
 
 const confirmCreateTransaction = async () => {
@@ -414,6 +420,82 @@ const confirmCreateTransaction = async () => {
         confirmUpdate()
     }
 }
+
+// error validation
+const errors = ref({
+    borrowerInput: [],
+    iscInput: [],
+    remarksInput: [],
+    selectedBorrowerId: [],
+})
+
+const validateForm = () => {
+    Object.keys(errors.value).forEach(key => {
+        errors.value[key] = [];
+    });
+
+    let hasErrors = false;
+
+    if (!borrowerInput.value) {
+        errors.value.borrowerInput = ["Borrower is required"];
+        hasErrors = true;
+    }
+
+
+    if (!iscInput.value) {
+        errors.value.iscInput = ["ISC is required"];
+        hasErrors = true;
+    }
+
+    if (!remarksInput.value) {
+        errors.value.remarksInput = ["Remarks is required"];
+        hasErrors = true;
+    }
+
+    if (!selectedBorrowerId.value) {
+        errors.value.selectedBorrowerId = ["Borrower is required"];
+        hasErrors = true;
+    }
+
+    return !hasErrors;
+}
+
+// watch effect for validation
+watch(() => borrowerInput.value, (newValue) => {
+    if (!newValue) {
+        errors.value.borrowerInput = ["Borrower is required"];
+    } else {
+        errors.value.borrowerInput = [];
+    }
+});
+
+
+watch(() => iscInput.value, (newValue) => {
+    if (!newValue) {
+        errors.value.iscInput = ["ISC is required"];
+    } else {
+        errors.value.iscInput = [];
+    }
+});
+
+watch(() => remarksInput.value, (newValue) => {
+    if (!newValue) {
+        errors.value.remarksInput = ["Remarks is required"];
+    } else {
+        errors.value.remarksInput = [];
+    }
+});
+
+watch(() => selectedBorrowerId.value, (newValue) => {
+    if (!newValue) {
+        errors.value.selectedBorrowerId = ["Borrower is required"];
+    } else {
+        errors.value.selectedBorrowerId = [];
+    }
+});
+
+
+
 </script>
 
 <template>
@@ -508,9 +590,15 @@ const confirmCreateTransaction = async () => {
                     </div>
 
                     <!-- BORROWER -->
-                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">
-                        Type Borrower:
-                    </label>
+                    <div class="flex flex-row mt-4 mb-2">
+                        <label class="block text font-medium text-gray-900 dark:text-gray-200">
+                            Type Borrower:
+                        </label>
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.borrowerInput ?
+                            errors.borrowerInput[0] :
+                            '' }}</p>
+                    </div>
+
                     <div class="relative ml-2">
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <BxSolidUser />
@@ -532,8 +620,12 @@ const confirmCreateTransaction = async () => {
                         </ul>
                     </div>
 
-                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Type
-                        ISC/AREE:</label>
+                    <div class="flex flex-row mt-4 mb-2">
+                        <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
+                            ISC/AREE:</label>
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.iscInput ? errors.iscInput[0] :
+                            '' }}</p>
+                    </div>
                     <div class="relative ml-2">
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <BxSolidUser />
@@ -554,8 +646,14 @@ const confirmCreateTransaction = async () => {
                     </div>
 
                     <!-- REMARKS -->
-                    <label class="block mt-4 mb-2 text font-medium text-gray-900 dark:text-gray-200">Type
-                        Remarks:</label>
+                    <div class="flex flex-row mt-4 mb-2">
+                        <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
+                            Remarks:</label>
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.remarksInput ?
+                            errors.remarksInput[0] :
+                            '' }}</p>
+                    </div>
+
                     <div class="relative ml-2">
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <AkTextAlignLeft />
