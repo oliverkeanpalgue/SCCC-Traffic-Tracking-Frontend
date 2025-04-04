@@ -134,7 +134,7 @@ onUnmounted(() => {
           <div>
             <div class="flex flex-row">
               <label for="password" class="block text-md font-medium text-gray-700">Password: </label>
-              <p class="color-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+              <p class="text-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
             </div>
 
             <input type="password" name="password" id="password" autocomplete="current-password" v-model="data.password"
