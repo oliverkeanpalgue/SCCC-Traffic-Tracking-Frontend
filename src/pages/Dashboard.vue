@@ -79,6 +79,34 @@ const updateDateRange = (range) => {
 onMounted(() => {
     updateDateRange({ start: selectedStartDate.value, end: selectedEndDate.value });
 });
+
+const borrowedCount = computed(() => {
+  if (!transactionHistoryArray.value) return 0;
+
+  const startDate = new Date(selectedDateRange.value.start);
+  const endDate = new Date(selectedDateRange.value.end);
+  endDate.setHours(23, 59, 59, 999);
+
+  return transactionHistoryArray.value.filter(transaction => {
+    const borrowDate = new Date(transaction.borrow_date);
+    return borrowDate >= startDate && borrowDate <= endDate;
+  }).length;
+});
+
+const returnedCount = computed(() => {
+  if (!transactionHistoryArray.value) return 0;
+
+  const startDate = new Date(selectedDateRange.value.start);
+  const endDate = new Date(selectedDateRange.value.end);
+  endDate.setHours(23, 59, 59, 999);
+
+  return transactionHistoryArray.value.filter(transaction => {
+    if (!transaction.return_date) return false;
+    const returnDate = new Date(transaction.borrow_date);
+    return returnDate >= startDate && returnDate <= endDate;
+  }).length;
+});
+
 </script>
 
 <template>
@@ -100,14 +128,14 @@ onMounted(() => {
                 <div
                     class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
                     <h5 class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
-                        Borrowed</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">418</p>
+                        Total Borrowed</h5>
+                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ borrowedCount }}</p>
                 </div>
                 <div
                     class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
                     <h5 class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
-                        Returned</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">399</p>
+                        Total Returned</h5>
+                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ returnedCount }}</p>
                 </div>
             </div>
         </div>

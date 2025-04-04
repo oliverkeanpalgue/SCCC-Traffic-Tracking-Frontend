@@ -86,6 +86,7 @@ const filteredTransactions = computed(() => {
   
   // ✅ Extend end date to include the full day (23:59:59)
   endDate.setHours(23, 59, 59, 999);
+  startDate.setHours(0, 0, 0, 0);
 
   return props.transactionHistory.filter(transaction => {
     const borrowDate = new Date(transaction.borrow_date);

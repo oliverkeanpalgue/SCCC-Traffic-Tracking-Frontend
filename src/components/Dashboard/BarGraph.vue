@@ -1,129 +1,16 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch, computed } from "vue";
 import ApexCharts from 'apexcharts';
+import { useDatabaseStore } from "../../stores/databaseStore";
 
 const props = defineProps({
-    dateRange: Object // Expecting { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
+  dateRange: Object // Expecting { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
 });
 
 const emit = defineEmits(['periodChange']);
 
-// Reactive date range
-const startDate = ref(null);
-const endDate = ref(null);
-
-// Function to generate sample data based on date range
-const generateSampleData = (start, end) => {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const days = [];
-    const organic = [];
-    const social = [];
-
-    while (startDate <= endDate) {
-        const currentDate = new Date(startDate);
-        const formattedDate = currentDate.toLocaleDateString('en-CA'); // YYYY-MM-DD format
-        days.push(formattedDate);
-
-        organic.push(Math.floor(Math.random() * 500));
-        social.push(Math.floor(Math.random() * 500));
-
-        startDate.setDate(startDate.getDate() + 1);
-    }
-
-    return { organic, social, categories: days };
-};
-
-// Reactive chart options
-const options = ref({
-  colors: ["#bf1029", "#3f8f29"],
-  series: [
-    {
-      name: "Organic",
-      color: "#bf1029",
-      data: [231, 122, 63, 421, 122, 323],
-    },
-    {
-      name: "Social media",
-      color: "#3f8f29",
-      data: [232, 113, 341, 224, 522, 411],
-    },
-  ],
-  chart: {
-    type: "bar",
-    height: "100%",
-    fontFamily: "Inter, sans-serif",
-    toolbar: {
-      show: true,
-    },
-  },
-  plotOptions: {
-    bar: {
-      horizontal: false,
-      columnWidth: "70%",
-      borderRadiusApplication: "end",
-      borderRadius: 8,
-    },
-  },
-  tooltip: {
-    shared: true,
-    intersect: false,
-    style: {
-      fontFamily: "Inter, sans-serif",
-    },
-  },
-  states: {
-    hover: {
-      filter: {
-        type: "darken",
-        value: 1,
-      },
-    },
-  },
-  stroke: {
-    show: true,
-    width: 0,
-    colors: ["transparent"],
-  },
-  grid: {
-    show: false,
-    strokeDashArray: 4,
-    padding: {
-      left: 2,
-      right: 2,
-      top: -14
-    },
-  },
-  dataLabels: {
-    enabled: false,
-  },
-  legend: {
-    show: false,
-  },
-  xaxis: {
-    floating: false,
-    categories: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
-    labels: {
-      show: true,
-      style: {
-        fontFamily: "Inter, sans-serif",
-        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
-      }
-    },
-    axisBorder: {
-      show: false,
-    },
-    axisTicks: {
-      show: false,
-    },
-  },
-  yaxis: {
-    show: true,
-  },
-  fill: {
-    opacity: 1,
-  },
-});
+// Access database store
+const databaseStore = useDatabaseStore();
 
 // Reference for the chart container
 const barChart = ref(null);
@@ -131,41 +18,153 @@ const barChart = ref(null);
 // Chart instance
 let chart = null;
 
-// Update chart based on date range
-const updateChart = () => {
-    if (props.dateRange?.start && props.dateRange?.end) {
-        const chartData = generateSampleData(props.dateRange.start, props.dateRange.end);
-        options.value.series[0].data = chartData.organic;
-        options.value.series[1].data = chartData.social;
-        options.value.xaxis.categories = chartData.categories;
+// Compute borrowed and returned items per day
+const dailyStats = computed(() => {
+  if (!databaseStore.transactionHistory) return { borrowed: [], returned: [], categories: [] };
 
-        emit('periodChange', props.dateRange);
+  const startDate = new Date(props.dateRange.start);
 
-        if (chart) {
-            chart.updateOptions(options.value);
-        }
+  const endDate = new Date(props.dateRange.end);
+
+  // Adjust the end date to GMT+8
+  endDate.setHours(23);
+  endDate.setMinutes(59);
+  endDate.setSeconds(59);
+  endDate.setMilliseconds(999);
+
+  const categoryStartDate = startDate;
+  categoryStartDate.setHours(startDate.getHours() + 8);
+
+  const days = [];
+  const borrowedCounts = [];
+  const returnedCounts = [];
+
+  const transactions = databaseStore.transactionHistory.filter(transaction => {
+  const borrowDate = new Date(transaction.borrow_date);
+  const hasMatchingItem = databaseStore.transactionItems.some(
+    item => item.transaction_id === transaction.id
+  );
+  return borrowDate >= startDate && borrowDate <= endDate && hasMatchingItem;
+});
+
+
+  const formatDateGMT8 = (dateStr) => {
+      const date = new Date(dateStr);
+      const gmt8Date = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+      return gmt8Date.toISOString().split('T')[0];
     }
+
+  while (categoryStartDate <= endDate) {
+    const formattedDate = startDate.toISOString().split('T')[0];
+    days.push(formattedDate);
+
+    const borrowedCount = transactions.filter(t =>
+      t.borrow_date && formatDateGMT8(t.borrow_date) === formattedDate
+    ).length;
+
+    const returnedCount = transactions.filter(t =>
+      t.return_date && formatDateGMT8(t.borrow_date) === formattedDate
+    ).length;
+
+    borrowedCounts.push(borrowedCount);
+    returnedCounts.push(returnedCount);
+
+    startDate.setDate(startDate.getDate() + 1); // Move to the next day
+  }
+
+  return { borrowed: borrowedCounts, returned: returnedCounts, categories: days };
+});
+
+const options = ref({
+  colors: ["#3f8f29", "#bf1029"], // Returned first (bottom), Still Borrowed (top)
+  series: [
+    { name: "Returned", color: "#3f8f29", data: [] },
+    { name: "Still Borrowed", color: "#bf1029", data: [] }
+  ],
+  chart: {
+    type: "bar",
+    height: "100%",
+    stacked: true, // ✅ Enable stacked bars
+    fontFamily: "Inter, sans-serif",
+    toolbar: { show: true }
+  },
+  plotOptions: {
+    bar: { horizontal: false, columnWidth: "70%", borderRadius: 8 }
+  },
+  tooltip: { shared: true, intersect: false },
+  stroke: { show: true, width: 0, colors: ["transparent"] },
+  grid: { show: false, strokeDashArray: 4 },
+  dataLabels: { enabled: false },
+  legend: { show: true }, // ✅ Show legend now
+  xaxis: {
+    categories: [],
+    labels: {
+      show: true,
+      style: {
+        cssClass: 'text-xs font-normal fill-gray-500 dark:fill-gray-400'
+      }
+    },
+    axisBorder: { show: false },
+    axisTicks: { show: false }
+  },
+  yaxis: { show: true },
+  fill: { opacity: 1 }
+});
+
+// Update chart with real data
+const updateChart = () => {
+  const stats = dailyStats.value;
+
+  const borrowed = stats.borrowed;
+  const returned = stats.returned;
+
+  // Compute "still borrowed"
+  const stillBorrowed = borrowed.map((b, i) => Math.max(b - returned[i], 0));
+  const adjustedReturned = returned.map((r, i) => Math.min(r, borrowed[i]));
+
+  options.value.series = [
+    {
+      name: "Returned",
+      color: "#3f8f29",
+      data: adjustedReturned
+    },
+    {
+      name: "Still Borrowed",
+      color: "#bf1029",
+      data: stillBorrowed
+    }
+  ];
+
+  options.value.xaxis.categories = stats.categories;
+
+  emit('periodChange', props.dateRange);
+
+  if (chart) {
+    chart.updateOptions(options.value);
+  }
 };
 
 // Watch for date range changes
 watch(() => props.dateRange, updateChart, { deep: true });
 
+// Initialize chart
 onMounted(() => {
-    if (barChart.value) {
-        chart = new ApexCharts(barChart.value, options.value);
-        chart.render();
-    }
+  if (barChart.value) {
+    chart = new ApexCharts(barChart.value, options.value);
+    chart.render();
+  }
 });
 
+// Destroy chart on unmount
 onUnmounted(() => {
-    if (chart) chart.destroy();
+  if (chart) chart.destroy();
 });
-
 </script>
 
 <template>
-  <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg bg-white dark:bg-gray-950 z-10">    
+  <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950 z-10">
     <!-- BAR CHART -->
+     <!-- Borrowed vs Returned - Daily -->
     <div ref="barChart"></div>
   </div>
 </template>
