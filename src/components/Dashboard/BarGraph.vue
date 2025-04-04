@@ -164,7 +164,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg bg-white dark:bg-gray-950">    
+  <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg bg-white dark:bg-gray-950 z-10">    
     <!-- BAR CHART -->
     <div ref="barChart"></div>
   </div>

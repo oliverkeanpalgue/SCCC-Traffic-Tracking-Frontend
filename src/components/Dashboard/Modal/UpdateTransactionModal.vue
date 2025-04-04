@@ -6,11 +6,15 @@ import { FlCheckboxChecked } from '@kalimahapps/vue-icons';
 import { FlCheckboxUnchecked } from '@kalimahapps/vue-icons';
 import { AkCheck } from '@kalimahapps/vue-icons';
 import { RaCross2 } from '@kalimahapps/vue-icons';
+import { useDatabaseStore } from "../../../stores/databaseStore";
+import Loading from "../../Loading.vue";
 
 import emitter from "../../../eventBus";
 const API_KEY = import.meta.env.VITE_API_KEY;
 
 const isLoading = ref(false);
+
+const databaseStore = useDatabaseStore()
 
 const props = defineProps({
   modelValue: Boolean,
@@ -22,7 +26,8 @@ const props = defineProps({
   equipmentCopies: Array,
   officeList: Array,
   categoryList: Array,
-  borrowers: Array
+  borrowers: Array,
+  users: Array
 })
 
 const transactionItems = ref([]);
@@ -165,6 +170,9 @@ const updateBorrowTransaction = async (date) => {
   } catch (error) {
     console.error('Error updating transaction item:', error);
     console.error('Error details:', error.response?.data);
+  }finally{
+    databaseStore.fetchData()
+    emitter.emit("show-toast", { message: "Transaction updated successfully!", type: "success" });
   }
 }
 
@@ -212,7 +220,6 @@ const updateItems = async (date, returned, item) => {
     if (response.data) {
       emit('confirmDelete', response.data);
       closeModal();
-      emitter.emit("show-toast", { message: "Transaction updated successfully!", type: "success" });
     }
   } catch (error) {
     console.error('Error details:', {
@@ -317,13 +324,16 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center px-4 py-5">
-    <div ref="modalContainer"
-      class="w-full max-w-[900px] max-h-[85vh] overflow-auto rounded-[20px] bg-white px-8 py-8 text-center border dark:bg-black">
+  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5 z-50 ">
+    <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+        <Loading />
+      </div>
+    <div v-else ref="modalContainer"
+      class="w-full max-w-[900px] max-h-[88vh] rounded-[20px] mt-9 bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
       <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
         Update Transaction
       </h3>
-      <div class="dark:text-gray-200">
+      <div class="dark:text-gray-200 max-h-[70vh] overflow-auto">
         <!-- FIRST ROW -->
         <div class="text-start rounded-2xl py-4 px-8 mb-4 dark:bg-gray-800">
           <p class="text-xl mb-1 font-semibold text-white">Transaction #{{ transaction.id }}</p>
@@ -350,16 +360,24 @@ const formatDate = (dateString) => {
         <div class="text-start mb-5 rounded-2xl py-4 px-8 dark:bg-gray-800 grid grid-cols-2 dark:text-gray-300">
           <div class="">
             <p class="text-lg font-bold mb-1 dark:text-white">Borrower Information:</p>
-            <p class="font-bold">{{ transaction.borrowers?.borrowers_name }}</p>
-            <p class="">{{ transaction.borrowers?.borrowers_contact }}</p>
+            <p class="font-bold">{{props.borrowers.find(borrower => Number(borrower.id) ===
+                Number(transaction.borrower_id))?.borrowers_name || 'Unknown First Name'}}</p>
+            <p class="">{{props.borrowers.find(borrower => Number(borrower.id) ===
+                Number(transaction.borrower_id))?.borrowers_contact || 'Unknown Contact'}}</p>
             <p class="">{{props.officeList.find(office => Number(office.id) ===
               (Number(props.borrowers.find(borrower => Number(borrower.id) ===
                 Number(transaction.borrower_id))?.office_id)))?.office_name || 'Unknown Office'}}</p>
           </div>
           <div class="">
             <p class="text-lg font-bold mb-1 dark:text-white">Lender Information:</p>
-            <p class="font-bold">{{ transaction.user?.firstName }} {{ transaction.user?.lastName }}</p>
-            <p class="">{{ transaction.user?.email }}</p>
+            <p class="font-bold">
+              {{props.users.find(user => Number(user.id) ===
+                Number(transaction.lender_id))?.firstName || 'Unknown First Name'}}
+              {{props.users.find(user => Number(user.id) ===
+                Number(transaction.lender_id))?.lastName || 'Unknown Last Name'}}
+            </p>
+            <p class="">{{props.users.find(user => Number(user.id) ===
+                Number(transaction.lender_id))?.email || 'Unknown Email'}}</p>
           </div>
         </div>
         <!-- THIRD ROW -->
@@ -468,7 +486,7 @@ const formatDate = (dateString) => {
                 </label>
               </td>
               <td v-if="item.item_type === 'Equipment Copy'" class="text-center">
-                {{categoryList.find(category => Number(category.id) === officeEquipments.find(equipment =>
+                {{props.categoryList.find(category => Number(category.id) === officeEquipments.find(equipment =>
                   Number(equipment.id) ===
                   Number(equipmentCopies.find(equipment_copy => Number(equipment_copy.id) ===
                     Number(item.item_copy_id))?.item_id))?.category_id)?.category_name || 'Unknown Category'}}

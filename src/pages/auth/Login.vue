@@ -66,7 +66,7 @@ function submit() {
       .then(response => {
         emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
         router.push({ name: 'Dashboard' })
-        isLoading.value = false
+        
       })
       .catch(error => {
         console.log(error.response)

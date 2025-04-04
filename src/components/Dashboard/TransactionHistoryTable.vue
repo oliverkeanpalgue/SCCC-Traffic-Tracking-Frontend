@@ -338,7 +338,7 @@ const OpenCreateTransactionModal = () => {
                   class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
                   <AkPlus class="w-5 h-5 mr-1" />
                   New Transaction
-                </button>       
+                </button>
 
                 <!--CREATE TRANSACTION MODAL -->
                 <CreateTransactionModal v-if="isOpenCreateTransactionModal" v-model="isOpenCreateTransactionModal"
@@ -358,12 +358,12 @@ const OpenCreateTransactionModal = () => {
                               <MdOutlinedArrowDropDown class="w-5 h-5" />
                             </button>
                             <div v-show="officeDropDownFilter" ref="officeDropDownMenuRef"
-                              class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                              class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
                               :class="{
                                 'top-full visible': officeDropDownFilter,
                                 'top-[110%] invisible': !officeDropDownFilter,
                               }">
-                              <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+                              <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
                                 v-for="item in officeDropDownItems" :key="item.id">
                                 <div class="relative">
                                   <input type="checkbox" class="sr-only" :checked="item.isActive"
@@ -419,14 +419,13 @@ const OpenCreateTransactionModal = () => {
                       {{ transaction.id }}
                     </th>
                     <td class="px-4 py-3">
-                      {{ transaction.borrowers?.borrowers_name || 'No data found' }}
+                      {{props.borrowers.find(borrower => Number(borrower.id) ===
+                        Number(transaction.borrower_id))?.borrowers_name || 'Unknown First Name'}}
                     </td>
                     <td class="px-4 py-3">
-                      {{
-                        props.officeList?.find(
-                          (office) => office.id === transaction.borrowers?.office_id
-                        )?.office_name || 'No data found'
-                      }}
+                      {{props.officeList.find(office => Number(office.id) ===
+                        (Number(props.borrowers.find(borrower => Number(borrower.id) ===
+                          Number(transaction.borrower_id))?.office_id)))?.office_name || 'Unknown Office'}}
                     </td>
                     <td class="px-4 py-3">
                       {{
@@ -507,7 +506,8 @@ const OpenCreateTransactionModal = () => {
                               :transaction="selectedTransaction" :officeEquipments="props.officeEquipments"
                               :officeSupplies="props.officeSupplies" :equipmentCopies="props.equipmentCopies"
                               :officeList="props.officeList" :categoryList="props.categoryList"
-                              :transactionItems="props.transactionItems" :borrowers="props.borrowers" @click.stop />
+                              :transactionItems="props.transactionItems" :borrowers="props.borrowers"
+                              :users="props.users" @click.stop />
                           </li>
                           <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
                             <button @click.stop="openDeleteModal(transaction)" class="w-full text-start px-4 py-2">
