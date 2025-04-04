@@ -1,18 +1,10 @@
 <script setup>
 import { onMounted, onUnmounted, ref, computed, watch, toRaw } from "vue";
-import axiosClient from "../../axios";
 import UpdateModal from "./Modal/UpdateTransactionModal.vue";
 import DeleteModal from "./Modal/DeleteTransactionModal.vue";
-import { ClListOrdered } from "@kalimahapps/vue-icons";
 import { ChMenuMeatball } from "@kalimahapps/vue-icons";
-import { FlFilledClipboardBulletList } from "@kalimahapps/vue-icons";
-import { CaDotMark } from "@kalimahapps/vue-icons";
-import { GlQuestion } from "@kalimahapps/vue-icons";
 import { IcSolidFilter } from '@kalimahapps/vue-icons';
 import { MdOutlinedArrowDropDown } from '@kalimahapps/vue-icons';
-import { AkCheck } from '@kalimahapps/vue-icons';
-import { AkCross } from '@kalimahapps/vue-icons';
-import { BsQuestion } from '@kalimahapps/vue-icons';
 import { BsCheck } from '@kalimahapps/vue-icons';
 import { BsX } from '@kalimahapps/vue-icons';
 import { AkPlus } from '@kalimahapps/vue-icons';
@@ -22,10 +14,6 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 
 // const transactionHistories = ref([]);
 const officeSupplies = ref([]);
-const officeEquipments = ref([]);
-const equipmentCopies = ref([]);
-// const officeList = ref([]);
-const categoryList = ref([]);
 
 const searchQuery = ref("");
 
@@ -45,6 +33,13 @@ const props = defineProps({
   equipmentCopies: Array,
   categoryList: Array,
   transactionHistories: Array,
+  selectedDateRange: Object,
+})
+
+watch(() => props.selectedDateRange, () => {
+  console.log("🚀 ~ watch ~ props.transactionHistory:", props.transactionHistory)
+  console.log("🚀 ~ watch ~ props.selectedDateRange.start:", props.selectedDateRange.start)
+  console.log("🚀 ~ watch ~ props.selectedDateRange.end:", props.selectedDateRange.end)
 })
 
 const openUpdateModal = (transaction) => {
@@ -84,44 +79,47 @@ const getActiveOfficeIds = () => {
 };
 
 const filteredTransactions = computed(() => {
-  if (!props.transactionHistory) return [];
+  if (!props.transactionHistory || !props.selectedDateRange.start || !props.selectedDateRange.end) return [];
 
-  const searchTerm = searchQuery.value.toLowerCase();
-  const activeOfficeIds = getActiveOfficeIds();
+  const startDate = new Date(props.selectedDateRange.start);
+  const endDate = new Date(props.selectedDateRange.end);
+  
+  // ✅ Extend end date to include the full day (23:59:59)
+  endDate.setHours(23, 59, 59, 999);
 
-  return props.transactionHistory.filter((transaction) => {
-    // DELETED
+  return props.transactionHistory.filter(transaction => {
+    const borrowDate = new Date(transaction.borrow_date);
+
+    // ✅ Ensure borrow_date is within the full range, including the same day
+    if (borrowDate < startDate || borrowDate > endDate) {
+      return false;
+    }
+
+    // 🔍 Keep existing filters (deletion check, search query, item check, etc.)
     if (transaction.is_deleted) return false;
-    // BORROWER NAME
+
+    const searchTerm = searchQuery.value.toLowerCase();
+    const activeOfficeIds = getActiveOfficeIds();
     const borrowerName =
       props.borrowers
         ?.find((borrower) => borrower.id === transaction.borrower_id)
         ?.borrowers_name?.toLowerCase() || "";
-    // TRANSACTION ID
     const transactionId = transaction.id?.toString().toLowerCase() || "";
-    // LENDER NAME
     const lender =
       props.users
         ?.find((user) => user.id === transaction.lender_id)
         ?.firstName?.toLowerCase() || "";
-    // RETURN DATE
     const returnDate = transaction.return_date
       ? transaction.return_date.toLowerCase()
       : "";
-    // BORROW DATE
-    const borrowDate = transaction.borrow_date
+    const borrowDateStr = transaction.borrow_date
       ? transaction.borrow_date.toLowerCase()
       : "";
 
-    // FETCH ITEMS OF THE TRANSACTION
+    // Fetch transaction items
     const selectedTransactionItems = props.transactionItems?.filter(item => item.transaction_id === transaction.id) || [];
+    if (!selectedTransactionItems.length) return false;
 
-    if (!selectedTransactionItems.length) {
-      console.log("NO ITEMS, RETURNING FALSE")
-      return false;
-    }
-
-    // ITEMS MATCH
     const itemsMatch = selectedTransactionItems.some(item => {
       if (item.item_type === 'Office Supply') {
         const supplyName = props.officeSupplies.find(
@@ -165,7 +163,7 @@ const filteredTransactions = computed(() => {
         transactionId.includes(searchTerm) ||
         lender.includes(searchTerm) ||
         returnDate.includes(searchTerm) ||
-        borrowDate.includes(searchTerm) ||
+        borrowDateStr.includes(searchTerm) ||
         itemsMatch)
     );
   });

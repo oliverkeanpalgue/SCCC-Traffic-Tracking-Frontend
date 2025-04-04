@@ -142,7 +142,8 @@ onMounted(() => {
                 :borrowers="borrowersArray" 
                 :equipmentCopies="equipmentCopiesArray" 
                 :categoryList="categoryListArray"
-                :transactionHistories="transactionHistoriesArray"/>
+                :transactionHistories="transactionHistoriesArray"
+                :selectedDateRange="selectedDateRange"/>
         </div>
     </div>
 </template>
