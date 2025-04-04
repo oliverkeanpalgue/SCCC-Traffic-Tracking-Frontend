@@ -4,7 +4,9 @@ import ApexCharts from 'apexcharts';
 import { useDatabaseStore } from "../../stores/databaseStore";
 
 const props = defineProps({
-  dateRange: Object // Expecting { start: 'YYYY-MM-DD', end: 'YYYY-MM-DD' }
+  dateRange: Object,
+  isLoading: Boolean,
+  transactionHistory: Array
 });
 
 const emit = defineEmits(['periodChange']);
@@ -20,7 +22,7 @@ let chart = null;
 
 // Compute borrowed and returned items per day
 const dailyStats = computed(() => {
-  if (!databaseStore.transactionHistory) return { borrowed: [], returned: [], categories: [] };
+  if (!props.transactionHistory) return { borrowed: [], returned: [], categories: [] };
 
   const startDate = new Date(props.dateRange.start);
 
@@ -39,7 +41,7 @@ const dailyStats = computed(() => {
   const borrowedCounts = [];
   const returnedCounts = [];
 
-  const transactions = databaseStore.transactionHistory.filter(transaction => {
+  const transactions = props.transactionHistory.filter(transaction => {
   const borrowDate = new Date(transaction.borrow_date);
   const hasMatchingItem = databaseStore.transactionItems.some(
     item => item.transaction_id === transaction.id
@@ -144,9 +146,27 @@ const updateChart = () => {
   }
 };
 
-// Watch for date range changes
-watch(() => props.dateRange, updateChart, { deep: true });
+// New: Track if the chart is initialized
+const isChartInitialized = ref(false);
 
+// Update chart setup logic inside a watcher
+watch(
+  [() => props.dateRange, () => props.transactionHistory, () => props.isLoading],
+  () => {
+    // Wait until data is available and not loading
+    if (!props.transactionHistory || props.isLoading) return;
+
+    updateChart();
+
+    // Initialize chart only once
+    if (!isChartInitialized.value && barChart.value) {
+      chart = new ApexCharts(barChart.value, options.value);
+      chart.render();
+      isChartInitialized.value = true;
+    }
+  },
+  { deep: true, immediate: true } // `immediate` makes it run on first load
+);
 // Initialize chart
 onMounted(() => {
   if (barChart.value) {

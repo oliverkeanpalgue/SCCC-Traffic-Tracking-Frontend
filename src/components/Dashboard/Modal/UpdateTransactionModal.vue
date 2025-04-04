@@ -170,7 +170,7 @@ const updateBorrowTransaction = async (date) => {
   } catch (error) {
     console.error('Error updating transaction item:', error);
     console.error('Error details:', error.response?.data);
-  }finally{
+  } finally {
     databaseStore.fetchData()
     emitter.emit("show-toast", { message: "Transaction updated successfully!", type: "success" });
   }
@@ -324,10 +324,11 @@ const formatDate = (dateString) => {
 </script>
 
 <template>
-  <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5 z-50 ">
+  <div v-if="modelValue"
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5 z-50 ">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
-        <Loading />
-      </div>
+      <Loading />
+    </div>
     <div v-else ref="modalContainer"
       class="w-full max-w-[900px] max-h-[88vh] rounded-[20px] mt-9 bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
       <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
@@ -361,9 +362,9 @@ const formatDate = (dateString) => {
           <div class="">
             <p class="text-lg font-bold mb-1 dark:text-white">Borrower Information:</p>
             <p class="font-bold">{{props.borrowers.find(borrower => Number(borrower.id) ===
-                Number(transaction.borrower_id))?.borrowers_name || 'Unknown First Name'}}</p>
+              Number(transaction.borrower_id))?.borrowers_name || 'Unknown First Name'}}</p>
             <p class="">{{props.borrowers.find(borrower => Number(borrower.id) ===
-                Number(transaction.borrower_id))?.borrowers_contact || 'Unknown Contact'}}</p>
+              Number(transaction.borrower_id))?.borrowers_contact || 'Unknown Contact'}}</p>
             <p class="">{{props.officeList.find(office => Number(office.id) ===
               (Number(props.borrowers.find(borrower => Number(borrower.id) ===
                 Number(transaction.borrower_id))?.office_id)))?.office_name || 'Unknown Office'}}</p>
@@ -377,7 +378,7 @@ const formatDate = (dateString) => {
                 Number(transaction.lender_id))?.lastName || 'Unknown Last Name'}}
             </p>
             <p class="">{{props.users.find(user => Number(user.id) ===
-                Number(transaction.lender_id))?.email || 'Unknown Email'}}</p>
+              Number(transaction.lender_id))?.email || 'Unknown Email'}}</p>
           </div>
         </div>
         <!-- THIRD ROW -->

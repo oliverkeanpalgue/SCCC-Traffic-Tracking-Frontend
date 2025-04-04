@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import LineGraph from '../components/Dashboard/LineGraph.vue';
 import BarGraph from "../components/Dashboard/BarGraph.vue";
 import TransactionHistoryTable from "../components/Dashboard/TransactionHistoryTable.vue";
 import DateRangePicker from "../components/Dashboard/DateRangePicker.vue";
 import { useDatabaseStore } from "../stores/databaseStore";
+import Loading from "../components/Loading.vue";
 
 // fetching data
 const databaseStore = useDatabaseStore()
@@ -81,97 +82,120 @@ onMounted(() => {
 });
 
 const borrowedCount = computed(() => {
-  if (!transactionHistoryArray.value) return 0;
+    if (!transactionHistoryArray.value) return 0;
 
-  const startDate = new Date(selectedDateRange.value.start);
-  const endDate = new Date(selectedDateRange.value.end);
-  endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(selectedDateRange.value.start);
+    const endDate = new Date(selectedDateRange.value.end);
+    endDate.setHours(23, 59, 59, 999);
 
-  return transactionHistoryArray.value.filter(transaction => {
-    const borrowDate = new Date(transaction.borrow_date);
-    return borrowDate >= startDate && borrowDate <= endDate;
-  }).length;
+    return transactionHistoryArray.value.filter(transaction => {
+        const borrowDate = new Date(transaction.borrow_date);
+        return borrowDate >= startDate && borrowDate <= endDate;
+    }).length;
 });
 
 const returnedCount = computed(() => {
-  if (!transactionHistoryArray.value) return 0;
+    if (!transactionHistoryArray.value) return 0;
 
-  const startDate = new Date(selectedDateRange.value.start);
-  const endDate = new Date(selectedDateRange.value.end);
-  endDate.setHours(23, 59, 59, 999);
+    const startDate = new Date(selectedDateRange.value.start);
+    const endDate = new Date(selectedDateRange.value.end);
+    endDate.setHours(23, 59, 59, 999);
 
-  return transactionHistoryArray.value.filter(transaction => {
-    if (!transaction.return_date) return false;
-    const returnDate = new Date(transaction.borrow_date);
-    return returnDate >= startDate && returnDate <= endDate;
-  }).length;
+    return transactionHistoryArray.value.filter(transaction => {
+        if (!transaction.return_date) return false;
+        const returnDate = new Date(transaction.borrow_date);
+        return returnDate >= startDate && returnDate <= endDate;
+    }).length;
+});
+
+
+const isLoading = computed(() => {
+  return (
+    transactionItemsArray.value.length === 0 ||
+    transactionHistoryArray.value.length === 0 ||
+    officeEquipmentsArray.value.length === 0 ||
+    officeSuppliesArray.value.length === 0 ||
+    officeListArray.value.length === 0 ||
+    usersArray.value.length === 0 ||
+    borrowersArray.value.length === 0 ||
+    equipmentCopiesArray.value.length === 0 ||
+    categoryListArray.value.length === 0 ||
+    transactionHistoriesArray.value.length === 0
+  );
+});
+
+watch(() => databaseStore.isLoading, (newVal) => {
+  isLoading.value = newVal;
+  console.log("isLoading changed to:", newVal);
 });
 
 </script>
 
 <template>
-    <div class="">
-        <header class="">
-            <div class="p-4 md:px-6 md:py-6 sm:px-6 ">
-                <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">
-                    Dashboard
-                </h1>
-            </div>
-        </header>
-
-        <div class="grid h-25 md:p-4 grid-cols-3 md:grid-cols-2">
-            <!-- Date Range Picker -->
-            <DateRangePicker @dateRangeSelected="updateDateRange"
-                class="px-4 col-span-2 md:col-span-1 dark:text-gray-200" />
-
-            <div class="grid grid-cols-2 items-center text-center">
-                <div
-                    class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
-                    <h5 class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
-                        Total Borrowed</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ borrowedCount }}</p>
-                </div>
-                <div
-                    class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
-                    <h5 class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
-                        Total Returned</h5>
-                    <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ returnedCount }}</p>
-                </div>
-            </div>
+    <div>
+        <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+            <Loading />
+            <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
         </div>
+        <div v-else class="">
+            <header class="">
+                <div class="p-4 md:px-6 md:py-6 sm:px-6 ">
+                    <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">
+                        Dashboard
+                    </h1>
+                </div>
+            </header>
 
-        <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-130 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
-            <!-- BAR GRAPH -->
-            <div class="w-full shadow-lg h-80 md:h-125 md:span-cols-1">
-                <div
-                    class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between">
-                    <BarGraph :dateRange="selectedDateRange" class="w-full" />
+            <div class="grid h-25 md:p-4 grid-cols-3 md:grid-cols-2">
+                <!-- Date Range Picker -->
+                <DateRangePicker @dateRangeSelected="updateDateRange"
+                    class="px-4 col-span-2 md:col-span-1 dark:text-gray-200" />
+
+                <div class="grid grid-cols-2 items-center text-center">
+                    <div
+                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
+                        <h5
+                            class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
+                            Total Borrowed</h5>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ borrowedCount }}</p>
+                    </div>
+                    <div
+                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
+                        <h5
+                            class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
+                            Total Returned</h5>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ returnedCount }}</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- LINE GRAPH -->
-            <div class="w-full shadow-lg h-70 md:h-125 md:span-cols-1 ">
-                <div
-                    class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
-                    <LineGraph :dateRange="selectedDateRange" class="w-full " />
+            <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-130 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
+                <!-- BAR GRAPH -->
+                <div class="w-full shadow-lg h-80 md:h-125 md:span-cols-1">
+                    <div
+                        class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between">
+                        <BarGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full" />
+                    </div>
+                </div>
+
+                <!-- LINE GRAPH -->
+                <div class="w-full shadow-lg h-70 md:h-125 md:span-cols-1 ">
+                    <div
+                        class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
+                        <LineGraph :dateRange="selectedDateRange" class="w-full " />
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- HISTORY TABLE -->
-        <div class="mb-6 md:mb-10 md:mt-2">
-            <TransactionHistoryTable 
-                :transactionItems="transactionItemsArray" 
-                :transactionHistory="transactionHistoryArray" 
-                :officeEquipments="officeEquipmentsArray" 
-                :officeSupplies="officeSuppliesArray" 
-                :officeList="officeListArray" 
-                :users="usersArray" 
-                :borrowers="borrowersArray" 
-                :equipmentCopies="equipmentCopiesArray" 
-                :categoryList="categoryListArray"
-                :transactionHistories="transactionHistoriesArray"
-                :selectedDateRange="selectedDateRange"/>
+            <!-- HISTORY TABLE -->
+            <div class="mb-6 md:mb-10 md:mt-2">
+                <TransactionHistoryTable :transactionItems="transactionItemsArray"
+                    :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
+                    :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
+                    :borrowers="borrowersArray" :equipmentCopies="equipmentCopiesArray"
+                    :categoryList="categoryListArray" :transactionHistories="transactionHistoriesArray"
+                    :selectedDateRange="selectedDateRange" />
+            </div>
         </div>
     </div>
 </template>
