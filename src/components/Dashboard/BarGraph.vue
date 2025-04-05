@@ -78,10 +78,10 @@ const dailyStats = computed(() => {
 });
 
 const options = ref({
-  colors: ["#3f8f29", "#bf1029"], // Returned first (bottom), Still Borrowed (top)
+  colors: ["#3f8f29", "#bf1029"], // Returned first (bottom), Unreturned (top)
   series: [
     { name: "Returned", color: "#3f8f29", data: [] },
-    { name: "Still Borrowed", color: "#bf1029", data: [] }
+    { name: "Unreturned", color: "#bf1029", data: [] }
   ],
   chart: {
     type: "bar",
@@ -120,7 +120,7 @@ const updateChart = () => {
   const borrowed = stats.borrowed;
   const returned = stats.returned;
 
-  // Compute "still borrowed"
+  // Compute "Unreturned"
   const stillBorrowed = borrowed.map((b, i) => Math.max(b - returned[i], 0));
   const adjustedReturned = returned.map((r, i) => Math.min(r, borrowed[i]));
 
@@ -131,7 +131,7 @@ const updateChart = () => {
       data: adjustedReturned
     },
     {
-      name: "Still Borrowed",
+      name: "Unreturned",
       color: "#bf1029",
       data: stillBorrowed
     }
@@ -186,9 +186,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950 z-10">
-    <!-- BAR CHART -->
-    <!-- Borrowed vs Returned - Daily -->
+  <div class="p-4 pb-8 md:px-8 items-center bg-white rounded-lg dark:bg-gray-950 z-10">
+    <label class="text-base font-medium text-dark dark:text-gray-200">
+      Returned vs Unreturned Transactions by Day:
+    </label>
     <div ref="barChart"></div>
   </div>
 </template>

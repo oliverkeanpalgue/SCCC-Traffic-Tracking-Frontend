@@ -172,7 +172,7 @@ const filteredTransactions = computed(() => {
 
 // Pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(7);
 
 // Compute total pages based on filtered transactions
 const totalPages = computed(() => {
@@ -410,7 +410,7 @@ const OpenCreateTransactionModal = () => {
                   <th scope="col" class="py-3">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody class="">
                 <template v-if="paginatedTransactions.length">
                   <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
                     v-for="transaction in paginatedTransactions" :key="transaction.id">

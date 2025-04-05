@@ -156,7 +156,12 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950">
+    <div class="h-full p-4 pb-8 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950">
+        
+
+    <label class="text-base font-medium text-dark dark:text-gray-200">
+        Transactions Made vs Returned Daily:
+    </label>
         <div ref="lineChart" id="line-chart"></div>
     </div>
 </template>

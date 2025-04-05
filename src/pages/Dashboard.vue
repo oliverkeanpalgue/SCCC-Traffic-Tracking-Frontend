@@ -130,12 +130,7 @@ const isLoading = computed(() => {
 </script>
 
 <template>
-    <div>
-        <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
-            <Loading />
-            <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
-        </div>
-        <div v-else class="">
+        <div class="">
             <header class="">
                 <div class="p-4 md:px-6 md:py-6 sm:px-6 ">
                     <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">
@@ -143,6 +138,12 @@ const isLoading = computed(() => {
                     </h1>
                 </div>
             </header>
+            
+            <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+                <Loading />
+                <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
+            </div>
+            <div v-else>
 
             <div class="grid h-25 md:p-4 grid-cols-3 md:grid-cols-2">
                 <!-- Date Range Picker -->
@@ -174,9 +175,9 @@ const isLoading = computed(() => {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-130 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
+            <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-135 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
                 <!-- BAR GRAPH -->
-                <div class="w-full shadow-lg h-80 md:h-125 md:span-cols-1">
+                <div class="w-full shadow-lg h-85 md:h-130 md:span-cols-1">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between">
                         <BarGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full" />
@@ -184,7 +185,7 @@ const isLoading = computed(() => {
                 </div>
 
                 <!-- LINE GRAPH -->
-                <div class="w-full shadow-lg h-70 md:h-125 md:span-cols-1 ">
+                <div class="w-full shadow-lg h-70 md:h-130 md:span-cols-1 ">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
                         <LineGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full " />
@@ -193,7 +194,7 @@ const isLoading = computed(() => {
             </div>
 
             <!-- HISTORY TABLE -->
-            <div class="mb-6 md:mb-10 md:mt-2">
+            <div class="mb-6 md:mt-2">
                 <TransactionHistoryTable :transactionItems="transactionItemsArray"
                     :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
                     :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
