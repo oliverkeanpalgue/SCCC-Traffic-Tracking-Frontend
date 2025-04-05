@@ -81,7 +81,7 @@ onMounted(() => {
     updateDateRange({ start: selectedStartDate.value, end: selectedEndDate.value });
 });
 
-const borrowedCount = computed(() => {
+const totalTransactionsCount = computed(() => {
     if (!transactionHistoryArray.value) return 0;
 
     const startDate = new Date(selectedDateRange.value.start);
@@ -103,11 +103,14 @@ const returnedCount = computed(() => {
 
     return transactionHistoryArray.value.filter(transaction => {
         if (!transaction.return_date) return false;
-        const returnDate = new Date(transaction.borrow_date);
+        const returnDate = new Date(transaction.return_date);
         return returnDate >= startDate && returnDate <= endDate;
     }).length;
 });
 
+const unreturnedCount = computed(() => {
+    return totalTransactionsCount.value - returnedCount.value;
+});
 
 const isLoading = computed(() => {
   return (
@@ -122,11 +125,6 @@ const isLoading = computed(() => {
     categoryListArray.value.length === 0 ||
     transactionHistoriesArray.value.length === 0
   );
-});
-
-watch(() => databaseStore.isLoading, (newVal) => {
-  isLoading.value = newVal;
-  console.log("isLoading changed to:", newVal);
 });
 
 </script>
@@ -150,17 +148,24 @@ watch(() => databaseStore.isLoading, (newVal) => {
                 <!-- Date Range Picker -->
                 <DateRangePicker @dateRangeSelected="updateDateRange"
                     class="px-4 col-span-2 md:col-span-1 dark:text-gray-200" />
-
-                <div class="grid grid-cols-2 items-center text-center">
+                <!-- Total Transactions Not Returned and Returned -->
+                <div class="grid grid-cols-3 gap-4 items-center text-center">
                     <div
-                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
+                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
                         <h5
                             class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
-                            Total Borrowed</h5>
-                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ borrowedCount }}</p>
+                            Total Transactions</h5>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ totalTransactionsCount }}</p>
                     </div>
                     <div
-                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 md:mx-5 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
+                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
+                        <h5
+                            class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
+                            Total Unreturned</h5>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ unreturnedCount }}</p>
+                    </div>
+                    <div
+                        class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
                         <h5
                             class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
                             Total Returned</h5>
@@ -182,7 +187,7 @@ watch(() => databaseStore.isLoading, (newVal) => {
                 <div class="w-full shadow-lg h-70 md:h-125 md:span-cols-1 ">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
-                        <LineGraph :dateRange="selectedDateRange" class="w-full " />
+                        <LineGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full " />
                     </div>
                 </div>
             </div>

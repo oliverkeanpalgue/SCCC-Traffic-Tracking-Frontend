@@ -42,19 +42,19 @@ const dailyStats = computed(() => {
   const returnedCounts = [];
 
   const transactions = props.transactionHistory.filter(transaction => {
-  const borrowDate = new Date(transaction.borrow_date);
-  const hasMatchingItem = databaseStore.transactionItems.some(
-    item => item.transaction_id === transaction.id
-  );
-  return borrowDate >= startDate && borrowDate <= endDate && hasMatchingItem;
-});
+    const borrowDate = new Date(transaction.borrow_date);
+    const hasMatchingItem = databaseStore.transactionItems.some(
+      item => item.transaction_id === transaction.id
+    );
+    return borrowDate >= startDate && borrowDate <= endDate && hasMatchingItem;
+  });
 
 
   const formatDateGMT8 = (dateStr) => {
-      const date = new Date(dateStr);
-      const gmt8Date = new Date(date.getTime() + 8 * 60 * 60 * 1000);
-      return gmt8Date.toISOString().split('T')[0];
-    }
+    const date = new Date(dateStr);
+    const gmt8Date = new Date(date.getTime() + 8 * 60 * 60 * 1000);
+    return gmt8Date.toISOString().split('T')[0];
+  }
 
   while (categoryStartDate <= endDate) {
     const formattedDate = startDate.toISOString().split('T')[0];
@@ -160,6 +160,7 @@ watch(
 
     // Initialize chart only once
     if (!isChartInitialized.value && barChart.value) {
+      console.log('Initializing chart inside watcher...');
       chart = new ApexCharts(barChart.value, options.value);
       chart.render();
       isChartInitialized.value = true;
@@ -167,11 +168,14 @@ watch(
   },
   { deep: true, immediate: true } // `immediate` makes it run on first load
 );
+
 // Initialize chart
 onMounted(() => {
-  if (barChart.value) {
+  if (!isChartInitialized.value && barChart.value) {
+    console.log('Initializing chart inside onMounted...');
     chart = new ApexCharts(barChart.value, options.value);
     chart.render();
+    isChartInitialized.value = true;
   }
 });
 
@@ -184,7 +188,7 @@ onUnmounted(() => {
 <template>
   <div class="h-full p-4 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950 z-10">
     <!-- BAR CHART -->
-     <!-- Borrowed vs Returned - Daily -->
+    <!-- Borrowed vs Returned - Daily -->
     <div ref="barChart"></div>
   </div>
 </template>
