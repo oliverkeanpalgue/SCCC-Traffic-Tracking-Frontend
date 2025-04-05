@@ -83,7 +83,7 @@ const filteredTransactions = computed(() => {
 
   const startDate = new Date(props.selectedDateRange.start);
   const endDate = new Date(props.selectedDateRange.end);
-  
+
   // ✅ Extend end date to include the full day (23:59:59)
   endDate.setHours(23, 59, 59, 999);
   startDate.setHours(0, 0, 0, 0);
@@ -179,13 +179,54 @@ const totalPages = computed(() => {
   return Math.ceil(filteredTransactions.value.length / itemsPerPage.value);
 });
 
-// Get paginated transactions
+const sortedTransactions = computed(() => {
+  const transactions = [...filteredTransactions.value];
+
+  return transactions.sort((a, b) => {
+    const getFieldValue = (transaction, field) => {
+      switch (field) {
+        case 'id':
+          return transaction.id;
+
+        case 'borrower':
+          return props.borrowers.find(b => b.id === transaction.borrower_id)?.borrowers_name?.toLowerCase() || '';
+
+        case 'borrow_date':
+          return new Date(transaction.borrow_date);
+
+        case 'return_date':
+          return transaction.return_date ? new Date(transaction.return_date) : new Date(0);
+
+        case 'lender':
+          return props.users.find(u => u.id === transaction.lender_id)?.firstName?.toLowerCase() || '';
+
+        case 'isc':
+          return transaction.isc;
+
+        case 'office':
+          const borrower = props.borrowers.find(b => b.id === transaction.borrower_id);
+          return props.officeList.find(o => o.id === borrower?.office_id)?.office_name?.toLowerCase() || '';
+
+        default:
+          return '';
+      }
+    };
+
+    const aVal = getFieldValue(a, sortBy.value);
+    const bVal = getFieldValue(b, sortBy.value);
+
+    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+    return 0;
+  });
+});
+
 const paginatedTransactions = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage.value;
   const end = start + itemsPerPage.value;
-
-  return filteredTransactions.value.slice(start, end);
+  return sortedTransactions.value.slice(start, end);
 });
+
 
 // Pagination controls
 const nextPage = () => {
@@ -286,6 +327,18 @@ const isOpenCreateTransactionModal = ref(false);
 const OpenCreateTransactionModal = () => {
   isOpenCreateTransactionModal.value = true;
 }
+
+const sortBy = ref("id");
+const sortDirection = ref("asc");
+
+const sortByField = (field) => {
+  if (sortBy.value === field) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortBy.value = field;
+    sortDirection.value = "asc";
+  }
+};
 </script>
 
 <template>
@@ -362,7 +415,8 @@ const OpenCreateTransactionModal = () => {
                                 'top-full visible': officeDropDownFilter,
                                 'top-[110%] invisible': !officeDropDownFilter,
                               }">
-                              <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
+                              <label
+                                class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
                                 v-for="item in officeDropDownItems" :key="item.id">
                                 <div class="relative">
                                   <input type="checkbox" class="sr-only" :checked="item.isActive"
@@ -395,21 +449,43 @@ const OpenCreateTransactionModal = () => {
               </div>
             </div>
           </div>
-          <div class="dark:bg-gray-900 ">
+          <div class="min-h-125 dark:bg-gray-900 ">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-              <thead class="text-xs text-gray-800 uppercase bg-gray-300 dark:bg-gray-700 dark:text-gray-300">
+              <thead class=" dark:bg-gray-800 dark:text-gray-300">
                 <tr>
-                  <th scope="col" class="">ID</th>
-                  <th scope="col" class="py-3">Borrower</th>
-                  <th scope="col" class="py-3">Office</th>
-                  <th scope="col" class="py-3">Lender</th>
-                  <th scope="col" class="py-3">AREE/ISC</th>
-                  <th scope="col" class="py-3">Items</th>
-                  <th scope="col" class="py-3">Return Date & Time</th>
-                  <th scope="col" class="py-3">Borrow Date & Time</th>
-                  <th scope="col" class="py-3">Actions</th>
+                  <th class="py-3" @click="sortByField('id')">
+                    ID
+                    <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th @click="sortByField('borrower')">
+                    Borrower
+                    <span v-if="sortBy === 'borrower'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th @click="sortByField('office')">
+                    Office
+                    <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th @click="sortByField('lender')">
+                    Lender
+                    <span v-if="sortBy === 'lender'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th @click="sortByField('isc')">
+                    ISC/AREE
+                    <span v-if="sortBy === 'isc'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th>Item</th>
+                  <th @click="sortByField('return_date')">
+                    Return Date
+                    <span v-if="sortBy === 'return_date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th @click="sortByField('borrow_date')">
+                    Borrow Date
+                    <span v-if="sortBy === 'borrow_date'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                  </th>
+                  <th>Actions</th>
                 </tr>
               </thead>
+
               <tbody class="">
                 <template v-if="paginatedTransactions.length">
                   <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
