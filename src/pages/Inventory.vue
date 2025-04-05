@@ -458,7 +458,7 @@ const toggleTableView = () => {
         </div>
       </div>
       <div v-if="!isLoading && tableView" class="h-[71vh] ">
-        <FullInventoryTable :filteredInventory="filteredInventory" :equipmentCopies="equipmentCopies" />
+        <FullInventoryTable :filteredInventory="filteredInventory" :equipmentCopies="equipmentCopies" :categoryList="categoryList" />
       </div>
     </div>
 

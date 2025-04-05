@@ -227,7 +227,6 @@ const paginatedTransactions = computed(() => {
   return sortedTransactions.value.slice(start, end);
 });
 
-
 // Pagination controls
 const nextPage = () => {
   if (currentPage.value < totalPages.value) {
@@ -451,7 +450,7 @@ const sortByField = (field) => {
           </div>
           <div class="min-h-125 dark:bg-gray-900 ">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-              <thead class=" dark:bg-gray-800 dark:text-gray-300">
+              <thead class=" dark:bg-gray-600 dark:text-gray-300">
                 <tr>
                   <th class="py-3" @click="sortByField('id')">
                     ID
@@ -488,7 +487,7 @@ const sortByField = (field) => {
 
               <tbody class="">
                 <template v-if="paginatedTransactions.length">
-                  <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300"
+                  <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white"
                     v-for="transaction in paginatedTransactions" :key="transaction.id">
                     <th scope="row" class="px-4 py-3 whitespace-nowrap ">
                       {{ transaction.id }}
