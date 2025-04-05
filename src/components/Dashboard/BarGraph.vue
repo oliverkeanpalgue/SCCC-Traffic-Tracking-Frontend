@@ -85,7 +85,7 @@ const options = ref({
   ],
   chart: {
     type: "bar",
-    height: "100%",
+    height: "98%",
     stacked: true, // ✅ Enable stacked bars
     fontFamily: "Inter, sans-serif",
     toolbar: { show: true }

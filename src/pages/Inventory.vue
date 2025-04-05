@@ -306,14 +306,14 @@ const toggleTableView = () => {
 
     <!-- MAIN CONTAINER -->
     <div class="border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-      <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+      <div v-if="isLoading" class="h-[67vh] flex flex-col items-center justify-center">
         <Loading />
         <p class="text-gray-500 dark:text-gray-500">{{ fetchedDataCount }}/9 items fetched</p>
       </div>
       <div v-if="!isLoading && !tableView" class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div 
-          class="grid gap-4 max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          class="grid gap-4 max-h-[67vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'hidden md:grid md:grid-cols-1 xl:grid-cols-2' : 'grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
@@ -329,7 +329,7 @@ const toggleTableView = () => {
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
         <div v-if="selectedItem"
-          class="relative max-h-[71vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-5 md:col-span-4">
+          class="relative max-h-[67vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-5 md:col-span-4">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-1 py-1 rounded-full hover:bg-gray-300 transition">

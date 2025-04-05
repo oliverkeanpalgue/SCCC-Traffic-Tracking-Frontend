@@ -72,7 +72,7 @@ const dailyStats = computed(() => {
 
 const options = ref({
     chart: {
-        height: "100%",
+        height: "95%",
         maxWidth: "100%",
         type: "area",
         fontFamily: "Inter, sans-serif",
@@ -159,9 +159,9 @@ onUnmounted(() => {
     <div class="h-full p-4 pb-8 md:px-6 items-center bg-white rounded-lg dark:bg-gray-950">
         
 
-    <label class="text-base font-medium text-dark dark:text-gray-200">
+    <label class=" text-base font-medium text-dark dark:text-gray-200">
         Transactions Made vs Returned Daily:
     </label>
-        <div ref="lineChart" id="line-chart"></div>
+        <div class="mt-3" ref="lineChart" id="line-chart"></div>
     </div>
 </template>

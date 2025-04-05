@@ -505,7 +505,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
         <Loading v-if="isLoading" />
 
         <div v-else ref="modalContainer"
-            class="w-full w-[90vw] h-[95vh] rounded-[20px] bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
+            class="w-full h-[95vh] rounded-[20px] bg-white px-8 py-6 text-center border-4 dark:bg-gray-950 dark:border-gray-100">
             <div class="grid grid-cols-3 gap-4 h-[87vh]">
                 <!-- CLOSE BUTTON -->
                 <button @click="closeModal()"
@@ -514,7 +514,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                 </button>
 
                 <!-- CHOOSE ITEM -->
-                <div class="col-span-2 rounded-2xl border-2 p-4 text-start dark:bg-black dark:border-gray-600">
+                <div class="col-span-2 rounded-2xl max-h-[89vh] border-2 p-4 text-start dark:bg-black dark:border-gray-600">
                     <p class="text-2xl font-bold pl-2 mb-2">Choose Item/s:</p>
                     <!-- SEARCH BAR -->
                     <div class="w-full">
@@ -561,10 +561,10 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                 </div>
 
                 <!-- SELECTED ITEMS -->
-                <div class="rounded-2xl border-2 p-4 text-start dark:bg-black dark:border-gray-600">
+                <div class="rounded-2xl max-h-[89vh] border-2 p-4 text-start dark:bg-black dark:border-gray-600">
                     <p class="text-2xl font-bold pl-2 mb-2">Selected Item/s:</p>
                     <div
-                        class="border-2 h-[35vh] rounded-xl overflow-y-auto bg-gray-100 dark:bg-gray-950 dark:border-gray-600">
+                        class="border-2 h-[30vh] rounded-xl overflow-y-auto bg-gray-100 dark:bg-gray-950 dark:border-gray-600">
                         <table class="w-full text-center ">
                             <thead class="bg-gray-50 dark:bg-gray-900">
                                 <tr>
@@ -590,7 +590,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                     </div>
 
                     <!-- BORROWER -->
-                    <div class="flex flex-row mt-4 mb-2">
+                    <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">
                             Type Borrower:
                         </label>
@@ -620,7 +620,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                         </ul>
                     </div>
 
-                    <div class="flex flex-row mt-4 mb-2">
+                    <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
                             ISC/AREE:</label>
                         <p class="text-red-700 ml-2 font-semibold italic">{{ errors.iscInput ? errors.iscInput[0] :
@@ -646,7 +646,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                     </div>
 
                     <!-- REMARKS -->
-                    <div class="flex flex-row mt-4 mb-2">
+                    <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
                             Remarks:</label>
                         <p class="text-red-700 ml-2 font-semibold italic">{{ errors.remarksInput ?
@@ -659,7 +659,7 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                             <AkTextAlignLeft />
                         </div>
                         <textarea type="text" v-model="remarksInput"
-                            class="min-h-20 max-h-30 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            class="min-h-25 max-h-25 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="Enter Remarks"></textarea>
                     </div>
 

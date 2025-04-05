@@ -325,18 +325,18 @@ const formatDate = (dateString) => {
 
 <template>
   <div v-if="modelValue"
-    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/55 px-4 py-5 z-50 ">
+    class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-black/60 px-4 py-5 ">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
     <div v-else ref="modalContainer"
-      class="w-full max-w-[900px] max-h-[88vh] rounded-[20px] mt-9 bg-white px-8 py-8 text-center border border-4 dark:bg-gray-950 dark:border-gray-100">
-      <h3 class="text-3xl mb-5 mt-1 font-semibold text-dark dark:text-white">
+      class="w-full max-w-[900px] max-h-[87vh] rounded-[20px] mt-13 bg-white px-8 py-8 text-center border-4 dark:bg-gray-950 dark:border-gray-100">
+      <h3 class="text-3xl mb-3 mt-1 font-semibold text-dark dark:text-white">
         Update Transaction
       </h3>
-      <div class="dark:text-gray-200 max-h-[70vh] overflow-auto">
+      <div class="dark:text-gray-200 max-h-[65vh] overflow-auto">
         <!-- FIRST ROW -->
-        <div class="text-start rounded-2xl py-4 px-8 mb-4 dark:bg-gray-800">
+        <div class="text-start rounded-2xl py-4 px-8 mb-3 dark:bg-gray-800">
           <p class="text-xl mb-1 font-semibold text-white">Transaction #{{ transaction.id }}</p>
           <p class="text-gray-300 mb-3">{{ formatDate(transaction.borrow_date) }}</p>
           <div class="flex flex-row text-center items-center">
@@ -358,7 +358,7 @@ const formatDate = (dateString) => {
           </div>
         </div>
         <!-- SECOND ROW -->
-        <div class="text-start mb-5 rounded-2xl py-4 px-8 dark:bg-gray-800 grid grid-cols-2 dark:text-gray-300">
+        <div class="text-start mb-3 rounded-2xl py-4 px-8 dark:bg-gray-800 grid grid-cols-2 dark:text-gray-300">
           <div class="">
             <p class="text-lg font-bold mb-1 dark:text-white">Borrower Information:</p>
             <p class="font-bold">{{props.borrowers.find(borrower => Number(borrower.id) ===
@@ -382,7 +382,7 @@ const formatDate = (dateString) => {
           </div>
         </div>
         <!-- THIRD ROW -->
-        <div class="text-start rounded-2xl mb-5 py-4 px-8 dark:bg-gray-800 dark:text-gray-300">
+        <div class="text-start rounded-2xl mb-3 py-4 px-8 dark:bg-gray-800 dark:text-gray-300">
           <p v-if="supplyCount > 0" class="text-xl font-bold mb-1 dark:text-white">Borrowed Items</p>
           <p v-if="transactionItems.length === 0"
             class="text-sm mb-1 flex flex-row bg-red-200 text-red-800 font-bold py-5 px-5 rounded-xl">
@@ -496,7 +496,7 @@ const formatDate = (dateString) => {
           </table>
         </div>
       </div>
-      <div class="-mx-3 flex flex-wrap">
+      <div class="mt-1 -mx-3 flex flex-wrap">
         <div class="w-1/2 px-3">
           <button @click="closeModal"
             class="block w-full rounded-md border border-stroke p-3 text-center text-base font-medium text-dark transition bg-gray-200 hover:border-red-800 hover:bg-red-800 hover:text-white dark:text-black">

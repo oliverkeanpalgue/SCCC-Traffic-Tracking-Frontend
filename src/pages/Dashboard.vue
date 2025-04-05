@@ -175,9 +175,9 @@ const isLoading = computed(() => {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-135 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
+            <div class="grid grid-cols-1 p-4 pb-0 h-160 md:h-130 md:grid-cols-2 md:gap-3 dark:text-gray-800 ">
                 <!-- BAR GRAPH -->
-                <div class="w-full shadow-lg h-85 md:h-130 md:span-cols-1">
+                <div class="w-full shadow-lg h-85 md:h-124 md:span-cols-1">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between">
                         <BarGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full" />
@@ -185,7 +185,7 @@ const isLoading = computed(() => {
                 </div>
 
                 <!-- LINE GRAPH -->
-                <div class="w-full shadow-lg h-70 md:h-130 md:span-cols-1 ">
+                <div class="w-full shadow-lg h-70 md:h-124 md:span-cols-1 ">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
                         <LineGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full " />
@@ -194,7 +194,7 @@ const isLoading = computed(() => {
             </div>
 
             <!-- HISTORY TABLE -->
-            <div class="mb-6 md:mt-2">
+            <div class="mb-2 md:mt-2">
                 <TransactionHistoryTable :transactionItems="transactionItemsArray"
                     :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
                     :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
