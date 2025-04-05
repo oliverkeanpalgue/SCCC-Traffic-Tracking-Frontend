@@ -8,6 +8,7 @@ import UpdateUsersPasswordModal from "./Modals/UpdateUsersPasswordModal.vue";
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import { useDatabaseStore } from '../../stores/databaseStore'
+import Loading from '../../components/Loading.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -178,14 +179,32 @@ const sortByField = (field) => {
     }
 };
 
+const isLoading = computed(() => {
+  return (
+    databaseStore.transactionItems.length === 0 ||
+    databaseStore.transactionHistory.length === 0 ||
+    databaseStore.officeEquipments.length === 0 ||
+    databaseStore.officeSupplies.length === 0 ||
+    databaseStore.officeList.length === 0 ||
+    databaseStore.users.length === 0 ||
+    databaseStore.borrowers.length === 0 ||
+    databaseStore.equipmentCopies.length === 0 ||
+    databaseStore.categoryList.length === 0
+  );
+});
 </script>
 
 <template>
-    <div class="overflow-x-auto">
-        <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
-            <!-- Search Box -->
-            <div class="w-full md:w-9/9">
-                <form class="flex items-center">
+    <div>
+        <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+            <Loading />
+            <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
+        </div>
+        <div v-else class="overflow-x-auto">
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                <!-- Search Box -->
+                <div class="w-full md:w-9/9">
+                    <form class="flex items-center">
                     <label for="simple-search" class="sr-only">Search</label>
                     <div class="relative w-full">
                         <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -352,5 +371,5 @@ const sortByField = (field) => {
             </ul>
         </nav>
     </div>
-
+    </div>
 </template>

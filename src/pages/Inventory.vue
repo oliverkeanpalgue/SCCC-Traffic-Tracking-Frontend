@@ -88,7 +88,6 @@ const {
 
 const selectedItem = ref(null);
 const searchQuery = ref("");
-const isLoading = ref(false);
 const fetchedDataCount = ref(0);
 
 const inventoryFilter = ref(false);
@@ -204,6 +203,21 @@ const { tableView } = storeToRefs(viewStore);
 const toggleTableView = () => {
   viewStore.toggleTableView();
 };
+
+const isLoading = computed(() => {
+  return (
+    databaseStore.transactionItems.length === 0 ||
+    databaseStore.transactionHistory.length === 0 ||
+    databaseStore.officeEquipments.length === 0 ||
+    databaseStore.officeSupplies.length === 0 ||
+    databaseStore.officeList.length === 0 ||
+    databaseStore.users.length === 0 ||
+    databaseStore.borrowers.length === 0 ||
+    databaseStore.equipmentCopies.length === 0 ||
+    databaseStore.categoryList.length === 0
+  );
+});
+
 </script>
 
 <template>
@@ -307,9 +321,9 @@ const toggleTableView = () => {
     <!-- MAIN CONTAINER -->
     <div class="border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
       <div v-if="isLoading" class="h-[67vh] flex flex-col items-center justify-center">
-        <Loading />
-        <p class="text-gray-500 dark:text-gray-500">{{ fetchedDataCount }}/9 items fetched</p>
-      </div>
+                <Loading />
+                <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
+            </div>
       <div v-if="!isLoading && !tableView" class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div 
