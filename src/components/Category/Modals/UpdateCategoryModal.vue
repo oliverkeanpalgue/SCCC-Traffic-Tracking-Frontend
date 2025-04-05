@@ -1,12 +1,13 @@
 <script setup>
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, watch } from 'vue'
 import axiosClient from '../../../axios';
-import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import { BsBoxFill } from '@kalimahapps/vue-icons';
-import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
-import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
+import { useDatabaseStore } from '../../../stores/databaseStore'
+
+// fetching data
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -85,6 +86,7 @@ const confirmUpdateCategory = async () => {
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error updating category. Please try again.", type: "error" });
     } finally {
+        databaseStore.fetchData()
         isLoading.value = false;
     }
 }

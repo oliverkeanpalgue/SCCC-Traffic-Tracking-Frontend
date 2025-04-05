@@ -21,8 +21,17 @@ const OpenAddCategoryModal = () => {
 // fetching data
 const databaseStore = useDatabaseStore()
 
+let refreshInterval = null;
+
 onMounted(() => {
-  databaseStore.fetchData()
+    databaseStore.fetchData()
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
 })
 
 // for search function
@@ -30,7 +39,7 @@ const searchQuery = ref("");
 
 const filteredCategories = computed(() => {
     return databaseStore.categoryList
-        .filter((category) => !category.is_deleted) 
+        .filter((category) => !category.is_deleted)
         .filter(category =>
             category.category_name.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
@@ -43,18 +52,42 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(5);
+const itemsPerPage = ref(9);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredCategories.value.length / itemsPerPage.value);
 });
 
-// Get paginated transactions
-const paginatedCategories = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage.value;
-    const end = start + itemsPerPage.value;
+const sortedCategories = computed(() => {
+  const categories = [...filteredCategories.value];
 
-    return filteredCategories.value.slice(start, end);
+  return categories.sort((a, b) => {
+    const getFieldValue = (category, field) => {
+      switch (field) {
+        case 'id':
+          return category.id;
+
+        case 'category_name':
+          return category.category_name?.toLowerCase() || '';
+
+        default:
+          return '';
+      }
+    };
+
+    const aVal = getFieldValue(a, sortBy.value);
+    const bVal = getFieldValue(b, sortBy.value);
+
+    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+    return 0;
+  });
+});
+
+const paginatedCategories = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return sortedCategories.value.slice(start, end);
 });
 
 // Pagination controls
@@ -121,6 +154,17 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
     }
 }
 
+const sortBy = ref("id");
+const sortDirection = ref("asc");
+
+const sortByField = (field) => {
+  if (sortBy.value === field) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortBy.value = field;
+    sortDirection.value = "asc";
+  }
+};
 </script>
 
 <template>
@@ -152,62 +196,72 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
                 <p class="ml-1">Add Category</p>
             </button>
         </div>
-        <table class="w-full border-collapse text-sm text-gray-300 rounded-lg">
-            <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
-                    <th class="px-4 py-2 border-b border-gray-600">ID</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Category Name</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Items</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Actions</th>
-                </tr>
-            </thead>
-            <tbody class='overflow-auto text-center'>
-                <tr v-for="category in paginatedCategories" :key="category.id"
-                    class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 ">{{ category.id }}</td>
-                    <td class="px-4 py-3">
-                        {{ category.category_name }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        Napipindot na button
-                    </td>
-                    <td class="px-4 py-3 flex items-center justify-center relative">
-                        <button @click.stop="toggleDropdown(category.id)"
-                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                            type="button">
-                            <ChMenuMeatball class="w-5 h-5" />
-                        </button>
 
-                        <div v-if="openDropdownId === category.id" ref="dropdownRefs"
-                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-42 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
-                            <ul class="text-sm text-gray-700 dark:text-gray-200">
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click.stop="OpenUpdateCategoryModal()" class="w-full text-start px-4 py-2">
-                                        Update
-                                    </button>
+        <div class="rounded-lg min-h-120 dark:bg-gray-900">
+            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                <thead class=" dark:bg-gray-600 dark:text-gray-300">
+                    <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                        <th class="py-3" @click="sortByField('id')">
+                            ID
+                            <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3" @click="sortByField('category_name')">
+                            Category Name
+                            <span v-if="sortBy === 'category_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3">Items</th>
+                        <th class="py-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="category in paginatedCategories" :key="category.id"
+                        class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <td class="px-4 py-3 ">{{ category.id }}</td>
+                        <td class="px-4 py-3">
+                            {{ category.category_name }}
+                        </td>
+                        <td class="px-4 py-3 ">
+                            Napipindot na button
+                        </td>
+                        <td class="px-4 py-3 flex items-center justify-center relative">
+                            <button @click.stop="toggleDropdown(category.id)"
+                                class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                type="button">
+                                <ChMenuMeatball class="w-5 h-5" />
+                            </button>
 
-                                    <UpdateCategoryModal v-if="isOpenUpdateCategoryModal"
-                                        v-model="isOpenUpdateCategoryModal" :category="category" @click.stop />
-                                </li>
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click="showDeleteConfirmationModal = true"
-                                        class="w-full text-start px-4 py-2">
-                                        Delete
-                                    </button>
+                            <div v-if="openDropdownId === category.id" ref="dropdownRefs"
+                                class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-42 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <button @click.stop="OpenUpdateCategoryModal()"
+                                            class="w-full text-start px-4 py-2">
+                                            Update
+                                        </button>
 
-                                    <!-- Delete Confirmation Modal -->
-                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                        title="Confirm Deletion" :message="`You are about to delete this category.`"
-                                        :messageData="`\nCategory Name: ${category.category_name}`" cancelText="Cancel"
-                                        confirmText="Confirm Deleting"
-                                        @confirm="() => confirmDeleteCategory(true, category.id)" />
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                                        <UpdateCategoryModal v-if="isOpenUpdateCategoryModal"
+                                            v-model="isOpenUpdateCategoryModal" :category="category" @click.stop />
+                                    </li>
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <button @click="showDeleteConfirmationModal = true"
+                                            class="w-full text-start px-4 py-2">
+                                            Delete
+                                        </button>
+
+                                        <!-- Delete Confirmation Modal -->
+                                        <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                            title="Confirm Deletion" :message="`You are about to delete this category.`"
+                                            :messageData="`\nCategory Name: ${category.category_name}`"
+                                            cancelText="Cancel" confirmText="Confirm Deleting"
+                                            @confirm="() => confirmDeleteCategory(true, category.id)" />
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
             aria-label="Table navigation">
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400">

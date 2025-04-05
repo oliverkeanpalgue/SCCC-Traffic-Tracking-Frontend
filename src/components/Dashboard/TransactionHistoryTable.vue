@@ -487,7 +487,8 @@ const sortByField = (field) => {
 
               <tbody class="">
                 <template v-if="paginatedTransactions.length">
-                  <tr class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white"
+                  <tr
+                    class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white"
                     v-for="transaction in paginatedTransactions" :key="transaction.id">
                     <th scope="row" class="px-4 py-3 whitespace-nowrap ">
                       {{ transaction.id }}
