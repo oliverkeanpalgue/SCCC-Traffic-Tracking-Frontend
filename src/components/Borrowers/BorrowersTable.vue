@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch, watchEffect } from 'vue'
 import axiosClient from "../../axios";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
 import { ChMenuMeatball } from "@kalimahapps/vue-icons";
@@ -7,55 +7,34 @@ import AddBorrowerModal from './Modals/AddBorrowerModal.vue';
 import UpdateBorrowerModal from './Modals/UpdateBorrowerModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
+import { useDatabaseStore } from "../../stores/databaseStore";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-const borrowersList = ref([])
+// fetching data
+const databaseStore = useDatabaseStore()
 
-const fetchBorrowers = async () => {
-    try {
-        const response = await axiosClient.get('api/borrowers', {
-            headers: {
-                'x-api-key': API_KEY,
-            },
-        });
-        console.log('Borrowers fetched:', response.data);
-        borrowersList.value = response.data;
-    } catch (error) {
-        console.error('Error fetching borrowers:', error);
-    }
-};
-
-// fetch office
-const officeList = ref([])
-const fetchOffices = async () => {
-    console.log('Fetching offices...');
-    try {
-        const response = await axiosClient.get('api/offices', {
-            headers: {
-                'x-api-key': API_KEY,
-            },
-        });
-        console.log('Offices fetched:', response.data);
-        officeList.value = response.data.map(office => ({ id: office.id, office_name: office.office_name }));
-    } catch (error) {
-        console.error('Error fetching offices:', error);
-    }
-}
+let refreshInterval = null;
 
 onMounted(() => {
-    fetchBorrowers();
-    fetchOffices();
-});
+    databaseStore.fetchData()
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
+})
 
 // for search function
 const searchQuery = ref("");
 
 const filteredBorrowers = computed(() => {
     
-    return borrowersList.value.filter((borrower) => !borrower.is_deleted) 
+    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted) 
     .filter((borrower) => {
-        const office = officeList.value.find((office) => office.id === borrower.office_id);
+        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
         const borrowerName = borrower.borrowers_name.toLowerCase();
         const contactNumber = borrower.borrowers_contact.toLowerCase();
         const officeName = office ? office.office_name.toLowerCase() : 'unknown';
@@ -66,7 +45,7 @@ const filteredBorrowers = computed(() => {
             officeName.includes(searchQueryValue)
         );
     }).map((borrower) => {
-        const office = officeList.value.find((office) => office.id === borrower.office_id);
+        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
         return {
             id: borrower.id,
             borrowers_name: borrower.borrowers_name,
@@ -83,18 +62,49 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(5);
+const itemsPerPage = ref(9);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredBorrowers.value.length / itemsPerPage.value);
 });
 
-// Get paginated transactions
-const paginatedBorrowers = computed(() => {
-    const start = (currentPage.value - 1) * itemsPerPage.value;
-    const end = start + itemsPerPage.value;
 
-    return filteredBorrowers.value.slice(start, end);
+const sortedBorrowers = computed(() => {
+  const borrowers = [...filteredBorrowers.value];
+
+  return borrowers.sort((a, b) => {
+    const getFieldValue = (borrower, field) => {
+      switch (field) {
+        case 'id':
+          return borrower.id;
+
+        case 'borrowers_name':
+          return borrower.borrowers_name?.toLowerCase() || '';
+
+        case 'contact_number':
+          return borrower.contact_number?.toLowerCase() || '';
+
+        case 'office':
+        return borrower.office_name?.toLowerCase() || '';
+
+        default:
+          return '';
+      }
+    };
+
+    const aVal = getFieldValue(a, sortBy.value);
+    const bVal = getFieldValue(b, sortBy.value);
+
+    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+    return 0;
+  });
+});
+
+const paginatedBorrowers = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+  return sortedBorrowers.value.slice(start, end);
 });
 
 // Pagination controls
@@ -166,6 +176,19 @@ const confirmDeleteBorrower = async (confirmed, borrowerId) => {
         }
     }
 };
+
+
+const sortBy = ref("id");
+const sortDirection = ref("asc");
+
+const sortByField = (field) => {
+  if (sortBy.value === field) {
+    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+  } else {
+    sortBy.value = field;
+    sortDirection.value = "asc";
+  }
+};
 </script>
 
 <template>
@@ -197,13 +220,26 @@ const confirmDeleteBorrower = async (confirmed, borrowerId) => {
                 <p class="ml-1">Add Borrower</p>
             </button>
         </div>
-        <table class="w-full border-collapse text-sm  text-center text-gray-300 rounded-lg">
-            <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-xs rounded-lg">
-                    <th class="px-4 py-2 border-b border-gray-600">ID</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Borrower Name</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Contact Number</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Office</th>
+        <div class="rounded-lg min-h-120 dark:bg-gray-900">
+            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                <thead class=" dark:bg-gray-600 dark:text-gray-300">
+                    <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                    <th class="py-3" @click="sortByField('id')">
+                        ID
+                        <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th class="py-3" @click="sortByField('borrowers_name')">
+                        Borrower Name
+                        <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th class="py-3" @click="sortByField('contact_number')">
+                        Contact Number
+                        <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
+                    <th class="py-3" @click="sortByField('office')">
+                        Office
+                        <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                    </th>
                     <th class="px-4 py-2 border-b border-gray-600">Transactions</th>
                     <th class="px-4 py-2 border-b border-gray-600">Actions</th>
                 </tr>
@@ -261,7 +297,8 @@ const confirmDeleteBorrower = async (confirmed, borrowerId) => {
                 </tr>
             </tbody>
         </table>
-        <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+    </div>
+    <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
             aria-label="Table navigation">
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
                 Showing

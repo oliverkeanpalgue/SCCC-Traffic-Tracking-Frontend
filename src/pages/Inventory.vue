@@ -240,7 +240,7 @@ const toggleTableView = () => {
         </label>
       </div>
     </header>
-    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 flex items-center px-1 mb-2">
+    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2">
       <!-- SEARCH BAR -->
       <div class="col-span-2 mb-2 md:mb-0 md:col-span-4 xl:col-span-6 pr-2 md:pr-3">
         <form class="flex items-center" @submit.prevent>
@@ -305,7 +305,7 @@ const toggleTableView = () => {
     </div>
 
     <!-- MAIN CONTAINER -->
-    <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
+    <div class="border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
       <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
         <Loading />
         <p class="text-gray-500 dark:text-gray-500">{{ fetchedDataCount }}/9 items fetched</p>
