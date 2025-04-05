@@ -102,7 +102,7 @@ watch(() => props.filteredInventory, () => {
 
 <template>
     <div>
-        <div class="rounded-lg min-h-130 dark:bg-gray-900">
+        <div class="rounded-lg min-h-115 dark:bg-gray-900">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
               <thead class=" dark:bg-gray-600 dark:text-gray-300">
                     <tr class="">
@@ -128,7 +128,7 @@ watch(() => props.filteredInventory, () => {
                 <tbody>
                     <tr v-for="(item, index) in paginatedItems" :key="index"
                     class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                        <td class="px-4 py-4 border-b border-gray-700">{{ item.equipment_name || item.supply_name }}</td>
+                        <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_name || item.supply_name }}</td>
                         <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_description || item.supply_description }}</td>
                         <td class="px-4 py-3 border-b border-gray-700">{{ categoryLookup[item.category_id] || 'Unknown Category' }}</td>
                         <td v-if="item.type === 'Office Equipment'" class="px-4 py-3 border-b border-gray-700">{{ getEquipmentCopyCount(item.id) }}</td>

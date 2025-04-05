@@ -22,7 +22,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
             <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
                 <Loading />
             </div>
-            <div class="h-[79vh]">
+            <div class="h-[78vh]">
                 <BorrowersTable />
             </div>
         </div>

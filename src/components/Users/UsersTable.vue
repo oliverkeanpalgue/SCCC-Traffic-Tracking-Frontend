@@ -7,36 +7,31 @@ import UpdateUsersModal from "./Modals/UpdateUsersModal.vue";
 import UpdateUsersPasswordModal from "./Modals/UpdateUsersPasswordModal.vue";
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
+import { useDatabaseStore } from '../../stores/databaseStore'
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-// fetching users
-const userList = ref([])
+// fetching data
+const databaseStore = useDatabaseStore()
 
-const fetchUsers = async () => {
-    console.log('Fetching users...');
-    try {
-        const response = await axiosClient.get('api/users', {
-            headers: {
-                'x-api-key': API_KEY,
-            },
-        });
-        console.log('Users fetched:', response.data);
-        userList.value = response.data
-    } catch (error) {
-        console.error('Error fetching users:', error);
-    }
-};
+let refreshInterval = null;
 
 onMounted(() => {
-    fetchUsers();
-});
+    databaseStore.fetchData()
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
+})
 
 // for search function 
 const searchQuery = ref("")
 
 const filteredUsers = computed(() => {
-    return userList.value
+    return databaseStore.users
         .filter((user) => !user.is_deleted)
         .filter(user =>
             user?.fistName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -52,18 +47,52 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(5);
+const itemsPerPage = ref(8);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredUsers.value.length / itemsPerPage.value);
 });
 
-// Get paginated transactions
+
+const sortedUsers = computed(() => {
+    const users = [...filteredUsers.value];
+
+    return users.sort((a, b) => {
+        const getFieldValue = (user, field) => {
+            switch (field) {
+                case 'id':
+                    return user.id;
+
+                case 'first_name':
+                    return user.firstName?.toLowerCase() || '';
+
+                case 'middle_name':
+                    return user.middleName?.toLowerCase() || '';
+
+                case 'last_name':
+                    return user.lastName?.toLowerCase() || '';
+
+                case 'email':
+                    return user.email?.toLowerCase() || '';
+
+                default:
+                    return '';
+            }
+        };
+
+        const aVal = getFieldValue(a, sortBy.value);
+        const bVal = getFieldValue(b, sortBy.value);
+
+        if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+        return 0;
+    });
+});
+
 const paginatedUsers = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage.value;
     const end = start + itemsPerPage.value;
-
-    return filteredUsers.value.slice(start, end);
+    return sortedUsers.value.slice(start, end);
 });
 
 // Pagination controls
@@ -137,6 +166,18 @@ const confirmDeleteUser = async (confirmed, userId) => {
     }
 }
 
+const sortBy = ref("id");
+const sortDirection = ref("asc");
+
+const sortByField = (field) => {
+    if (sortBy.value === field) {
+        sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+    } else {
+        sortBy.value = field;
+        sortDirection.value = "asc";
+    }
+};
+
 </script>
 
 <template>
@@ -162,82 +203,101 @@ const confirmDeleteUser = async (confirmed, userId) => {
                 </form>
             </div>
         </div>
-        <table class="w-full border-collapse text-sm text-center text-gray-300 rounded-lg">
-            <thead>
-                <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
-                    <th class="px-4 py-2 ">ID</th>
-                    <th class="px-4 py-2 ">First Name</th>
-                    <th class="px-4 py-2 ">Middle Name</th>
-                    <th class="px-4 py-2 ">Last Name</th>
-                    <th class="px-4 py-2 ">Email</th>
-                    <th class="px-4 py-2 ">Transactions</th>
-                    <th class="px-4 py-2 ">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="user in paginatedUsers" :key="user.id"
-                    class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
-                    <td class="px-4 py-3 ">{{ user.id }}</td>
-                    <td class="px-4 py-3 ">
-                        {{ user.firstName }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ user.middleName }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ user.lastName }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ user.email }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        Napipindot na button
-                    </td>
-                    <td class="px-4 py-3 flex items-center justify-center relative">
-                        <button @click.stop="toggleDropdown(user.id)"
-                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                            type="button">
-                            <ChMenuMeatball class="w-5 h-5" />
-                        </button>
+        <div class="rounded-lg min-h-110 dark:bg-gray-900">
+            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                <thead class=" dark:bg-gray-600 dark:text-gray-300">
+                    <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                        <th class="py-3" @click="sortByField('id')">
+                            ID
+                            <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3" @click="sortByField('first_name')">
+                            First Name
+                            <span v-if="sortBy === 'first_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3" @click="sortByField('middle_name')">
+                            Middle Name
+                            <span v-if="sortBy === 'middle_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3" @click="sortByField('last_name')">
+                            Last Name
+                            <span v-if="sortBy === 'last_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3" @click="sortByField('email')">
+                            Email
+                            <span v-if="sortBy === 'email'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                        </th>
+                        <th class="py-3 ">Transactions</th>
+                        <th class="py-3 ">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="user in paginatedUsers" :key="user.id"
+                        class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <td class="px-4 py-3 ">{{ user.id }}</td>
+                        <td class="px-4 py-3 ">
+                            {{ user.firstName }}
+                        </td>
+                        <td class="px-4 py-3 ">
+                            {{ user.middleName }}
+                        </td>
+                        <td class="px-4 py-3 ">
+                            {{ user.lastName }}
+                        </td>
+                        <td class="px-4 py-3 ">
+                            {{ user.email }}
+                        </td>
+                        <td class="px-4 py-3 ">
+                            Napipindot na button
+                        </td>
+                        <td class="px-4 py-3 flex items-center justify-center relative">
+                            <button @click.stop="toggleDropdown(user.id)"
+                                class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                type="button">
+                                <ChMenuMeatball class="w-5 h-5" />
+                            </button>
 
-                        <div v-if="openDropdownId === user.id" ref="dropdownRefs"
-                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
-                            <ul class="text-sm text-gray-700 dark:text-gray-200">
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click.stop="OpenUpdateUsersModal()" class="w-full text-start px-4 py-2">
-                                        Update
-                                    </button>
+                            <div v-if="openDropdownId === user.id" ref="dropdownRefs"
+                                class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <button @click.stop="OpenUpdateUsersModal()"
+                                            class="w-full text-start px-4 py-2">
+                                            Update
+                                        </button>
 
-                                    <UpdateUsersModal v-if="isOpenUpdateUsersModal"
-                                        v-model="isOpenUpdateUsersModal" :user="user" @click.stop />
-                                </li>
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click.stop="OpenUpdateUsersPasswordModal()" class="w-full text-start px-4 py-2">
-                                        Change Password
-                                    </button>
+                                        <UpdateUsersModal v-if="isOpenUpdateUsersModal" v-model="isOpenUpdateUsersModal"
+                                            :user="user" @click.stop />
+                                    </li>
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <button @click.stop="OpenUpdateUsersPasswordModal()"
+                                            class="w-full text-start px-4 py-2">
+                                            Change Password
+                                        </button>
 
-                                    <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
-                                        v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
-                                </li>
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click="showDeleteConfirmationModal = true"
-                                        class="w-full text-start px-4 py-2">
-                                        Delete
-                                    </button>
+                                        <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
+                                            v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
+                                    </li>
+                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <button @click="showDeleteConfirmationModal = true"
+                                            class="w-full text-start px-4 py-2">
+                                            Delete
+                                        </button>
 
-                                    <!-- Delete Confirmation Modal -->
-                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                        title="Confirm Deletion" :message="`You are about to delete this user.`"
-                                        :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`" cancelText="Cancel"
-                                        confirmText="Confirm Deleting"
-                                        @confirm="() => confirmDeleteUser(true, user.id)" />
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+                                        <!-- Delete Confirmation Modal -->
+                                        <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                            title="Confirm Deletion" :message="`You are about to delete this user.`"
+                                            :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`"
+                                            cancelText="Cancel" confirmText="Confirm Deleting"
+                                            @confirm="() => confirmDeleteUser(true, user.id)" />
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
         <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
             aria-label="Table navigation">
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -248,7 +308,7 @@ const confirmDeleteUser = async (confirmed, userId) => {
                 </span>
                 of
                 <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
-                }}</span>
+                    }}</span>
             </span>
 
             <ul class="inline-flex items-stretch -space-x-px">

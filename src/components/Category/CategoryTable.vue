@@ -52,7 +52,7 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(9);
+const itemsPerPage = ref(8);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredCategories.value.length / itemsPerPage.value);
@@ -197,7 +197,7 @@ const sortByField = (field) => {
             </button>
         </div>
 
-        <div class="rounded-lg min-h-120 dark:bg-gray-900">
+        <div class="rounded-lg min-h-110 dark:bg-gray-900">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
                 <thead class=" dark:bg-gray-600 dark:text-gray-300">
                     <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">

@@ -62,7 +62,7 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(9);
+const itemsPerPage = ref(8);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredBorrowers.value.length / itemsPerPage.value);
@@ -220,7 +220,7 @@ const sortByField = (field) => {
                 <p class="ml-1">Add Borrower</p>
             </button>
         </div>
-        <div class="rounded-lg min-h-120 dark:bg-gray-900">
+        <div class="rounded-lg min-h-110 dark:bg-gray-900">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
                 <thead class=" dark:bg-gray-600 dark:text-gray-300">
                     <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
@@ -240,13 +240,13 @@ const sortByField = (field) => {
                         Office
                         <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                     </th>
-                    <th class="px-4 py-2 border-b border-gray-600">Transactions</th>
-                    <th class="px-4 py-2 border-b border-gray-600">Actions</th>
+                    <th class="py-3">Transactions</th>
+                    <th class="py-3">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
-                    class="odd:bg-gray-800 even:bg-gray-750 hover:bg-gray-700 transition">
+                class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
                     <td class="px-4 py-3 ">{{ borrower.id }}</td>
                     <td class="px-4 py-3 ">
                         {{ borrower.borrowers_name }}

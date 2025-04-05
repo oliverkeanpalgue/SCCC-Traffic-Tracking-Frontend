@@ -18,11 +18,11 @@ const API_KEY = import.meta.env.VITE_API_KEY;
         </header>
 
         <!-- MAIN CONTAINER -->
-        <div class="border border-2 p-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
+        <div class="border-2 px-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
             <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
                 <Loading />
             </div>
-            <div class="h-[79vh]">
+            <div class="h-[78vh]">
                 <UsersTable />
             </div>
         </div>
