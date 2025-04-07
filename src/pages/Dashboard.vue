@@ -104,7 +104,8 @@ const returnedCount = computed(() => {
     return transactionHistoryArray.value.filter(transaction => {
         if (!transaction.return_date) return false;
         const returnDate = new Date(transaction.return_date);
-        return returnDate >= startDate && returnDate <= endDate;
+        const borrowDate = new Date(transaction.borrow_date);
+        return borrowDate >= startDate && returnDate <= endDate;
     }).length;
 });
 

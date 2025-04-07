@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps, computed, ref, watch } from 'vue'
+import { defineProps, computed, ref, watch, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
     filteredInventory: Array,
@@ -35,8 +35,8 @@ const sortedItems = computed(() => {
                     return categoryLookup.value[item.category_id] || 'Unknown Category';
 
                 case 'quantity':
-                    return item.type === 'Office Equipment' 
-                        ? getEquipmentCopyCount(item.id) 
+                    return item.type === 'Office Equipment'
+                        ? getEquipmentCopyCount(item.id)
                         : item.supply_quantity || 0;
                 default:
                     return '';
@@ -78,71 +78,80 @@ const sortByField = (field) => {
 };
 
 const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-  }
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+    }
 };
 
 const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-  }
+    if (currentPage.value > 1) {
+        currentPage.value--;
+    }
 };
 
 const goToPage = (page) => {
-  if (page >= 1 && page <= totalPages.value) {
-    currentPage.value = page;
-  }
+    if (page >= 1 && page <= totalPages.value) {
+        currentPage.value = page;
+    }
 };
 
 watch(() => props.filteredInventory, () => {
-  currentPage.value = 1;
+    currentPage.value = 1;
 });
 </script>
 
 <template>
-    <div>
-        <div class="rounded-lg min-h-115 dark:bg-gray-900">
-            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-              <thead class=" dark:bg-gray-600 dark:text-gray-300">
-                    <tr class="">
-                        <th class="py-3" @click="sortByField('itemName')">
+    <div class="">
+        <div ref="tableContainerRef"
+            class="rounded-lg min-h-[62vh] max-h-[62vh] overflow-y-auto overflow-x-auto dark:bg-gray-950">
+            <table class="w-full text-sm md:text-md text-center text-gray-500 dark:text-gray-400">
+                <thead class="dark:text-gray-300 dark:bg-gray-600">
+                    <tr class="md:text-lg">
+                        <th class="px-3 py-2 min-w-40" @click="sortByField('itemName')">
                             Item Name
                             <span v-if="sortBy === 'itemName'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                         </th>
-                        <th class="py-3" @click="sortByField('description')">
+                        <th class="px-3 py-2" @click="sortByField('description')">
                             Description
                             <span v-if="sortBy === 'description'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                         </th>
-                        <th class="py-3" @click="sortByField('category')">
+                        <th class="px-3 py-2 min-w-40" @click="sortByField('category')">
                             Category
                             <span v-if="sortBy === 'category'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                         </th>
-                        <th class="px-4 py-2 border-b border-gray-600" @click="sortByField('quantity')">
+                        <th class="px-3 py-2 min-w-40" @click="sortByField('quantity')">
                             Quantity / Copy
                             <span v-if="sortBy === 'quantity'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                         </th>
-                        <th class="px-4 py-2 border-b border-gray-600">Actions</th>
+                        <th class="px-3 py-2 min-w-30">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="">
                     <tr v-for="(item, index) in paginatedItems" :key="index"
-                    class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                        <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_name || item.supply_name }}</td>
-                        <td class="px-4 py-3 border-b border-gray-700">{{ item.equipment_description || item.supply_description }}</td>
-                        <td class="px-4 py-3 border-b border-gray-700">{{ categoryLookup[item.category_id] || 'Unknown Category' }}</td>
-                        <td v-if="item.type === 'Office Equipment'" class="px-4 py-3 border-b border-gray-700">{{ getEquipmentCopyCount(item.id) }}</td>
-                        <td v-if="item.type === 'Office Supply'" class="px-4 py-3 border-b border-gray-700">{{ item.supply_quantity || 0 }}</td>
-                        <td class="px-4 py-3 border-b border-gray-700">q</td>
+                        class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
+                        <td class="px-4 py-3 md:py-4 border-b border-gray-700">{{ item.equipment_name ||
+                            item.supply_name }}</td>
+                        <td class="px-4 py-3 min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+                            :title="item.equipment_description || item.supply_description">
+                            {{ item.equipment_description || item.supply_description }}
+                        </td>
+                        <td class="px-4 py-3 md:py-4 border-b border-gray-700">{{ categoryLookup[item.category_id] ||
+                            'Unknown Category' }}</td>
+                        <td v-if="item.type === 'Office Equipment'" class="px-4 py-3 md:py-4 border-b border-gray-700">
+                            {{ getEquipmentCopyCount(item.id) }}</td>
+                        <td v-if="item.type === 'Office Supply'" class="px-4 py-3 md:py-4 border-b border-gray-700">{{
+                            item.supply_quantity || 0 }}</td>
+                        <td class="px-4 py-3 md:py-4 border-b border-gray-700">q</td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4" aria-label="Table navigation">
+        <nav class="flex flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+            aria-label="Table navigation">
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
                 Showing
                 <span class="font-semibold text-gray-900 dark:text-white">
-                    {{ (currentPage - 1) * itemsPerPage + 1 }} - 
+                    {{ (currentPage - 1) * itemsPerPage + 1 }} -
                     {{ Math.min(currentPage * itemsPerPage, props.filteredInventory.length) }}
                 </span>
                 of
@@ -151,31 +160,38 @@ watch(() => props.filteredInventory, () => {
 
             <ul class="inline-flex items-stretch -space-x-px">
                 <li>
-                    <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button @click="prevPage" :disabled="currentPage === 1"
+                        class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
                         <span class="sr-only">Previous</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                 </li>
 
                 <li v-for="page in totalPages" :key="page">
-                    <button @click="goToPage(page)"
-                        :class="[
-                            'flex items-center justify-center text-sm py-2 px-3 leading-tight border',
-                            page === currentPage
-                                ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
-                        ]">
+                    <button @click="goToPage(page)" :class="[
+                        'flex items-center justify-center text-sm py-2 px-3 leading-tight border',
+                        page === currentPage
+                            ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                            : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white'
+                    ]">
                         {{ page }}
                     </button>
                 </li>
 
                 <li>
-                    <button @click="nextPage" :disabled="currentPage.value === totalPages.value" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                    <button @click="nextPage" :disabled="currentPage.value === totalPages.value"
+                        class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
                         <span class="sr-only">Next</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clip-rule="evenodd" />
                         </svg>
                     </button>
                 </li>

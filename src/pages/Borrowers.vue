@@ -19,10 +19,10 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 
         <!-- MAIN CONTAINER -->
         <div class="border-2 px-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-            <div v-if="isLoading" class="h-[72vh] flex items-center justify-center">
+            <div v-if="isLoading" class="h-[79vh] flex items-center justify-center">
                 <Loading />
             </div>
-            <div class="h-[78vh]">
+            <div class="h-[79vh]">
                 <BorrowersTable />
             </div>
         </div>
