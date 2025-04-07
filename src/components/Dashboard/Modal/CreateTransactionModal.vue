@@ -214,17 +214,6 @@ const filteredBorrowers = computed(() => {
 });
 
 
-
-// Select an Existing Borrower or Keep New Input
-// const selectedBorrowerId = ref(null);
-
-
-// const selectBorrower = (borrower) => {
-//     borrowerInput.value = borrower.borrowers_name;
-//     selectedBorrowerId.value = borrower.id;
-//     showBorrowerListDropdown.value = false;
-// };
-
 const selectBorrower = (value) => {
     borrowerInput.value = value;
     showBorrowerListDropdown.value = false;
@@ -504,17 +493,6 @@ const confirmCreateTransaction = async () => {
             }
         );
 
-        // Update inventory status
-        // await confirmUpdate();
-
-        // emitter.emit("show-toast", { 
-        //     message: "Transaction created successfully!", 
-        //     type: "success" 
-        // });
-
-        // closeModal();
-        // databaseStore.fetchData();
-
     } catch (error) {
         console.error('Transaction error:', error);
         let errorMessage = "Error creating transaction. Please try again.";
@@ -529,6 +507,7 @@ const confirmCreateTransaction = async () => {
             type: "error"
         });
     } finally {
+        await confirmUpdate();
         await databaseStore.fetchData();
         isLoading.value = false;
         emitter.emit("show-toast", { message: "Transaction created successfully!", type: "success" });
