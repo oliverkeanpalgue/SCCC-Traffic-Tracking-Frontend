@@ -4,7 +4,7 @@ import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
 import image from '../../../../src/assets/baguio-logo.png'
 import { useDatabaseStore } from "../../../stores/databaseStore";
-import AddTransactionItemModal from './AddTransactionItemModal.vue';
+import AddTransactionItemModal from './IncludeItemPressedModal.vue';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
 import { MdRoundDeleteForever } from '@kalimahapps/vue-icons';
 import { BxSolidUser } from '@kalimahapps/vue-icons';
