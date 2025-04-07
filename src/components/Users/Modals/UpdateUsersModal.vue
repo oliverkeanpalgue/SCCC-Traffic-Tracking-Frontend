@@ -115,14 +115,17 @@ const confirmUpdateUsers = async () => {
             }
         );
         console.log('Update Users API response:', response);
-        emitter.emit("show-toast", { message: "User updated successfully!", type: "success" });
-        closeModal()
+        // emitter.emit("show-toast", { message: "User updated successfully!", type: "success" });
+        // closeModal()
     } catch (error) {
         console.error('Error updating user:', error);
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error updating user. Please try again.", type: "error" });
     } finally {
+        await databaseStore.fetchData();
         isLoading.value = false;
+        emitter.emit("show-toast", { message: "User updated successfully!", type: "success" });
+        closeModal();
     }
 }
 

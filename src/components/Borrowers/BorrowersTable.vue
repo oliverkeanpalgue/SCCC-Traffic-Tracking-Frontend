@@ -32,28 +32,28 @@ onUnmounted(() => {
 const searchQuery = ref("");
 
 const filteredBorrowers = computed(() => {
-    
-    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted) 
-    .filter((borrower) => {
-        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
-        const borrowerName = borrower.borrowers_name.toLowerCase();
-        const contactNumber = borrower.borrowers_contact.toLowerCase();
-        const officeName = office ? office.office_name.toLowerCase() : 'unknown';
-        const searchQueryValue = searchQuery.value.toLowerCase();
-        return (
-            borrowerName.includes(searchQueryValue) ||
-            contactNumber.includes(searchQueryValue) ||
-            officeName.includes(searchQueryValue)
-        );
-    }).map((borrower) => {
-        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
-        return {
-            id: borrower.id,
-            borrowers_name: borrower.borrowers_name,
-            contact_number: borrower.borrowers_contact,
-            office_name: office ? office.office_name : 'Unknown',
-        };
-    });
+
+    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted)
+        .filter((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            const borrowerName = borrower.borrowers_name.toLowerCase();
+            const contactNumber = borrower.borrowers_contact.toLowerCase();
+            const officeName = office ? office.office_name.toLowerCase() : 'unknown';
+            const searchQueryValue = searchQuery.value.toLowerCase();
+            return (
+                borrowerName.includes(searchQueryValue) ||
+                contactNumber.includes(searchQueryValue) ||
+                officeName.includes(searchQueryValue)
+            );
+        }).map((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            return {
+                id: borrower.id,
+                borrowers_name: borrower.borrowers_name,
+                contact_number: borrower.borrowers_contact,
+                office_name: office ? office.office_name : 'Unknown',
+            };
+        });
 });
 
 // Reset to first page when searching
@@ -71,41 +71,41 @@ const totalPages = computed(() => {
 
 
 const sortedBorrowers = computed(() => {
-  const borrowers = [...filteredBorrowers.value];
+    const borrowers = [...filteredBorrowers.value];
 
-  return borrowers.sort((a, b) => {
-    const getFieldValue = (borrower, field) => {
-      switch (field) {
-        case 'id':
-          return borrower.id;
+    return borrowers.sort((a, b) => {
+        const getFieldValue = (borrower, field) => {
+            switch (field) {
+                case 'id':
+                    return borrower.id;
 
-        case 'borrowers_name':
-          return borrower.borrowers_name?.toLowerCase() || '';
+                case 'borrowers_name':
+                    return borrower.borrowers_name?.toLowerCase() || '';
 
-        case 'contact_number':
-          return borrower.contact_number?.toLowerCase() || '';
+                case 'contact_number':
+                    return borrower.contact_number?.toLowerCase() || '';
 
-        case 'office':
-        return borrower.office_name?.toLowerCase() || '';
+                case 'office':
+                    return borrower.office_name?.toLowerCase() || '';
 
-        default:
-          return '';
-      }
-    };
+                default:
+                    return '';
+            }
+        };
 
-    const aVal = getFieldValue(a, sortBy.value);
-    const bVal = getFieldValue(b, sortBy.value);
+        const aVal = getFieldValue(a, sortBy.value);
+        const bVal = getFieldValue(b, sortBy.value);
 
-    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
-    return 0;
-  });
+        if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+        return 0;
+    });
 });
 
 const paginatedBorrowers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return sortedBorrowers.value.slice(start, end);
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    return sortedBorrowers.value.slice(start, end);
 });
 
 // Pagination controls
@@ -168,12 +168,14 @@ const confirmDeleteBorrower = async (confirmed, borrowerId) => {
             console.log(`Borrower deleted successfully.`);
 
             // Emit success toast only after a successful delete
-            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
+            // emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         } catch (error) {
             console.error('Error deleting borrower:', error);
             emitter.emit("show-toast", { message: "Error deleting borrower. Please try again.", type: "error" });
         } finally {
+            await databaseStore.fetchData();
             showDeleteConfirmationModal.value = false; // Close the modal
+            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         }
     }
 };
@@ -183,26 +185,26 @@ const sortBy = ref("id");
 const sortDirection = ref("asc");
 
 const sortByField = (field) => {
-  if (sortBy.value === field) {
-    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
-  } else {
-    sortBy.value = field;
-    sortDirection.value = "asc";
-  }
+    if (sortBy.value === field) {
+        sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+    } else {
+        sortBy.value = field;
+        sortDirection.value = "asc";
+    }
 };
 
 const isLoading = computed(() => {
-  return (
-    databaseStore.transactionItems.length === 0 ||
-    databaseStore.transactionHistory.length === 0 ||
-    databaseStore.officeEquipments.length === 0 ||
-    databaseStore.officeSupplies.length === 0 ||
-    databaseStore.officeList.length === 0 ||
-    databaseStore.users.length === 0 ||
-    databaseStore.borrowers.length === 0 ||
-    databaseStore.equipmentCopies.length === 0 ||
-    databaseStore.categoryList.length === 0
-  );
+    return (
+        databaseStore.transactionItems.length === 0 ||
+        databaseStore.transactionHistory.length === 0 ||
+        databaseStore.officeEquipments.length === 0 ||
+        databaseStore.officeSupplies.length === 0 ||
+        databaseStore.officeList.length === 0 ||
+        databaseStore.users.length === 0 ||
+        databaseStore.borrowers.length === 0 ||
+        databaseStore.equipmentCopies.length === 0 ||
+        databaseStore.categoryList.length === 0
+    );
 });
 </script>
 
@@ -217,162 +219,170 @@ const isLoading = computed(() => {
                 <!-- Search Box -->
                 <div class="w-full md:w-8/9">
                     <form class="flex items-center">
-                    <label for="simple-search" class="sr-only">Search</label>
-                    <div class="relative w-full">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-                                viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                        <label for="simple-search" class="sr-only">Search</label>
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                    fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input v-model="searchQuery" type="text" id="simple-search"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                placeholder="Search equipment copies..." />
+                        </div>
+                    </form>
+                </div>
+                <!-- ADD BUTTON -->
+                <button @click.stop="OpenAddBorrowerModal()"
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-8" />
+                    <p class="ml-1">Add Borrower</p>
+                </button>
+            </div>
+            <div class="rounded-lg min-h-110 dark:bg-gray-900">
+                <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                    <thead class=" dark:bg-gray-600 dark:text-gray-300">
+                        <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                            <th class="py-3" @click="sortByField('id')">
+                                ID
+                                <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('borrowers_name')">
+                                Borrower Name
+                                <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('contact_number')">
+                                Contact Number
+                                <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('office')">
+                                Office
+                                <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </th>
+                            <th class="py-3">Transactions</th>
+                            <th class="py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
+                            class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
+                            <td class="px-4 py-3 ">{{ borrower.id }}</td>
+                            <td class="px-4 py-3 ">
+                                {{ borrower.borrowers_name }}
+                            </td>
+                            <td class="px-4 py-3 ">
+                                {{ borrower.contact_number }}
+                            </td>
+                            <td class="px-4 py-3 ">
+                                {{ borrower.office_name }}
+                            </td>
+                            <td class="px-4 py-3 ">
+                                Napipindot na button
+                            </td>
+                            <td class="px-4 py-3 flex items-center justify-center relative">
+                                <button @click.stop="toggleDropdown(borrower.id)"
+                                    class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                    type="button">
+                                    <ChMenuMeatball class="w-5 h-5" />
+                                </button>
+
+                                <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
+                                    class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                    <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click.stop="OpenUpdateBorrowerModal()"
+                                                class="w-full text-start px-4 py-2">
+                                                Update
+                                            </button>
+
+                                            <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
+                                                v-model="isOpenUpdateBorrowerModal" :borrower="borrower"
+                                                :officeList="officeList" @click.stop />
+                                        </li>
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click="showDeleteConfirmationModal = true"
+                                                class="w-full text-start px-4 py-2">
+                                                Delete
+                                            </button>
+
+                                            <!-- Delete Confirmation Modal -->
+                                            <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                                title="Confirm Deletion"
+                                                :message="`You are about to delete this borrower.`"
+                                                :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
+                                                cancelText="Cancel" confirmText="Confirm Deleting"
+                                                @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+                aria-label="Table navigation">
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    Showing
+                    <span class="font-semibold text-gray-900 dark:text-white">
+                        {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                        {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
+                    </span>
+                    of
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
+                        }}</span>
+                </span>
+
+                <ul class="inline-flex items-stretch -space-x-px">
+                    <li>
+                        <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
+                     hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
+                     dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span class="sr-only">Previous</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd"
-                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                                     clip-rule="evenodd" />
                             </svg>
-                        </div>
-                        <input v-model="searchQuery" type="text" id="simple-search"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                            placeholder="Search equipment copies..." />
-                    </div>
-                </form>
-            </div>
-            <!-- ADD BUTTON -->
-            <button @click.stop="OpenAddBorrowerModal()"
-                class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                <ClAddPlus class="w-8 h-8" />
-                <p class="ml-1">Add Borrower</p>
-            </button>
-        </div>
-        <div class="rounded-lg min-h-110 dark:bg-gray-900">
-            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-                <thead class=" dark:bg-gray-600 dark:text-gray-300">
-                    <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
-                    <th class="py-3" @click="sortByField('id')">
-                        ID
-                        <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('borrowers_name')">
-                        Borrower Name
-                        <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('contact_number')">
-                        Contact Number
-                        <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('office')">
-                        Office
-                        <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3">Transactions</th>
-                    <th class="py-3">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
-                class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                    <td class="px-4 py-3 ">{{ borrower.id }}</td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.borrowers_name }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.contact_number }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.office_name }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        Napipindot na button
-                    </td>
-                    <td class="px-4 py-3 flex items-center justify-center relative">
-                        <button @click.stop="toggleDropdown(borrower.id)"
-                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                            type="button">
-                            <ChMenuMeatball class="w-5 h-5" />
                         </button>
+                    </li>
 
-                        <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
-                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
-                            <ul class="text-sm text-gray-700 dark:text-gray-200">
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click.stop="OpenUpdateBorrowerModal()" class="w-full text-start px-4 py-2">
-                                        Update
-                                    </button>
+                    <li v-for="page in totalPages" :key="page">
+                        <button @click="goToPage(page)"
+                            :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
+                                page === currentPage
+                                    ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                                    : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
+                            {{ page }}
+                        </button>
+                    </li>
 
-                                    <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
-                                        v-model="isOpenUpdateBorrowerModal" :borrower="borrower" :officeList="officeList" @click.stop />
-                                </li>
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click="showDeleteConfirmationModal = true"
-                                        class="w-full text-start px-4 py-2">
-                                        Delete
-                                    </button>
-
-                                    <!-- Delete Confirmation Modal -->
-                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                        title="Confirm Deletion" :message="`You are about to delete this borrower.`"
-                                        :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
-                                        cancelText="Cancel" confirmText="Confirm Deleting"
-                                        @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-            aria-label="Table navigation">
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                Showing
-                <span class="font-semibold text-gray-900 dark:text-white">
-                    {{ (currentPage - 1) * itemsPerPage + 1 }} -
-                    {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
-                </span>
-                of
-                <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
-                }}</span>
-            </span>
-
-            <ul class="inline-flex items-stretch -space-x-px">
-                <li>
-                    <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
+                    <li>
+                        <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
                      hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
                      dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Previous</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
+                            <span class="sr-only">Next</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
 
-                <li v-for="page in totalPages" :key="page">
-                    <button @click="goToPage(page)"
-                        :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
-                            page === currentPage
-                                ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
-                        {{ page }}
-                    </button>
-                </li>
-
-                <li>
-                    <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
-                     hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
-                     dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Next</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
-            </ul>
-        </nav>
-
-        <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList" @click.stop />
+            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList"
+                @click.stop />
+        </div>
     </div>
-</div>
 </template>

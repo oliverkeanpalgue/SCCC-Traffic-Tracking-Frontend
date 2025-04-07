@@ -7,6 +7,9 @@ import { FlFilledTextDescription } from '@kalimahapps/vue-icons';
 import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -86,14 +89,17 @@ const confirmUpdateBorrower = async () => {
             }
         );
         console.log('Update Borrower API response:', response);
-        emitter.emit("show-toast", { message: "Borrower updated successfully!", type: "success" });
-        closeModal()
+        // emitter.emit("show-toast", { message: "Borrower updated successfully!", type: "success" });
+        // closeModal()
     } catch (error) {
         console.error('Error updating borrower:', error);
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error borrower category. Please try again.", type: "error" });
     } finally {
+        await databaseStore.fetchData();
         isLoading.value = false;
+        emitter.emit("show-toast", { message: "Borrower updated successfully!", type: "success" });
+        closeModal();
     }
 }
 

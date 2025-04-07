@@ -582,7 +582,10 @@ const sortByField = (field) => {
                               Delete
                             </button>
                             <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen"
-                              :transaction="selectedTransaction" :officeSupplies="officeSupplies" @click.stop />
+                              :transaction="selectedTransaction" :officeSupplies="props.officeSupplies"
+                              :transactionItems="props.transactionItems"
+                              :borrowers="props.borrowers"
+                               @click.stop />
                           </li>
                         </ul>
                       </div>

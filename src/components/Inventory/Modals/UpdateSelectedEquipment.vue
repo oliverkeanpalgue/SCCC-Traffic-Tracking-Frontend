@@ -7,6 +7,9 @@ import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import QRCodeDisplay from '../../QRCodeGenerator/QRCodeDisplay.vue';
 import Loading from '../../Loading.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -106,14 +109,16 @@ const confirmUpdateEquipment = async () => {
     }));
 
     console.log('Update Equipment API response:', response);
-    emitter.emit("show-toast", { message: "Equipment updated successfully!", type: "success" });
+    // emitter.emit("show-toast", { message: "Equipment updated successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error updating equipment:', error);
     console.error('Error details:', error.response?.data);
     emitter.emit("show-toast", { message: "Error updating equipment. Please try again.", type: "error" });
   } finally {
+    await databaseStore.fetchData();
     isLoading.value = false;
+    emitter.emit("show-toast", { message: "Equipment updated successfully!", type: "success" });
     showQRCodes.value = true;
   }
 }
@@ -144,73 +149,73 @@ const errors = ref({
 })
 
 const validateForm = () => {
-    Object.keys(errors.value).forEach(key => {
-        errors.value[key] = [];
-    });
+  Object.keys(errors.value).forEach(key => {
+    errors.value[key] = [];
+  });
 
-    let hasErrors = false;
+  let hasErrors = false;
 
-    if (!equipmentName.value) {
-        errors.value.equipmentName = ["Equipment Name is required"];
-        hasErrors = true;
-    }
+  if (!equipmentName.value) {
+    errors.value.equipmentName = ["Equipment Name is required"];
+    hasErrors = true;
+  }
 
-    if (!equipmentDescription.value) {
-        errors.value.equipmentDescription = ["Equipment Description is required"];
-        hasErrors = true;
-    }
+  if (!equipmentDescription.value) {
+    errors.value.equipmentDescription = ["Equipment Description is required"];
+    hasErrors = true;
+  }
 
-    if (!selectedCategory.value) {
-        errors.value.selectedCategory = ["Category is required"];
-        hasErrors = true;
-    }
+  if (!selectedCategory.value) {
+    errors.value.selectedCategory = ["Category is required"];
+    hasErrors = true;
+  }
 
-    if (!selectedImage.value) {
-        errors.value.selectedImage = ["Image is required"];
-        hasErrors = true;
-    }
+  if (!selectedImage.value) {
+    errors.value.selectedImage = ["Image is required"];
+    hasErrors = true;
+  }
 
-    return !hasErrors;
+  return !hasErrors;
 }
 
 watch(() => equipmentName.value, (newValue) => {
-    if (!newValue) {
-        errors.value.equipmentName = ["Equipment name is required"];
-    } else {
-        errors.value.equipmentName = [];
-    }
+  if (!newValue) {
+    errors.value.equipmentName = ["Equipment name is required"];
+  } else {
+    errors.value.equipmentName = [];
+  }
 });
 
 watch(() => equipmentDescription.value, (newValue) => {
-    if (!newValue) {
-        errors.value.equipmentDescription = ["Equipment description is required"];
-    } else {
-        errors.value.equipmentDescription = [];
-    }
+  if (!newValue) {
+    errors.value.equipmentDescription = ["Equipment description is required"];
+  } else {
+    errors.value.equipmentDescription = [];
+  }
 });
 
 watch(() => selectedCategory.value, (newValue) => {
-    if (!newValue) {
-        errors.value.selectedCategory = ["Category is required"];
-    } else {
-        errors.value.selectedCategory = [];
-    }
+  if (!newValue) {
+    errors.value.selectedCategory = ["Category is required"];
+  } else {
+    errors.value.selectedCategory = [];
+  }
 });
 
 watch(() => selectedImage.value, (newValue) => {
-    if (!newValue) {
-        errors.value.selectedImage = ["Image is required"];
-    } else {
-        errors.value.selectedImage = [];
-    }
+  if (!newValue) {
+    errors.value.selectedImage = ["Image is required"];
+  } else {
+    errors.value.selectedImage = [];
+  }
 });
 
 const isClickedShowConfirmationModal = () => {
-    if (!validateForm()) {
-        return;
-    } else {
-        showConfirmationModal.value = true
-    }
+  if (!validateForm()) {
+    return;
+  } else {
+    showConfirmationModal.value = true
+  }
 }
 
 </script>
@@ -227,10 +232,10 @@ const isClickedShowConfirmationModal = () => {
       <div class="flex flex-col text-start">
         <!-- IMAGE UPLOAD -->
         <div class="flex flex-row mt-4 mb-2">
-        <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
-        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedImage ? errors.selectedImage[0] :
-          '' }}</p>
-      </div>
+          <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment Image:</label>
+          <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedImage ? errors.selectedImage[0] :
+            '' }}</p>
+        </div>
         <input type="file" @change="handleImageUpload"
           class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400" />
         <!-- EQUIPMENT NAME -->
@@ -239,7 +244,7 @@ const isClickedShowConfirmationModal = () => {
           <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentName ? errors.equipmentName[0] :
             '' }}</p>
         </div>
-        
+
         <div class="relative ml-2">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
             <BsBoxFill />
@@ -252,8 +257,9 @@ const isClickedShowConfirmationModal = () => {
         <div class="flex flex-row mt-4 mb-2">
           <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
             Description:</label>
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentDescription ? errors.equipmentDescription[0] :
-              '' }}</p>
+          <p class="text-red-700 ml-2 font-semibold italic">{{ errors.equipmentDescription ?
+            errors.equipmentDescription[0] :
+            '' }}</p>
         </div>
         <div class="relative ml-2">
           <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
@@ -267,10 +273,10 @@ const isClickedShowConfirmationModal = () => {
         <div class="flex flex-row mt-4 mb-2">
           <label class="block text font-medium text-gray-900 dark:text-gray-200">Equipment
             Category:</label>
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedCategory ? errors.selectedCategory[0] :
-              '' }}</p>
+          <p class="text-red-700 ml-2 font-semibold italic">{{ errors.selectedCategory ? errors.selectedCategory[0] :
+            '' }}</p>
         </div>
-        
+
         <div class="relative">
           <div class="absolute inset-y-0 start-2 flex items-center ps-3.5 pointer-events-none">
             <BxSolidCategoryAlt />

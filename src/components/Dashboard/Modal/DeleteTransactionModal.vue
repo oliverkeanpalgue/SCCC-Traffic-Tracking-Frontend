@@ -2,11 +2,16 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps } from 'vue'
 import { MdDeleteForever } from '@kalimahapps/vue-icons';
 import axiosClient from '../../../axios';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+import Loading from '../../Loading.vue';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
+
 
 const isLoading = ref(false)
 
@@ -14,14 +19,18 @@ const props = defineProps({
   modelValue: Boolean, // v-model binding for modal open state
   transactionName: String, // Pass the transaction name
   transaction: Object,
-  officeSupplies: Object
+  officeSupplies: Object,
+  transactionItems: Array,
+  borrowers: Array,
 })
-console.log("hello", props.transaction.borrow_transaction_items)
+console.log("Transaction Items", props.transactionItems)
+
+console.log("Office Supplies", props.officeSupplies)
 
 const updateItemAvailability = async () => {
   try {
-    for (const item of props.transaction.borrow_transaction_items) {
-      if (item.item_type === "Equipment Copy") {
+    for (const item of props.transactionItems) {
+      if (item.item_type === "Equipment Copy" && item.transaction_id === props.transaction.id) {
         const updateTransactionItems = {
           is_available: true,
         };
@@ -37,7 +46,7 @@ const updateItemAvailability = async () => {
         );
 
         console.log("Updated Equipment Copy successfully:", response.data);
-      } else if (item.item_type === "Office Supply") {
+      } else if (item.item_type === "Office Supply" && item.transaction_id === props.transaction.id) {
         const officeSupply = props.officeSupplies?.find(
           (office_supply) => office_supply.id === item.item_copy_id
         );
@@ -61,6 +70,11 @@ const updateItemAvailability = async () => {
     }
   } catch (error) {
     console.error("Error updating items:", error);
+  } finally {
+    await databaseStore.fetchData();
+    isLoading.value = false;
+    emitter.emit("show-toast", { message: "Transaction deleted successfully!", type: "success" });
+    closeModal();
   }
 };
 
@@ -81,14 +95,13 @@ const confirmDelete = async () => {
       borrow_date: props.transaction.borrow_date,
       return_date: props.transaction.return_date,
       lender_id: props.transaction.lender_id,
-      borrowers_id: props.transaction.borrowers.id,
+      borrowers_id: props.borrowers.id,
       remarks: props.transaction.remarks,
       is_deleted: true,
-      borrow_transaction_items: props.transaction.borrow_transaction_items || []
     };
 
     const response = await axiosClient.put(
-      `/api/transaction_history/${props.transaction.id}`,
+      `/api/borrow_transactions/${props.transaction.id}`,
       updateData,
       {
         headers: {
@@ -130,6 +143,9 @@ onUnmounted(() => {
 
 <template>
   <div v-if="modelValue" class="fixed left-0 top-0 flex h-full w-full items-center justify-center bg-dark/90 px-4 py-5">
+    <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+      <Loading />
+    </div>
     <div ref="modalContainer"
       class="w-full max-w-[570px] rounded-[20px] bg-white px-8 py-8 text-center dark:bg-dark-2 border dark:bg-gray-700">
       <div class="flex justify-center text-center">

@@ -79,15 +79,17 @@ const confirmUpdateCategory = async () => {
             }
         );
         console.log('Update Category API response:', response);
-        emitter.emit("show-toast", { message: "Copy/Copies updated successfully!", type: "success" });
-        closeModal()
+        // emitter.emit("show-toast", { message: "Copy/Copies updated successfully!", type: "success" });
+        // closeModal()
     } catch (error) {
         console.error('Error updating category:', error);
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error updating category. Please try again.", type: "error" });
     } finally {
-        databaseStore.fetchData()
+        await databaseStore.fetchData();
         isLoading.value = false;
+        emitter.emit("show-toast", { message: "Copy updated successfully!", type: "success" });
+        closeModal();
     }
 }
 

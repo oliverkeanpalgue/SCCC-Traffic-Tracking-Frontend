@@ -8,6 +8,9 @@ import { BxSolidCategoryAlt } from '@kalimahapps/vue-icons';
 import { AnOutlinedNumber } from '@kalimahapps/vue-icons';
 import Loading from '../../Loading.vue';
 import ConfirmationModal from '../../ConfirmationModal.vue';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -112,14 +115,17 @@ const confirmUpdateSupply = async () => {
 
     showQRCodes.value = true;
     console.log('Update Supplies API response:', response);
-    emitter.emit("show-toast", { message: "Supply updated successfully!", type: "success" });
+    // emitter.emit("show-toast", { message: "Supply updated successfully!", type: "success" });
     // closeModal()
   } catch (error) {
     console.error('Error updating supplies:', error);
     console.error('Error details:', error.response?.data);
     emitter.emit("show-toast", { message: "Error updating supplies. Please try again.", type: "error" });
   } finally {
+    await databaseStore.fetchData();
     isLoading.value = false;
+    emitter.emit("show-toast", { message: "Transaction deleted successfully!", type: "success" });
+    // closeModal();
   }
 }
 
