@@ -10,6 +10,9 @@ import Loading from '../../Loading.vue';
 import { MdOutlinedAlternateEmail } from '@kalimahapps/vue-icons';
 import { FlFilledBookContacts } from '@kalimahapps/vue-icons';
 import { ReLockPasswordLine } from '@kalimahapps/vue-icons';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -83,21 +86,24 @@ const confirmUpdatePassword = async () => {
             }
         );
         console.log('Update Password API response:', response);
-        emitter.emit("show-toast", { message: "Password updated successfully!", type: "success" });
-        closeModal()
+        // emitter.emit("show-toast", { message: "Password updated successfully!", type: "success" });
+        // closeModal()
     } catch (error) {
         console.error('Error updating password:', error);
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error updating password. Please try again.", type: "error" });
     } finally {
+        await databaseStore.fetchData();
         isLoading.value = false;
+        emitter.emit("show-toast", { message: "User password updated successfully!", type: "success" });
+        closeModal();
     }
 }
 
 // validations
 const errors = ref({
-  password: [],
-  password_confirmation: [],
+    password: [],
+    password_confirmation: [],
 })
 
 // REGEX s
@@ -111,57 +117,57 @@ const validateForm = () => {
     let hasErrors = false;
 
     if (!password.value) {
-    errors.value.password = ["Password is required"];
-    hasErrors = true;
-  } else {
-    if (!passwordRegex.test(password.value)) {
-      errors.value.password = ["Password must contain both letters and numbers"];
-      hasErrors = true;
+        errors.value.password = ["Password is required"];
+        hasErrors = true;
+    } else {
+        if (!passwordRegex.test(password.value)) {
+            errors.value.password = ["Password must contain both letters and numbers"];
+            hasErrors = true;
+        }
+        if (password.value.length < 8) {
+            errors.value.password = ["Password must be at least 8 characters long"];
+            hasErrors = true;
+        }
     }
-    if (password.value.length < 8) {
-      errors.value.password = ["Password must be at least 8 characters long"];
-      hasErrors = true;
+
+    // Validate password confirmation
+    if (!confirmPassword.value) {
+        errors.value.password_confirmation = ["Password confirmation is required"];
+        hasErrors = true;
+    } else if (password.value !== confirmPassword.value) {
+        errors.value.password_confirmation = ["Passwords don't match"];
+        hasErrors = true;
     }
-  }
 
-  // Validate password confirmation
-  if (!confirmPassword.value) {
-    errors.value.password_confirmation = ["Password confirmation is required"];
-    hasErrors = true;
-  } else if (password.value !== confirmPassword.value) {
-    errors.value.password_confirmation = ["Passwords don't match"];
-    hasErrors = true;
-  }
-
-  if (hasErrors) {
-    return;
-  }
+    if (hasErrors) {
+        return;
+    }
 }
 
 
 // watch for validation
 watch(() => password.value, (newValue) => {
-  errors.value.password = [];
-  if (!newValue) {
-    errors.value.password = ["Password is required"];
-  } else {
-    if (!passwordRegex.test(newValue)) {
-      errors.value.password = ["Password must contain both letters and numbers"];
+    errors.value.password = [];
+    if (!newValue) {
+        errors.value.password = ["Password is required"];
+    } else {
+        if (!passwordRegex.test(newValue)) {
+            errors.value.password = ["Password must contain both letters and numbers"];
+        }
+        if (newValue.length < 8) {
+            errors.value.password = ["Password must be at least 8 characters long"];
+        }
     }
-    if (newValue.length < 8) {
-      errors.value.password = ["Password must be at least 8 characters long"];
-    }
-  }
 });
 
 watch(() => confirmPassword.value, (newValue) => {
-  if (!newValue) {
-    errors.value.password_confirmation = ["Password confirmation is required"];
-  } else if (newValue !== password.value) {
-    errors.value.password_confirmation = ["Passwords don't match"];
-  } else {
-    errors.value.password_confirmation = [];
-  }
+    if (!newValue) {
+        errors.value.password_confirmation = ["Password confirmation is required"];
+    } else if (newValue !== password.value) {
+        errors.value.password_confirmation = ["Passwords don't match"];
+    } else {
+        errors.value.password_confirmation = [];
+    }
 });
 
 const isClickedShowConfirmationModal = () => {
@@ -192,9 +198,10 @@ const isClickedShowConfirmationModal = () => {
                 <!-- Password -->
                 <div class="flex flex-row">
                     <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Password:</label>
-                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}
+                    </p>
                 </div>
-                
+
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                         <ReLockPasswordLine />
@@ -205,8 +212,10 @@ const isClickedShowConfirmationModal = () => {
                 </div>
                 <!-- Password verification -->
                 <div class="flex flex-row">
-                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Confirm Password:</label>
-                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ? errors.password_confirmation[0] : '' }}</p>
+                    <label class="block mb-2 text font-medium text-gray-900 dark:text-gray-200">Confirm
+                        Password:</label>
+                    <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ?
+                        errors.password_confirmation[0] : '' }}</p>
                 </div>
                 <div class="relative ml-2 mb-2">
                     <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">

@@ -9,6 +9,7 @@ import UpdateCategoryModal from './Modals/UpdateCategoryModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import Loading from '../../components/Loading.vue';
+import { useDatabaseStore } from '../../stores/databaseStore';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -146,12 +147,14 @@ const confirmDeleteCategory = async (confirmed, categoryId) => {
             databaseStore.categoryList = databaseStore.categoryList.filter(category => category.id !== categoryId);
 
             console.log(`Category deleted successfully.`);
-            emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
+            // emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
         } catch (error) {
             console.error('Error deleting category:', error);
             emitter.emit("show-toast", { message: "Error deleting category. Please try again.", type: "error" });
         } finally {
-            showDeleteConfirmationModal.value = false; // Close the modal
+            await databaseStore.fetchData();
+            emitter.emit("show-toast", { message: "Category deleted successfully!", type: "success" });
+            showDeleteConfirmationModal.value = false; // Close the modal           
         }
     }
 }
@@ -169,17 +172,17 @@ const sortByField = (field) => {
 };
 
 const isLoading = computed(() => {
-  return (
-    databaseStore.transactionItems.length === 0 ||
-    databaseStore.transactionHistory.length === 0 ||
-    databaseStore.officeEquipments.length === 0 ||
-    databaseStore.officeSupplies.length === 0 ||
-    databaseStore.officeList.length === 0 ||
-    databaseStore.users.length === 0 ||
-    databaseStore.borrowers.length === 0 ||
-    databaseStore.equipmentCopies.length === 0 ||
-    databaseStore.categoryList.length === 0
-  );
+    return (
+        databaseStore.transactionItems.length === 0 ||
+        databaseStore.transactionHistory.length === 0 ||
+        databaseStore.officeEquipments.length === 0 ||
+        databaseStore.officeSupplies.length === 0 ||
+        databaseStore.officeList.length === 0 ||
+        databaseStore.users.length === 0 ||
+        databaseStore.borrowers.length === 0 ||
+        databaseStore.equipmentCopies.length === 0 ||
+        databaseStore.categoryList.length === 0
+    );
 });
 </script>
 

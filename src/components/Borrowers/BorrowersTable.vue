@@ -32,28 +32,28 @@ onUnmounted(() => {
 const searchQuery = ref("");
 
 const filteredBorrowers = computed(() => {
-    
-    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted) 
-    .filter((borrower) => {
-        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
-        const borrowerName = borrower.borrowers_name.toLowerCase();
-        const contactNumber = borrower.borrowers_contact.toLowerCase();
-        const officeName = office ? office.office_name.toLowerCase() : 'unknown';
-        const searchQueryValue = searchQuery.value.toLowerCase();
-        return (
-            borrowerName.includes(searchQueryValue) ||
-            contactNumber.includes(searchQueryValue) ||
-            officeName.includes(searchQueryValue)
-        );
-    }).map((borrower) => {
-        const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
-        return {
-            id: borrower.id,
-            borrowers_name: borrower.borrowers_name,
-            contact_number: borrower.borrowers_contact,
-            office_name: office ? office.office_name : 'Unknown',
-        };
-    });
+
+    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted)
+        .filter((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            const borrowerName = borrower.borrowers_name.toLowerCase();
+            const contactNumber = borrower.borrowers_contact.toLowerCase();
+            const officeName = office ? office.office_name.toLowerCase() : 'unknown';
+            const searchQueryValue = searchQuery.value.toLowerCase();
+            return (
+                borrowerName.includes(searchQueryValue) ||
+                contactNumber.includes(searchQueryValue) ||
+                officeName.includes(searchQueryValue)
+            );
+        }).map((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            return {
+                id: borrower.id,
+                borrowers_name: borrower.borrowers_name,
+                contact_number: borrower.borrowers_contact,
+                office_name: office ? office.office_name : 'Unknown',
+            };
+        });
 });
 
 // Reset to first page when searching
@@ -71,41 +71,41 @@ const totalPages = computed(() => {
 
 
 const sortedBorrowers = computed(() => {
-  const borrowers = [...filteredBorrowers.value];
+    const borrowers = [...filteredBorrowers.value];
 
-  return borrowers.sort((a, b) => {
-    const getFieldValue = (borrower, field) => {
-      switch (field) {
-        case 'id':
-          return borrower.id;
+    return borrowers.sort((a, b) => {
+        const getFieldValue = (borrower, field) => {
+            switch (field) {
+                case 'id':
+                    return borrower.id;
 
-        case 'borrowers_name':
-          return borrower.borrowers_name?.toLowerCase() || '';
+                case 'borrowers_name':
+                    return borrower.borrowers_name?.toLowerCase() || '';
 
-        case 'contact_number':
-          return borrower.contact_number?.toLowerCase() || '';
+                case 'contact_number':
+                    return borrower.contact_number?.toLowerCase() || '';
 
-        case 'office':
-        return borrower.office_name?.toLowerCase() || '';
+                case 'office':
+                    return borrower.office_name?.toLowerCase() || '';
 
-        default:
-          return '';
-      }
-    };
+                default:
+                    return '';
+            }
+        };
 
-    const aVal = getFieldValue(a, sortBy.value);
-    const bVal = getFieldValue(b, sortBy.value);
+        const aVal = getFieldValue(a, sortBy.value);
+        const bVal = getFieldValue(b, sortBy.value);
 
-    if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
-    if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
-    return 0;
-  });
+        if (aVal < bVal) return sortDirection.value === 'asc' ? -1 : 1;
+        if (aVal > bVal) return sortDirection.value === 'asc' ? 1 : -1;
+        return 0;
+    });
 });
 
 const paginatedBorrowers = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-  return sortedBorrowers.value.slice(start, end);
+    const start = (currentPage.value - 1) * itemsPerPage.value;
+    const end = start + itemsPerPage.value;
+    return sortedBorrowers.value.slice(start, end);
 });
 
 // Pagination controls
@@ -168,12 +168,14 @@ const confirmDeleteBorrower = async (confirmed, borrowerId) => {
             console.log(`Borrower deleted successfully.`);
 
             // Emit success toast only after a successful delete
-            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
+            // emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         } catch (error) {
             console.error('Error deleting borrower:', error);
             emitter.emit("show-toast", { message: "Error deleting borrower. Please try again.", type: "error" });
         } finally {
+            await databaseStore.fetchData();
             showDeleteConfirmationModal.value = false; // Close the modal
+            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         }
     }
 };
@@ -183,26 +185,26 @@ const sortBy = ref("id");
 const sortDirection = ref("asc");
 
 const sortByField = (field) => {
-  if (sortBy.value === field) {
-    sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
-  } else {
-    sortBy.value = field;
-    sortDirection.value = "asc";
-  }
+    if (sortBy.value === field) {
+        sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
+    } else {
+        sortBy.value = field;
+        sortDirection.value = "asc";
+    }
 };
 
 const isLoading = computed(() => {
-  return (
-    databaseStore.transactionItems.length === 0 ||
-    databaseStore.transactionHistory.length === 0 ||
-    databaseStore.officeEquipments.length === 0 ||
-    databaseStore.officeSupplies.length === 0 ||
-    databaseStore.officeList.length === 0 ||
-    databaseStore.users.length === 0 ||
-    databaseStore.borrowers.length === 0 ||
-    databaseStore.equipmentCopies.length === 0 ||
-    databaseStore.categoryList.length === 0
-  );
+    return (
+        databaseStore.transactionItems.length === 0 ||
+        databaseStore.transactionHistory.length === 0 ||
+        databaseStore.officeEquipments.length === 0 ||
+        databaseStore.officeSupplies.length === 0 ||
+        databaseStore.officeList.length === 0 ||
+        databaseStore.users.length === 0 ||
+        databaseStore.borrowers.length === 0 ||
+        databaseStore.equipmentCopies.length === 0 ||
+        databaseStore.categoryList.length === 0
+    );
 });
 </script>
 
@@ -287,92 +289,98 @@ const isLoading = computed(() => {
                             <ChMenuMeatball class="w-5 h-5" />
                         </button>
 
-                        <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
-                            class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
-                            <ul class="text-sm text-gray-700 dark:text-gray-200">
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click.stop="OpenUpdateBorrowerModal()" class="w-full text-start px-4 py-2">
-                                        Update
-                                    </button>
+                                <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
+                                    class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                    <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click.stop="OpenUpdateBorrowerModal()"
+                                                class="w-full text-start px-4 py-2">
+                                                Update
+                                            </button>
 
-                                    <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
-                                        v-model="isOpenUpdateBorrowerModal" :borrower="borrower" :officeList="officeList" @click.stop />
-                                </li>
-                                <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <button @click="showDeleteConfirmationModal = true"
-                                        class="w-full text-start px-4 py-2">
-                                        Delete
-                                    </button>
+                                            <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
+                                                v-model="isOpenUpdateBorrowerModal" :borrower="borrower"
+                                                :officeList="officeList" @click.stop />
+                                        </li>
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click="showDeleteConfirmationModal = true"
+                                                class="w-full text-start px-4 py-2">
+                                                Delete
+                                            </button>
 
-                                    <!-- Delete Confirmation Modal -->
-                                    <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                        title="Confirm Deletion" :message="`You are about to delete this borrower.`"
-                                        :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
-                                        cancelText="Cancel" confirmText="Confirm Deleting"
-                                        @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
-                                </li>
-                            </ul>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-            aria-label="Table navigation">
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                Showing
-                <span class="font-semibold text-gray-900 dark:text-white">
-                    {{ (currentPage - 1) * itemsPerPage + 1 }} -
-                    {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
+                                            <!-- Delete Confirmation Modal -->
+                                            <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                                title="Confirm Deletion"
+                                                :message="`You are about to delete this borrower.`"
+                                                :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
+                                                cancelText="Cancel" confirmText="Confirm Deleting"
+                                                @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+                aria-label="Table navigation">
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    Showing
+                    <span class="font-semibold text-gray-900 dark:text-white">
+                        {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                        {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
+                    </span>
+                    of
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
+                        }}</span>
                 </span>
-                of
-                <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
-                }}</span>
-            </span>
 
-            <ul class="inline-flex items-stretch -space-x-px">
-                <li>
-                    <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
+                <ul class="inline-flex items-stretch -space-x-px">
+                    <li>
+                        <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
                      hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
                      dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Previous</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
+                            <span class="sr-only">Previous</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </li>
 
-                <li v-for="page in totalPages" :key="page">
-                    <button @click="goToPage(page)"
-                        :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
-                            page === currentPage
-                                ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
-                        {{ page }}
-                    </button>
-                </li>
+                    <li v-for="page in totalPages" :key="page">
+                        <button @click="goToPage(page)"
+                            :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
+                                page === currentPage
+                                    ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                                    : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
+                            {{ page }}
+                        </button>
+                    </li>
 
-                <li>
-                    <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
+                    <li>
+                        <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
                      hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
                      dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Next</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
-            </ul>
-        </nav>
+                            <span class="sr-only">Next</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
 
-        <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList" @click.stop />
+            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList"
+                @click.stop />
+        </div>
     </div>
-</div>
 </template>

@@ -4,6 +4,9 @@ import { BsBoxFill } from '@kalimahapps/vue-icons';
 import ConfirmationModal from '../../ConfirmationModal.vue';
 import Loading from '../../Loading.vue';
 import axiosClient from '../../../axios';
+import { useDatabaseStore } from '../../../stores/databaseStore';
+
+const databaseStore = useDatabaseStore()
 
 // FOR THE TOAST
 import emitter from "../../../eventBus";
@@ -70,14 +73,17 @@ const confirmAddCategory = async () => {
             }
         );
         console.log('Add Category API response:', response);
-        emitter.emit("show-toast", { message: "Category added successfully!", type: "success" });
-        closeModal()
+        // emitter.emit("show-toast", { message: "Category added successfully!", type: "success" });
+        // closeModal()
     } catch (error) {
         console.error('Error adding category:', error);
         console.error('Error details:', error.response?.data);
         emitter.emit("show-toast", { message: "Error adding category. Please try again.", type: "error" });
     } finally {
+        await databaseStore.fetchData();
         isLoading.value = false;
+        emitter.emit("show-toast", { message: "Category added successfully!", type: "success" });
+        closeModal();
     }
 }
 

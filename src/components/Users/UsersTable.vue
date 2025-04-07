@@ -157,11 +157,13 @@ const confirmDeleteUser = async (confirmed, userId) => {
             userList.value = userList.value.filter(user => user.id !== userId);
 
             console.log(`User deleted successfully.`);
-            emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
+            // emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
         } catch (error) {
             console.error('Error deleting user:', error);
             emitter.emit("show-toast", { message: "Error deleting user. Please try again.", type: "error" });
         } finally {
+            await databaseStore.fetchData();
+            emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
             showDeleteConfirmationModal.value = false; // Close the modal
         }
     }
@@ -180,17 +182,17 @@ const sortByField = (field) => {
 };
 
 const isLoading = computed(() => {
-  return (
-    databaseStore.transactionItems.length === 0 ||
-    databaseStore.transactionHistory.length === 0 ||
-    databaseStore.officeEquipments.length === 0 ||
-    databaseStore.officeSupplies.length === 0 ||
-    databaseStore.officeList.length === 0 ||
-    databaseStore.users.length === 0 ||
-    databaseStore.borrowers.length === 0 ||
-    databaseStore.equipmentCopies.length === 0 ||
-    databaseStore.categoryList.length === 0
-  );
+    return (
+        databaseStore.transactionItems.length === 0 ||
+        databaseStore.transactionHistory.length === 0 ||
+        databaseStore.officeEquipments.length === 0 ||
+        databaseStore.officeSupplies.length === 0 ||
+        databaseStore.officeList.length === 0 ||
+        databaseStore.users.length === 0 ||
+        databaseStore.borrowers.length === 0 ||
+        databaseStore.equipmentCopies.length === 0 ||
+        databaseStore.categoryList.length === 0
+    );
 });
 </script>
 
@@ -276,100 +278,103 @@ const isLoading = computed(() => {
                                 <ChMenuMeatball class="w-5 h-5" />
                             </button>
 
-                            <div v-if="openDropdownId === user.id" ref="dropdownRefs"
-                                class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
-                                <ul class="text-sm text-gray-700 dark:text-gray-200">
-                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        <button @click.stop="OpenUpdateUsersModal()"
-                                            class="w-full text-start px-4 py-2">
-                                            Update
-                                        </button>
+                                <div v-if="openDropdownId === user.id" ref="dropdownRefs"
+                                    class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                    <ul class="text-sm text-gray-700 dark:text-gray-200">
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click.stop="OpenUpdateUsersModal()"
+                                                class="w-full text-start px-4 py-2">
+                                                Update
+                                            </button>
 
-                                        <UpdateUsersModal v-if="isOpenUpdateUsersModal" v-model="isOpenUpdateUsersModal"
-                                            :user="user" @click.stop />
-                                    </li>
-                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        <button @click.stop="OpenUpdateUsersPasswordModal()"
-                                            class="w-full text-start px-4 py-2">
-                                            Change Password
-                                        </button>
+                                            <UpdateUsersModal v-if="isOpenUpdateUsersModal"
+                                                v-model="isOpenUpdateUsersModal" :user="user" @click.stop />
+                                        </li>
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click.stop="OpenUpdateUsersPasswordModal()"
+                                                class="w-full text-start px-4 py-2">
+                                                Change Password
+                                            </button>
 
-                                        <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
-                                            v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
-                                    </li>
-                                    <li class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        <button @click="showDeleteConfirmationModal = true"
-                                            class="w-full text-start px-4 py-2">
-                                            Delete
-                                        </button>
+                                            <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
+                                                v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
+                                        </li>
+                                        <li
+                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
+                                            <button @click="showDeleteConfirmationModal = true"
+                                                class="w-full text-start px-4 py-2">
+                                                Delete
+                                            </button>
 
-                                        <!-- Delete Confirmation Modal -->
-                                        <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                            title="Confirm Deletion" :message="`You are about to delete this user.`"
-                                            :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`"
-                                            cancelText="Cancel" confirmText="Confirm Deleting"
-                                            @confirm="() => confirmDeleteUser(true, user.id)" />
-                                    </li>
-                                </ul>
-                            </div>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
-            aria-label="Table navigation">
-            <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
-                Showing
-                <span class="font-semibold text-gray-900 dark:text-white">
-                    {{ (currentPage - 1) * itemsPerPage + 1 }} -
-                    {{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }}
+                                            <!-- Delete Confirmation Modal -->
+                                            <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
+                                                title="Confirm Deletion" :message="`You are about to delete this user.`"
+                                                :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`"
+                                                cancelText="Cancel" confirmText="Confirm Deleting"
+                                                @confirm="() => confirmDeleteUser(true, user.id)" />
+                                        </li>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
+                aria-label="Table navigation">
+                <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                    Showing
+                    <span class="font-semibold text-gray-900 dark:text-white">
+                        {{ (currentPage - 1) * itemsPerPage + 1 }} -
+                        {{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }}
+                    </span>
+                    of
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
+                        }}</span>
                 </span>
-                of
-                <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
-                    }}</span>
-            </span>
 
-            <ul class="inline-flex items-stretch -space-x-px">
-                <li>
-                    <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
+                <ul class="inline-flex items-stretch -space-x-px">
+                    <li>
+                        <button @click="prevPage" :disabled="currentPage === 1" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 
                      hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
                      dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Previous</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
+                            <span class="sr-only">Previous</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </li>
 
-                <li v-for="page in totalPages" :key="page">
-                    <button @click="goToPage(page)"
-                        :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
-                            page === currentPage
-                                ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
-                                : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
-                        {{ page }}
-                    </button>
-                </li>
+                    <li v-for="page in totalPages" :key="page">
+                        <button @click="goToPage(page)"
+                            :class="['flex items-center justify-center text-sm py-2 px-3 leading-tight border',
+                                page === currentPage
+                                    ? 'text-primary-600 bg-primary-50 border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white'
+                                    : 'text-gray-500 bg-white border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white']">
+                            {{ page }}
+                        </button>
+                    </li>
 
-                <li>
-                    <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
+                    <li>
+                        <button @click="nextPage" :disabled="currentPage === totalPages" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 
                      hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 
                      dark:hover:bg-gray-700 dark:hover:text-white disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span class="sr-only">Next</span>
-                        <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd"
-                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                clip-rule="evenodd" />
-                        </svg>
-                    </button>
-                </li>
-            </ul>
-        </nav>
-    </div>
+                            <span class="sr-only">Next</span>
+                            <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
     </div>
 </template>
