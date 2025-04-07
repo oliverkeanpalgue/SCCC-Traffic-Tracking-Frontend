@@ -127,7 +127,7 @@ const allInventory = computed(() => {
             if (item.type === "Office Supply") {
                 return item.supply_quantity > 0;
             } else if (item.type === "Office Equipment") {
-                return equipmentCopiesArray.value.some(e_copy => 
+                return equipmentCopiesArray.value.some(e_copy =>
                     e_copy.item_id === item.id && e_copy.is_available === 1
                 );
             }
@@ -426,50 +426,47 @@ const formatDateForMySQL = (date) => {
 };
 
 const confirmCreateTransaction = async () => {
-    selectedBorrowerId.value = borrowersArray.value.find((borrower) =>
-        borrower.borrowers_name.toLowerCase() === borrowerInput.value.toLowerCase()
-    )?.id || 0;
-
-    // #AYUSIN MO TO PAENG
-    if (selectedBorrowerId.value === 0) {
-        const officeId = officeListArray.value.find((office) =>
-            office.office_name.toLowerCase() === borrowerOfficeInput.value.toLowerCase()
-        )?.id || 0;
-
-        const transactionResponse = await axiosClient.post(
-            '/api/borrowers',
-            {
-                borrowers_name: borrowerInput.value,
-                borrowers_contact: borrowerContactInput.value,
-                office_id: officeId,
-            },
-            {
-                headers: {
-                    "x-api-key": API_KEY,
-                },
-            }
-        );
-
-        selectedBorrowerId.value = transactionResponse.data.data.id;
-        console.log("Created Borrower ID:", transactionResponse.data.data.id);
-    } else {
-        console.log("Borrower ID already exists:", selectedBorrowerId.value);
-    }
-
     try {
         isLoading.value = true;
+
+        let borrowerId = borrowersArray.value.find((borrower) =>
+            borrower.borrowers_name.toLowerCase() === borrowerInput.value.toLowerCase()
+        )?.id || 0;
+
+        // If borrower doesn't exist, create new borrower first
+        if (borrowerId === 0) {
+            const officeId = officeListArray.value.find((office) =>
+                office.office_name.toLowerCase() === borrowerOfficeInput.value.toLowerCase()
+            )?.id;
+
+            // Create new borrower
+            const borrowerResponse = await axiosClient.post(
+                '/api/borrowers',
+                {
+                    borrowers_name: borrowerInput.value,
+                    borrowers_contact: borrowerContactInput.value,
+                    office_id: officeId,
+                    is_deleted: false,
+                    deleted_by: null
+                },
+                {
+                    headers: {
+                        "x-api-key": API_KEY,
+                    },
+                }
+            );
+
+            borrowerId = borrowerResponse.data.data.id;
+        }
 
         const currentDate = new Date();
         const formattedDate = formatDateForMySQL(currentDate);
 
-        const selectedBorrowerId = borrowersArray.value.find(
-            (borrower) => borrower.borrowers_name === borrowerInput.value)?.id || 0;
-
-        // First, create the borrow transaction
+        // Create borrow transaction with confirmed borrower ID
         const transactionResponse = await axiosClient.post(
             '/api/borrow_transactions',
             {
-                borrower_id: selectedBorrowerId,
+                borrower_id: borrowerId,
                 lender_id: lenderInput.value,
                 isc: iscInput.value,
                 remarks: remarksInput.value,
@@ -482,10 +479,9 @@ const confirmCreateTransaction = async () => {
             }
         );
 
-        // Get the transaction ID from the response
         const transactionId = transactionResponse.data.data.id;
 
-        // Format items (remove the transaction_id property since we send it separately)
+        // Format items for transaction
         const formattedItems = selectedItems.value.map(item => ({
             item_copy_id: item.item_copy_id,
             returned: false,
@@ -494,11 +490,11 @@ const confirmCreateTransaction = async () => {
             quantity: item.quantity || item.copy || 1
         }));
 
-        // Create transaction items by sending transaction_id at the root level
+        // Create transaction items
         await axiosClient.post(
             '/api/borrow_transaction_items',
             {
-                transaction_id: transactionId, // top-level field required by the controller
+                transaction_id: transactionId,
                 items: formattedItems
             },
             {
@@ -508,21 +504,37 @@ const confirmCreateTransaction = async () => {
             }
         );
 
-        emitter.emit("show-toast", { message: "Transaction created successfully!", type: "success" });
-        closeModal();
-        databaseStore.fetchData();
+        // Update inventory status
+        // await confirmUpdate();
+
+        // emitter.emit("show-toast", { 
+        //     message: "Transaction created successfully!", 
+        //     type: "success" 
+        // });
+
+        // closeModal();
+        // databaseStore.fetchData();
 
     } catch (error) {
         console.error('Transaction error:', error);
-        console.error('Error details:', error.response?.data);
+        let errorMessage = "Error creating transaction. Please try again.";
+
+        if (error.response?.data) {
+            console.error('Error details:', error.response.data);
+            errorMessage = Object.values(error.response.data)[0] || errorMessage;
+        }
+
         emitter.emit("show-toast", {
-            message: error.response?.data?.message || "Error creating transaction. Please try again.",
+            message: errorMessage,
             type: "error"
         });
     } finally {
-        confirmUpdate()
+        await databaseStore.fetchData();
+        isLoading.value = false;
+        emitter.emit("show-toast", { message: "Transaction created successfully!", type: "success" });
+        closeModal();
     }
-}
+};
 
 // error validation
 const errors = ref({
@@ -755,8 +767,9 @@ watch(() => borrowerOfficeInput.value, (newValue) => {
                             <AkTextAlignLeft />
                         </div>
                         <input type="text" v-model="borrowerContactInput"
-                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                        placeholder="Ex. Printer, Chair, Stairs" :disabled="!borrowerInfoAllowedInput" :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
+                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Ex. Printer, Chair, Stairs" :disabled="!borrowerInfoAllowedInput"
+                            :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
                     </div>
 
                     <!-- BORROWER OFFICE -->
@@ -767,21 +780,25 @@ watch(() => borrowerOfficeInput.value, (newValue) => {
                             errors.borrowerOfficeInput[0] :
                             '' }}</p>
                     </div>
-                    
+
                     <div class="relative ml-2">
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <BxSolidUser />
                         </div>
                         <input type="text" v-model="borrowerOfficeInput" @focus="showBorrowerOfficeListDropdown = true"
-                            @blur="hideBorrowerOfficeDropdownWithDelay" @keydown.enter.prevent="selectBorrowerOffice(borrowerOfficeInput)"
+                            @blur="hideBorrowerOfficeDropdownWithDelay"
+                            @keydown.enter.prevent="selectBorrowerOffice(borrowerOfficeInput)"
                             placeholder="Search or enter new Borrower Office..."
-                            class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"  :disabled="!borrowerInfoAllowedInput" :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
+                            class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            :disabled="!borrowerInfoAllowedInput"
+                            :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
 
                         <!-- Dropdown List -->
                         <ul v-if="showBorrowerOfficeListDropdown && filteredBorrowerOffice.length"
                             class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
                             <li v-for="office in filteredBorrowerOffice" :key="office.id"
-                                @mousedown="selectBorrowerOffice(office.office_name)" class="p-2 hover:bg-blue-100 cursor-pointer">
+                                @mousedown="selectBorrowerOffice(office.office_name)"
+                                class="p-2 hover:bg-blue-100 cursor-pointer">
                                 {{ office.office_name }}
                             </li>
                         </ul>
