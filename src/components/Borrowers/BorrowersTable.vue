@@ -185,6 +185,7 @@ const sortBy = ref("id");
 const sortDirection = ref("asc");
 
 const sortByField = (field) => {
+    currentPage.value = 1;
     if (sortBy.value === field) {
         sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
     } else {
@@ -276,9 +277,10 @@ const isLoading = computed(() => {
                     <td class="px-4 py-3 ">
                         {{ borrower.contact_number }}
                     </td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.office_name }}
-                    </td>
+                    <td class="px-4 py-3 min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+                            :title="borrower.office_name">
+                            {{ borrower.office_name }}
+                        </td>
                     <td class="px-4 py-3 ">
                         Napipindot na button
                     </td>

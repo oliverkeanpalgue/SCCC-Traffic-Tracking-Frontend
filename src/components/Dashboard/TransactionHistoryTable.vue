@@ -324,6 +324,7 @@ const sortBy = ref("id");
 const sortDirection = ref("asc");
 
 const sortByField = (field) => {
+  currentPage.value = 1;
   if (sortBy.value === field) {
     sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
   } else {

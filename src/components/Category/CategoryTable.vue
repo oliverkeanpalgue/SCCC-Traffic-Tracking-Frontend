@@ -9,7 +9,6 @@ import UpdateCategoryModal from './Modals/UpdateCategoryModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import Loading from '../../components/Loading.vue';
-import { useDatabaseStore } from '../../stores/databaseStore';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -163,6 +162,7 @@ const sortBy = ref("id");
 const sortDirection = ref("asc");
 
 const sortByField = (field) => {
+    currentPage.value = 1;
     if (sortBy.value === field) {
         sortDirection.value = sortDirection.value === "asc" ? "desc" : "asc";
     } else {

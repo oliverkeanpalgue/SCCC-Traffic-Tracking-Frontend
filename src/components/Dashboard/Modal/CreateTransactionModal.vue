@@ -20,6 +20,8 @@ const borrowerInput = ref("")
 const lenderInput = ref("")
 const iscInput = ref("")
 const remarksInput = ref("")
+const borrowerContactInput = ref("")
+const borrowerOfficeInput = ref("")
 
 // User Store to get Lender
 const userStore = useUserStore();
@@ -76,7 +78,6 @@ const computedArrays = (source) => computed(() => Object.values(source.value));
 
 const transactionItemsArray = computedArrays(transactionItems);
 const transactionHistoryArray = computedArrays(transactionHistory);
-console.log('Transaction History Array:', transactionHistoryArray.value);
 const officeEquipmentsArray = computedArrays(officeEquipments);
 const officeSuppliesArray = computedArrays(officeSupplies);
 const officeListArray = computedArrays(officeList);
@@ -121,11 +122,23 @@ onUnmounted(() => {
 })
 
 const allInventory = computed(() => {
-    return [...officeEquipmentsArray.value, ...officeSuppliesArray.value].map((item, index) => ({
-        ...item,
-        newId: `INV-${index + 1}`,
-    }));
+    return [...officeEquipmentsArray.value, ...officeSuppliesArray.value]
+        .filter(item => {
+            if (item.type === "Office Supply") {
+                return item.supply_quantity > 0;
+            } else if (item.type === "Office Equipment") {
+                return equipmentCopiesArray.value.some(e_copy => 
+                    e_copy.item_id === item.id && e_copy.is_available === 1
+                );
+            }
+            return false;
+        })
+        .map((item, index) => ({
+            ...item,
+            newId: `INV-${index + 1}`,
+        }));
 });
+
 
 // FOR SEARCH
 const searchQuery = ref("");
@@ -203,12 +216,17 @@ const filteredBorrowers = computed(() => {
 
 
 // Select an Existing Borrower or Keep New Input
-const selectedBorrowerId = ref(null);
+// const selectedBorrowerId = ref(null);
 
 
-const selectBorrower = (borrower) => {
-    borrowerInput.value = borrower.borrowers_name;
-    selectedBorrowerId.value = borrower.id;
+// const selectBorrower = (borrower) => {
+//     borrowerInput.value = borrower.borrowers_name;
+//     selectedBorrowerId.value = borrower.id;
+//     showBorrowerListDropdown.value = false;
+// };
+
+const selectBorrower = (value) => {
+    borrowerInput.value = value;
     showBorrowerListDropdown.value = false;
 };
 
@@ -218,6 +236,7 @@ const hideBorrowerDropdownWithDelay = () => {
         showBorrowerListDropdown.value = false;
     }, 200);
 };
+
 
 // Filtered List for Searching ISC
 const showIscListDropdown = ref(false);
@@ -237,12 +256,34 @@ const selectIsc = (value) => {
 const hideIscDropdownWithDelay = () => {
     setTimeout(() => {
         showIscListDropdown.value = false;
-    }, 200);
+    }, 0);
+};
+
+
+const showBorrowerOfficeListDropdown = ref(false);
+
+const filteredBorrowerOffice = computed(() => {
+    if (!borrowerOfficeInput.value) return officeListArray.value;
+    return officeListArray.value.filter((office) =>
+        office.office_name.toLowerCase().includes(borrowerOfficeInput.value.toLowerCase())
+    );
+});
+
+const selectBorrowerOffice = (value) => {
+    borrowerOfficeInput.value = value;
+    showBorrowerOfficeListDropdown.value = false;
+};
+
+const hideBorrowerOfficeDropdownWithDelay = () => {
+    setTimeout(() => {
+        showBorrowerOfficeListDropdown.value = false;
+    }, 0);
 };
 
 // HANDLE OF CREATE TRANSACTION BUTTON
 const handleCreateTransactionButton = () => {
     if (!validateForm()) {
+        console.log("Validation failed");
         return;
     } else if (selectedItems.value.length) {
         showConfirmationModal.value = true
@@ -269,9 +310,38 @@ const formattedMessageData = computed(() => {
 
 // IF CONFIRM CREATE TRANSACTION WAS PRESSED:
 const createTransactionConfirmed = () => {
-    console.log(borrowerInput.value, lenderInput.value, iscInput.value, remarksInput.value, selectedItems.value)
     confirmCreateTransaction()
 }
+
+const selectedBorrowerId = ref(0);
+const selectedOfficeId = ref(null);
+const borrowerInfoAllowedInput = ref(true);
+
+watch(borrowerInput, () => {
+    borrowerOfficeInput.value = '';
+    borrowerContactInput.value = '';
+    borrowerInfoAllowedInput.value = true;
+
+    selectedBorrowerId.value = borrowersArray.value.find((borrower) =>
+        borrower.borrowers_name.toLowerCase() === borrowerInput.value.toLowerCase()
+    )?.id || 0;
+
+    if (selectedBorrowerId.value === 0) {
+        console.log("Borrower ID not found:");
+    } else {
+        selectedOfficeId.value = borrowersArray.value.find(
+            (borrower) => borrower.id === selectedBorrowerId.value
+        )?.office_id || 0;
+        borrowerOfficeInput.value = officeListArray.value.find(
+            (office) => office.id === selectedOfficeId.value
+        )?.office_name || '';
+        borrowerContactInput.value = borrowersArray.value.find(
+            (borrower) => borrower.id === selectedBorrowerId.value
+        )?.borrowers_contact || '';
+        console.log("Borrower ID already exists:", selectedBorrowerId.value);
+        borrowerInfoAllowedInput.value = false;
+    }
+});
 
 const confirmUpdate = async () => {
     try {
@@ -356,17 +426,50 @@ const formatDateForMySQL = (date) => {
 };
 
 const confirmCreateTransaction = async () => {
+    selectedBorrowerId.value = borrowersArray.value.find((borrower) =>
+        borrower.borrowers_name.toLowerCase() === borrowerInput.value.toLowerCase()
+    )?.id || 0;
+
+    // #AYUSIN MO TO PAENG
+    if (selectedBorrowerId.value === 0) {
+        const officeId = officeListArray.value.find((office) =>
+            office.office_name.toLowerCase() === borrowerOfficeInput.value.toLowerCase()
+        )?.id || 0;
+
+        const transactionResponse = await axiosClient.post(
+            '/api/borrowers',
+            {
+                borrowers_name: borrowerInput.value,
+                borrowers_contact: borrowerContactInput.value,
+                office_id: officeId,
+            },
+            {
+                headers: {
+                    "x-api-key": API_KEY,
+                },
+            }
+        );
+
+        selectedBorrowerId.value = transactionResponse.data.data.id;
+        console.log("Created Borrower ID:", transactionResponse.data.data.id);
+    } else {
+        console.log("Borrower ID already exists:", selectedBorrowerId.value);
+    }
+
     try {
         isLoading.value = true;
 
         const currentDate = new Date();
         const formattedDate = formatDateForMySQL(currentDate);
 
+        const selectedBorrowerId = borrowersArray.value.find(
+            (borrower) => borrower.borrowers_name === borrowerInput.value)?.id || 0;
+
         // First, create the borrow transaction
         const transactionResponse = await axiosClient.post(
             '/api/borrow_transactions',
             {
-                borrower_id: selectedBorrowerId.value,
+                borrower_id: selectedBorrowerId,
                 lender_id: lenderInput.value,
                 isc: iscInput.value,
                 remarks: remarksInput.value,
@@ -427,6 +530,7 @@ const errors = ref({
     iscInput: [],
     remarksInput: [],
     selectedBorrowerId: [],
+    borrowerOfficeInput: [],
 })
 
 const validateForm = () => {
@@ -452,8 +556,13 @@ const validateForm = () => {
         hasErrors = true;
     }
 
-    if (!selectedBorrowerId.value) {
-        errors.value.selectedBorrowerId = ["Borrower is required"];
+    const officeChecked = officeListArray.value.find((office) => office.office_name === borrowerOfficeInput.value)
+
+    if (!borrowerOfficeInput.value) {
+        errors.value.borrowerOfficeInput = ["Borrower Office is required"];
+        hasErrors = true;
+    } else if (!officeChecked) {
+        errors.value.borrowerOfficeInput = ["Select a valid Borrower Office"];
         hasErrors = true;
     }
 
@@ -494,7 +603,16 @@ watch(() => selectedBorrowerId.value, (newValue) => {
     }
 });
 
-
+watch(() => borrowerOfficeInput.value, (newValue) => {
+    const officeChecked = officeListArray.value.find((office) => office.office_name === borrowerOfficeInput.value)
+    if (!newValue) {
+        errors.value.borrowerOfficeInput = ["Borrower Office is required"];
+    } else if (!officeChecked) {
+        errors.value.borrowerOfficeInput = ["Select a valid Borrower Office"];
+    } else {
+        errors.value.borrowerOfficeInput = [];
+    }
+});
 
 </script>
 
@@ -514,7 +632,8 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                 </button>
 
                 <!-- CHOOSE ITEM -->
-                <div class="col-span-2 rounded-2xl max-h-[89vh] border-2 p-4 text-start dark:bg-black dark:border-gray-600">
+                <div
+                    class="col-span-2 rounded-2xl max-h-[89vh] border-2 p-4 text-start dark:bg-black dark:border-gray-600">
                     <p class="text-2xl font-bold pl-2 mb-2">Choose Item/s:</p>
                     <!-- SEARCH BAR -->
                     <div class="w-full">
@@ -592,11 +711,12 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                     <!-- BORROWER -->
                     <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">
-                            Type Borrower:
+                            Type Borrower: {{ borrowerInput }}
                         </label>
                         <p class="text-red-700 ml-2 font-semibold italic">{{ errors.borrowerInput ?
                             errors.borrowerInput[0] :
-                            '' }}</p>
+                            '' }}
+                        </p>
                     </div>
 
                     <div class="relative ml-2">
@@ -614,12 +734,60 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                         <ul v-if="showBorrowerListDropdown && filteredBorrowers.length"
                             class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
                             <li v-for="borrower in filteredBorrowers" :key="borrower.id"
-                                @mousedown="selectBorrower(borrower)" class="p-2 hover:bg-blue-100 cursor-pointer">
+                                @mousedown="selectBorrower(borrower.borrowers_name)"
+                                class="p-2 hover:bg-blue-100 cursor-pointer">
                                 {{ borrower.borrowers_name }}
                             </li>
                         </ul>
                     </div>
 
+                    <!-- BORROWER CONTACT -->
+                    <div class="flex flex-row mt-2 mb-2">
+                        <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
+                            Borrower Contact:</label>
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.remarksInput ?
+                            errors.remarksInput[0] :
+                            '' }}</p>
+                    </div>
+
+                    <div class="relative ml-2">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                            <AkTextAlignLeft />
+                        </div>
+                        <input type="text" v-model="borrowerContactInput"
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                        placeholder="Ex. Printer, Chair, Stairs" :disabled="!borrowerInfoAllowedInput" :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
+                    </div>
+
+                    <!-- BORROWER OFFICE -->
+                    <div class="flex flex-row mt-2 mb-2">
+                        <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
+                            Borrower Office:</label>
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.borrowerOfficeInput ?
+                            errors.borrowerOfficeInput[0] :
+                            '' }}</p>
+                    </div>
+                    
+                    <div class="relative ml-2">
+                        <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
+                            <BxSolidUser />
+                        </div>
+                        <input type="text" v-model="borrowerOfficeInput" @focus="showBorrowerOfficeListDropdown = true"
+                            @blur="hideBorrowerOfficeDropdownWithDelay" @keydown.enter.prevent="selectBorrowerOffice(borrowerOfficeInput)"
+                            placeholder="Search or enter new Borrower Office..."
+                            class="bg-gray-50 mb-2 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"  :disabled="!borrowerInfoAllowedInput" :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
+
+                        <!-- Dropdown List -->
+                        <ul v-if="showBorrowerOfficeListDropdown && filteredBorrowerOffice.length"
+                            class="absolute ml-5 w-[95%] border rounded-lg shadow-lg mt-1 z-10 max-h-40 overflow-y-auto bg-white border-gray-300 dark:bg-gray-800">
+                            <li v-for="office in filteredBorrowerOffice" :key="office.id"
+                                @mousedown="selectBorrowerOffice(office.office_name)" class="p-2 hover:bg-blue-100 cursor-pointer">
+                                {{ office.office_name }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ISC/AREE -->
                     <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
                             ISC/AREE:</label>
@@ -658,9 +826,9 @@ watch(() => selectedBorrowerId.value, (newValue) => {
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <AkTextAlignLeft />
                         </div>
-                        <textarea type="text" v-model="remarksInput"
-                            class="min-h-25 max-h-25 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            placeholder="Enter Remarks"></textarea>
+                        <input type="text" v-model="remarksInput"
+                            class="min-h-11 max-h-11 bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5  dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                            placeholder="Enter Remarks">
                     </div>
 
                     <!-- Action Buttons -->
