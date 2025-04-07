@@ -327,7 +327,7 @@ const isLoading = computed(() => {
       <div v-if="!isLoading && !tableView" class="" :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div 
-          class="grid gap-4 max-h-[67vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          class="grid gap-4 max-h-[svh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'hidden md:grid md:grid-cols-1 xl:grid-cols-2' : 'grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"

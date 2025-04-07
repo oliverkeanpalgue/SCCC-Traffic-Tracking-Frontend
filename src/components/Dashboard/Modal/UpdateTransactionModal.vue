@@ -41,6 +41,7 @@ const closeModal = () => {
 };
 
 const confirmUpdate = async () => {
+  isLoading.value = true;
   try {
     for (const item of transactionItems.value) {
       if (item.item_type === "Equipment Copy") {
@@ -171,8 +172,10 @@ const updateBorrowTransaction = async (date) => {
     console.error('Error updating transaction item:', error);
     console.error('Error details:', error.response?.data);
   } finally {
-    databaseStore.fetchData()
+    await databaseStore.fetchData();
+    isLoading.value = false;
     emitter.emit("show-toast", { message: "Transaction updated successfully!", type: "success" });
+    closeModal();
   }
 }
 
@@ -219,7 +222,6 @@ const updateItems = async (date, returned, item) => {
 
     if (response.data) {
       emit('confirmDelete', response.data);
-      closeModal();
     }
   } catch (error) {
     console.error('Error details:', {
