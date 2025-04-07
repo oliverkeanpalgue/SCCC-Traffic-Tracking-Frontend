@@ -72,50 +72,43 @@ const openDeleteModal = (transaction) => {
   console.log("🚀 ~ openDeleteModal ~ isDeleteModalOpen:", isDeleteModalOpen.value);
 };
 
-const getActiveOfficeIds = () => {
-  return officeDropDownItems.value
-    .filter((item) => item.isActive)
-    .map((item) => item.id);
-};
-
 const filteredTransactions = computed(() => {
   if (!props.transactionHistory || !props.selectedDateRange.start || !props.selectedDateRange.end) return [];
 
   const startDate = new Date(props.selectedDateRange.start);
   const endDate = new Date(props.selectedDateRange.end);
 
-  // ✅ Extend end date to include the full day (23:59:59)
   endDate.setHours(23, 59, 59, 999);
   startDate.setHours(0, 0, 0, 0);
+
+  // Get active office IDs
+  const activeOfficeIds = officeDropDownItems.value
+    .filter(item => item.isActive)
+    .map(item => item.id);
 
   return props.transactionHistory.filter(transaction => {
     const borrowDate = new Date(transaction.borrow_date);
 
-    // ✅ Ensure borrow_date is within the full range, including the same day
     if (borrowDate < startDate || borrowDate > endDate) {
       return false;
     }
 
-    // 🔍 Keep existing filters (deletion check, search query, item check, etc.)
     if (transaction.is_deleted) return false;
 
     const searchTerm = searchQuery.value.toLowerCase();
-    const activeOfficeIds = getActiveOfficeIds();
-    const borrowerName =
-      props.borrowers
-        ?.find((borrower) => borrower.id === transaction.borrower_id)
-        ?.borrowers_name?.toLowerCase() || "";
+    const borrower = props.borrowers?.find((b) => b.id === transaction.borrower_id);
+    const borrowerOfficeId = borrower?.office_id;
+
+    // If there are active filters, check if the transaction's office is in the active list
+    if (activeOfficeIds.length > 0 && !activeOfficeIds.includes(borrowerOfficeId)) {
+      return false;
+    }
+
+    const borrowerName = borrower?.borrowers_name?.toLowerCase() || "";
     const transactionId = transaction.id?.toString().toLowerCase() || "";
-    const lender =
-      props.users
-        ?.find((user) => user.id === transaction.lender_id)
-        ?.firstName?.toLowerCase() || "";
-    const returnDate = transaction.return_date
-      ? transaction.return_date.toLowerCase()
-      : "";
-    const borrowDateStr = transaction.borrow_date
-      ? transaction.borrow_date.toLowerCase()
-      : "";
+    const lender = props.users?.find((user) => user.id === transaction.lender_id)?.firstName?.toLowerCase() || "";
+    const returnDate = transaction.return_date?.toLowerCase() || "";
+    const borrowDateStr = transaction.borrow_date?.toLowerCase() || "";
 
     // Fetch transaction items
     const selectedTransactionItems = props.transactionItems?.filter(item => item.transaction_id === transaction.id) || [];
@@ -146,26 +139,15 @@ const filteredTransactions = computed(() => {
         return equipmentName.includes(searchTerm) || equipmentId.includes(searchTerm);
       }
       return false;
-    }) || false;
-
-    const borrowerOfficeId =
-      props.borrowers
-        ?.find((borrower) => borrower.id === transaction.borrower_id)
-        ?.office_id || "";
-
-    const officeMatch =
-      props.officeList
-        ?.find((office) => office.id === borrowerOfficeId)
-        ?.office_name?.toLowerCase() || "";
+    });
 
     return (
-      officeMatch &&
-      (borrowerName.includes(searchTerm) ||
-        transactionId.includes(searchTerm) ||
-        lender.includes(searchTerm) ||
-        returnDate.includes(searchTerm) ||
-        borrowDateStr.includes(searchTerm) ||
-        itemsMatch)
+      borrowerName.includes(searchTerm) ||
+      transactionId.includes(searchTerm) ||
+      lender.includes(searchTerm) ||
+      returnDate.includes(searchTerm) ||
+      borrowDateStr.includes(searchTerm) ||
+      itemsMatch
     );
   });
 });
@@ -273,7 +255,18 @@ const officeDropDownMenuRef = ref(null); // Reference to officeDropDown menu
 
 const officeDropDownItems = ref([]);
 
+const resetOfficeFilters = () => {
+  officeDropDownItems.value = props.officeList.map((office) => ({
+    id: office.id,
+    type: office.office_name,
+    isActive: false, // Set initial state to false
+  }));
+};
+
 const toggleofficeDropDown = () => {
+  if (!officeDropDownFilter.value) {
+    resetOfficeFilters(); // Reset when opening the dropdown
+  }
   officeDropDownFilter.value = !officeDropDownFilter.value;
 };
 
