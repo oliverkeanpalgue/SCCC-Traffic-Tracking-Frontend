@@ -9,6 +9,8 @@ import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import { useDatabaseStore } from "../../stores/databaseStore";
 import Loading from '../../components/Loading.vue';
+import baguioLogo from '../../assets/baguio-logo.png';
+import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -207,6 +209,96 @@ const isLoading = computed(() => {
         databaseStore.categoryList.length === 0
     );
 });
+
+// for printing reports
+const handlePrint = async () => {
+
+    
+const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+// Wait for the image to load
+await new Promise((resolve) => {
+    const img = new Image();
+    img.src = baguioLogo;
+    img.onload = resolve;
+    img.onerror = resolve; // Avoid hanging if image fails
+});
+
+// Wait for the reports data to be fully available
+await new Promise((resolve) => {
+    setTimeout(resolve, 100); // Small delay to ensure data is processed
+});
+
+printWindow.document.write(`
+    <html>
+        <head>
+            <title>Printed Borrowers Reports</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 20px; 
+                }
+                th, td { 
+                    border: 1px solid #ddd; 
+                    padding: 8px; 
+                    text-align: left; 
+                }
+                th { 
+                    background-color: #f2f2f2; 
+                    font-weight: bold; 
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <img src="${baguioLogo}" alt="Logo" style="width: 100px; height: auto; display: block; margin: 20px auto;">
+                <h1>Borrowers Management - Printed Report</h1>
+                <p>Printed on: ${new Date().toLocaleString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Borrower Name</th>
+                        <th>Contact Number</th>
+                        <th>Office</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${paginatedBorrowers.value.map(report => `
+                        <tr>
+                            <td>${report.id}</td>
+                            <td>${report.borrower_name}</td>
+                            <td>${report.contact_number}</td>
+                            <td>${report.office_name}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="print-footer">
+                <p>Total Borrowers: ${paginatedBorrowers.value.length}</p>
+            </div>
+        </body>
+    </html>
+`);
+
+printWindow.document.close();
+
+// Wait for the new window to finish rendering before printing
+await new Promise((resolve) => setTimeout(resolve, 500));
+
+printWindow.print();
+
+printWindow.onafterprint = () => {
+    printWindow.close();
+};
+};
 </script>
 
 <template>
@@ -242,6 +334,11 @@ const isLoading = computed(() => {
                 <ClAddPlus class="w-8 h-8" />
                 <p class="ml-1">Add Borrower</p>
             </button>
+            <button @click="handlePrint"
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <AnFilledPrinter class="w-8 h-8" />
+                    <p class="ml-1 text-sm">Print Borrowers</p>
+                </button>
         </div>
         <div class="rounded-lg min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">

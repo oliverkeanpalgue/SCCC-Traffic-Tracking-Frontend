@@ -117,6 +117,9 @@ const validateForm = () => {
     if (!borrowerContact.value) {
         errors.value.borrowerContact = ["Contact number is required"];
         hasErrors = true;
+    } else if (!/^(09|\+63)[0-9]{9}$/.test(borrowerContact.value)) {
+        errors.value.borrowerContact = ["Contact number must start with 09 or +63 followed by 9 digits"];
+        hasErrors = true;
     }
 
     if (!selectedOffice.value) {

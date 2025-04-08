@@ -3,12 +3,14 @@ import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch 
 import { useDatabaseStore } from '../../stores/databaseStore'
 import axiosClient from "../../axios";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
+import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 import { ChMenuMeatball } from "@kalimahapps/vue-icons";
 import AddCategoryModal from './Modals/AddCategoryModal.vue';
 import UpdateCategoryModal from './Modals/UpdateCategoryModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import Loading from '../../components/Loading.vue';
+import baguioLogo from '../../assets/baguio-logo.png';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -184,6 +186,93 @@ const isLoading = computed(() => {
         databaseStore.categoryList.length === 0
     );
 });
+
+// for printing reports
+const handlePrint = async () => {
+
+    
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+    // Wait for the image to load
+    await new Promise((resolve) => {
+        const img = new Image();
+        img.src = baguioLogo;
+        img.onload = resolve;
+        img.onerror = resolve; // Avoid hanging if image fails
+    });
+
+    // Wait for the reports data to be fully available
+    await new Promise((resolve) => {
+        setTimeout(resolve, 100); // Small delay to ensure data is processed
+    });
+
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Printed Categories Reports</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-bottom: 20px; 
+                    }
+                    th, td { 
+                        border: 1px solid #ddd; 
+                        padding: 8px; 
+                        text-align: left; 
+                    }
+                    th { 
+                        background-color: #f2f2f2; 
+                        font-weight: bold; 
+                    }
+                    .print-header {
+                        text-align: center;
+                        margin-bottom: 20px;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="print-header">
+                    <img src="${baguioLogo}" alt="Logo" style="width: 100px; height: auto; display: block; margin: 20px auto;">
+                    <h1>Categories Management - Printed Report</h1>
+                    <p>Printed on: ${new Date().toLocaleString()}</p>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Category Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${paginatedCategories.value.map(report => `
+                            <tr>
+                                <td>${report.id}</td>
+                                <td>${report.category_name}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                <div class="print-footer">
+                    <p>Total Categories: ${paginatedCategories.value.length}</p>
+                </div>
+            </body>
+        </html>
+    `);
+
+    printWindow.document.close();
+
+    // Wait for the new window to finish rendering before printing
+    await new Promise((resolve) => setTimeout(resolve, 500));
+
+    printWindow.print();
+
+    printWindow.onafterprint = () => {
+        printWindow.close();
+    };
+};
+
 </script>
 
 <template>
@@ -218,6 +307,11 @@ const isLoading = computed(() => {
                     class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <ClAddPlus class="w-8 h-8" />
                     <p class="ml-1">Add Category</p>
+                </button>
+                <button @click="handlePrint"
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <AnFilledPrinter class="w-8 h-8" />
+                    <p class="ml-1 text-sm">Print Categories</p>
                 </button>
             </div>
 

@@ -522,6 +522,7 @@ const errors = ref({
     remarksInput: [],
     selectedBorrowerId: [],
     borrowerOfficeInput: [],
+    borrowerContactInput: [],
 })
 
 const validateForm = () => {
@@ -533,6 +534,14 @@ const validateForm = () => {
 
     if (!borrowerInput.value) {
         errors.value.borrowerInput = ["Borrower is required"];
+        hasErrors = true;
+    }
+
+    if (!borrowerContactInput.value) {
+        errors.value.borrowerContactInput = ["Contact number is required"];
+        hasErrors = true;
+    } else if (!/^(09|\+63)[0-9]{9}$/.test(borrowerContact.value)) {
+        errors.value.borrowerContactInput = ["Contact number must start with 09 or +63 followed by 9 digits"];
         hasErrors = true;
     }
 
@@ -591,6 +600,16 @@ watch(() => selectedBorrowerId.value, (newValue) => {
         errors.value.selectedBorrowerId = ["Borrower is required"];
     } else {
         errors.value.selectedBorrowerId = [];
+    }
+});
+
+watch(() => borrowerContactInput.value, (newValue) => {
+    if (!newValue) {
+        errors.value.borrowerContactInput = ["Contact number is required"];
+    } else if (!/^(09|\+63)[0-9]{9}$/.test(newValue)) {
+        errors.value.borrowerContactInput = ["Contact number must start with 09 or +63 followed by 9 digits"];
+    } else {
+        errors.value.borrowerContactInput = [];
     }
 });
 
@@ -736,8 +755,8 @@ watch(() => borrowerOfficeInput.value, (newValue) => {
                     <div class="flex flex-row mt-2 mb-2">
                         <label class="block text font-medium text-gray-900 dark:text-gray-200">Type
                             Borrower Contact:</label>
-                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.remarksInput ?
-                            errors.remarksInput[0] :
+                        <p class="text-red-700 ml-2 font-semibold italic">{{ errors.borrowerContactInput ?
+                            errors.borrowerContactInput[0] :
                             '' }}</p>
                     </div>
 
@@ -745,7 +764,8 @@ watch(() => borrowerOfficeInput.value, (newValue) => {
                         <div class="absolute inset-y-0 start-0 flex items-center ps-3.5 pointer-events-none">
                             <AkTextAlignLeft />
                         </div>
-                        <input type="text" v-model="borrowerContactInput"
+                        <input type="tel" v-model="borrowerContactInput" pattern="(09|\+63)[0-9]{9}" maxlength="13"
+                        oninput="this.value = this.value.replace(/[^0-9+]/g, '')"
                             class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full ps-10 p-2.5 dark:focus:ring-blue-500 dark:focus:border-blue-500"
                             placeholder="Ex. Printer, Chair, Stairs" :disabled="!borrowerInfoAllowedInput"
                             :class="!borrowerInfoAllowedInput ? ' dark:bg-gray-900 dark:border-gray-700 dark:placeholder-gray-400 dark:text-gray-500' : ' dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white '">
