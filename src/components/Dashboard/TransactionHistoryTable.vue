@@ -9,6 +9,8 @@ import { BsCheck } from '@kalimahapps/vue-icons';
 import { BsX } from '@kalimahapps/vue-icons';
 import { AkPlus } from '@kalimahapps/vue-icons';
 import CreateTransactionModal from './Modal/CreateTransactionModal.vue';
+import baguioLogo from '../../assets/baguio-logo.png';
+import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -332,6 +334,121 @@ const sortByField = (field) => {
     sortDirection.value = "asc";
   }
 };
+
+// for printing reports
+const handlePrint = async () => {
+
+
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+  // Wait for the image to load
+  await new Promise((resolve) => {
+    const img = new Image();
+    img.src = baguioLogo;
+    img.onload = resolve;
+    img.onerror = resolve; // Avoid hanging if image fails
+  });
+
+  // Wait for the reports data to be fully available
+  await new Promise((resolve) => {
+    setTimeout(resolve, 100); // Small delay to ensure data is processed
+  });
+
+  printWindow.document.write(`
+    <html>
+        <head>
+            <title>Printed Categories Reports</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 20px; 
+                }
+                th, td { 
+                    border: 1px solid #ddd; 
+                    padding: 8px; 
+                    text-align: left; 
+                }
+                th { 
+                    background-color: #f2f2f2; 
+                    font-weight: bold; 
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <img src="${baguioLogo}" alt="Logo" style="width: 100px; height: auto; display: block; margin: 20px auto;">
+                <h1>Categories Management - Printed Report</h1>
+                <p>Printed on: ${new Date().toLocaleString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Borrower</th>
+                        <th>Office</th>
+                        <th>Lender</th>
+                        <th>ISC/AREE</th>
+                        <th>Item</th>
+                        <th>Return Date</th>
+                        <th>Borrow Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+    ${filteredTransactions.value.map(report => `
+        <tr>
+            <td>${report.id}</td>
+            <td>${props.borrowers.find(b => b.id === report.borrower_id)?.borrowers_name || 'Unknown'}</td>
+            <td>${props.officeList.find(o => o.id === props.borrowers.find(b => b.id === report.borrower_id)?.office_id)?.office_name || 'Unknown'}</td>
+            <td>${(props.users.find(u => u.id === report.lender_id)?.firstName || '') + ' ' + (props.users.find(u => u.id === report.lender_id)?.lastName || 'Unknown')}</td>
+            <td>${report.isc || 'No data found'}</td>
+            <td>${props.transactionItems
+      .filter(item => item.transaction_id === report.id)
+      .map(item => {
+        if (item.item_type === 'Office Supply') {
+          return props.officeSupplies.find(supply => supply.id === item.item_copy_id)?.supply_name || 'Unknown Supply';
+        } else if (item.item_type === 'Equipment Copy') {
+          const equipment = props.officeEquipments.find(eq =>
+            eq.id === props.equipmentCopies.find(ec =>
+              ec.id === item.item_copy_id
+            )?.item_id
+          );
+          const copyNum = props.equipmentCopies.find(ec =>
+            ec.id === item.item_copy_id
+          )?.copy_num;
+          return `${equipment?.equipment_name || 'Unknown Equipment'} #${copyNum || ''}`;
+        }
+        return '';
+      }).join(', ')}</td>
+            <td>${report.return_date ? new Date(report.return_date).toLocaleString() : 'Not yet returned'}</td>
+            <td>${new Date(report.borrow_date).toLocaleString()}</td>
+        </tr>
+    `).join('')}
+</tbody>
+            </table>
+            <div class="print-footer">
+                <p>Total Categories: ${filteredTransactions.value.length}</p>
+            </div>
+        </body>
+    </html>
+`);
+
+  printWindow.document.close();
+
+  // Wait for the new window to finish rendering before printing
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  printWindow.print();
+
+  printWindow.onafterprint = () => {
+    printWindow.close();
+  };
+};
 </script>
 
 <template>
@@ -378,16 +495,6 @@ const sortByField = (field) => {
                       all</a>
                   </div>
                 </div>
-
-                <button @click.stop="OpenCreateTransactionModal()"
-                  class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
-                  <AkPlus class="w-5 h-5 mr-1" />
-                  New Transaction
-                </button>
-
-                <!--CREATE TRANSACTION MODAL -->
-                <CreateTransactionModal v-if="isOpenCreateTransactionModal" v-model="isOpenCreateTransactionModal"
-                  @click.stop />
 
                 <!--OFFICE DROPDOWN -->
                 <section class="">
@@ -439,6 +546,24 @@ const sortByField = (field) => {
                     </div>
                   </div>
                 </section>
+
+                <button @click.stop="OpenCreateTransactionModal()"
+                  class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
+                  <AkPlus class="w-5 h-5 mr-1" />
+                  New Transaction
+                </button>
+
+                <button @click="handlePrint"
+                    class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
+                    <AnFilledPrinter class="w-5 h-5 mr-1" />
+                    <p class="ml-1">Print Transaction</p>
+                </button>
+
+                <!--CREATE TRANSACTION MODAL -->
+                <CreateTransactionModal v-if="isOpenCreateTransactionModal" v-model="isOpenCreateTransactionModal"
+                  @click.stop />
+
+                
               </div>
             </div>
           </div>
@@ -584,9 +709,7 @@ const sortByField = (field) => {
                             </button>
                             <DeleteModal v-if="isDeleteModalOpen" v-model="isDeleteModalOpen"
                               :transaction="selectedTransaction" :officeSupplies="props.officeSupplies"
-                              :transactionItems="props.transactionItems"
-                              :borrowers="props.borrowers"
-                               @click.stop />
+                              :transactionItems="props.transactionItems" :borrowers="props.borrowers" @click.stop />
                           </li>
                         </ul>
                       </div>

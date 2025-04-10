@@ -271,10 +271,10 @@ printWindow.document.write(`
                     </tr>
                 </thead>
                 <tbody>
-                    ${paginatedBorrowers.value.map(report => `
+                    ${filteredBorrowers.value.map(report => `
                         <tr>
                             <td>${report.id}</td>
-                            <td>${report.borrower_name}</td>
+                            <td>${report.borrowers_name}</td>
                             <td>${report.contact_number}</td>
                             <td>${report.office_name}</td>
                         </tr>
@@ -282,7 +282,7 @@ printWindow.document.write(`
                 </tbody>
             </table>
             <div class="print-footer">
-                <p>Total Borrowers: ${paginatedBorrowers.value.length}</p>
+                <p>Total Borrowers: ${filteredBorrowers.value.length}</p>
             </div>
         </body>
     </html>

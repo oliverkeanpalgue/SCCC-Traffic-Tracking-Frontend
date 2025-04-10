@@ -17,6 +17,8 @@ import IncreaseSupplyQty from "../components/Inventory/Modals/IncreaseSupplyQty.
 import { FlFilledGrid } from '@kalimahapps/vue-icons';
 import { BxTable } from '@kalimahapps/vue-icons';
 import FullInventoryTable from "../components/Inventory/Tables/FullInventoryTable.vue";
+import baguioLogo from '../assets/baguio-logo.png'
+import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 
 const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -218,6 +220,99 @@ const isLoading = computed(() => {
   );
 });
 
+// for printing reports
+const handlePrint = async () => {
+
+
+  const printWindow = window.open('', '_blank', 'width=800,height=600');
+
+  // Wait for the image to load
+  await new Promise((resolve) => {
+    const img = new Image();
+    img.src = baguioLogo;
+    img.onload = resolve;
+    img.onerror = resolve; // Avoid hanging if image fails
+  });
+
+  // Wait for the reports data to be fully available
+  await new Promise((resolve) => {
+    setTimeout(resolve, 100); // Small delay to ensure data is processed
+  });
+
+  printWindow.document.write(`
+    <html>
+        <head>
+            <title>Printed Categories Reports</title>
+            <style>
+                body { font-family: Arial, sans-serif; }
+                table { 
+                    width: 100%; 
+                    border-collapse: collapse; 
+                    margin-bottom: 20px; 
+                }
+                th, td { 
+                    border: 1px solid #ddd; 
+                    padding: 8px; 
+                    text-align: left; 
+                }
+                th { 
+                    background-color: #f2f2f2; 
+                    font-weight: bold; 
+                }
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-header">
+                <img src="${baguioLogo}" alt="Logo" style="width: 100px; height: auto; display: block; margin: 20px auto;">
+                <h1>Categories Management - Printed Report</h1>
+                <p>Printed on: ${new Date().toLocaleString()}</p>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Item Name</th>
+                        <th>Description</th>
+                        <th>Category</th>
+                        <th>Quantity Copy</th>
+                    </tr>
+                </thead>
+                <tbody>
+    ${filteredInventory.value.map(report => `
+    <tr>
+        <td>${report.id}</td>
+        <td>${report.equipment_name || report.supply_name}</td>
+        <td>${report.equipment_description || report.supply_description}</td>
+        <td>${categoryList.value.find(category => category.id === report.category_id)?.category_name || 'Unknown Category'}</td>
+        <td>${report.type === 'Office Equipment'
+      ? equipmentCopies.value.filter(ec => ec.item_id === report.id).length
+      : report.supply_quantity || 0}</td>
+    </tr>
+`).join('')}
+</tbody>
+            </table>
+            <div class="print-footer">
+                <p>Total Categories: ${filteredInventory.value.length}</p>
+            </div>
+        </body>
+    </html>
+`);
+
+  printWindow.document.close();
+
+  // Wait for the new window to finish rendering before printing
+  await new Promise((resolve) => setTimeout(resolve, 500));
+
+  printWindow.print();
+
+  printWindow.onafterprint = () => {
+    printWindow.close();
+  };
+};
 </script>
 
 <template>
@@ -256,9 +351,9 @@ const isLoading = computed(() => {
         </label>
       </div>
     </header>
-    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2">
+    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2 ">
       <!-- SEARCH BAR -->
-      <div class="col-span-2 mb-2 md:mb-0 md:col-span-4 xl:col-span-6 pr-2 md:pr-3">
+      <div class="col-span-1 mb-2 md:mb-0 md:col-span-3 xl:col-span-5 pr-2 md:pr-3">
         <form class="flex items-center" @submit.prevent>
           <label for="simple-search" class="sr-only">Search</label>
           <div class="relative w-full">
@@ -266,7 +361,7 @@ const isLoading = computed(() => {
               <FlSearch class="w-5 h-5 text-gray-300" />
             </div>
             <input v-model="searchQuery" type="text" id="simple-search"
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 "
               placeholder="Search inventory..." />
           </div>
         </form>
@@ -308,6 +403,7 @@ const isLoading = computed(() => {
             {{ item.type }}
           </label>
         </div>
+
       </div>
 
       <!-- ADD ITEM BUTTON -->
@@ -316,6 +412,14 @@ const isLoading = computed(() => {
           class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
           <ClAddPlus class="w-8 h-8" />
           <p class="ml-1">Add Item</p>
+        </button>
+      </div>
+
+      <div class="mr-2">
+        <button @click="handlePrint"
+          class="flex items-center justify-center border w-full px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+          <AnFilledPrinter class="w-8 h-8" />
+          <p class="ml-1 text-sm">Print Items</p>
         </button>
       </div>
     </div>
