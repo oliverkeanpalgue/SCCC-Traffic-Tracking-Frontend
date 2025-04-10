@@ -239,7 +239,7 @@ const openDropdownId = ref(null);
 
 const dropdownRefs = ref([]);
 
-watch(() => props.officeList, () => {
+onMounted(() => props.officeList, () => {
   officeDropDownItems.value = props.officeList.map((office) => ({
     id: office.id,
     type: office.office_name,
