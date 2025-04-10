@@ -37,10 +37,11 @@ const dailyStats = computed(() => {
 
     const transactions = props.transactionHistory.filter(transaction => {
         const borrowDate = new Date(transaction.borrow_date);
+        const returnDate = new Date(transaction.return_date);
         const hasMatchingItem = databaseStore.transactionItems.some(
             item => item.transaction_id === transaction.id
         );
-        return borrowDate >= startDate && borrowDate <= endDate && hasMatchingItem;
+        return (borrowDate >= startDate && borrowDate <= endDate && hasMatchingItem) || (returnDate >= startDate && returnDate <= endDate && hasMatchingItem);
     });
 
     const formatDateGMT8 = (dateStr) => {

@@ -255,7 +255,7 @@ const isClickedShowConfirmationModal = () => {
             <!-- Confirmation Modal -->
             <ConfirmationModal v-model="showConfirmationModal" title="Confirm Addition"
                 :message="`You are about to add this borrower.`"
-                :messageData="`\nBorrower Name: ${borrowerName}\nBorrower Contact: ${borrowerContact}\nBorrower Office: ${officeList.find(office => office.id === selectedOffice)?.office_name || 'Unknown Office'}`"
+                :messageData="`\nBorrower Name: ${borrowerName}\nBorrower Contact: ${borrowerContact}\nBorrower Office: ${props.officeList.find(office => office.id === selectedOffice)?.office_name || 'Unknown Office'}`"
                 cancelText="Cancel" confirmText="Confirm Adding" @confirm="confirmAction" />
         </div>
     </div>

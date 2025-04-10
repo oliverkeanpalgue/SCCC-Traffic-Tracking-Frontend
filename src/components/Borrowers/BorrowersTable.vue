@@ -400,7 +400,7 @@ printWindow.onafterprint = () => {
 
                                             <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
                                                 v-model="isOpenUpdateBorrowerModal" :borrower="borrower"
-                                                :officeList="officeList" @click.stop />
+                                                :officeList="databaseStore.officeList" @click.stop />
                                         </li>
                                         <li
                                             class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
@@ -478,7 +478,7 @@ printWindow.onafterprint = () => {
                 </ul>
             </nav>
 
-            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="officeList"
+            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="databaseStore.officeList"
                 @click.stop />
         </div>
     </div>

@@ -39,6 +39,8 @@ const data = ref({
   password: '',
   password_confirmation: '',
   for_911: false,
+  for_inventory: true,
+  role: false,
 })
 
 const errors = ref({
