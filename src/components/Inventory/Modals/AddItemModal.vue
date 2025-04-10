@@ -333,7 +333,8 @@ const confirmAddItem = async () => {
             copyNumber: index + 1,
             name: equipmentName.value,
             description: equipmentDescription.value,
-            categoryId: selectedCategory.value
+            categoryId: selectedCategory.value,
+            type: 'equipment'
           }));
 
           showQRCodes.value = true;

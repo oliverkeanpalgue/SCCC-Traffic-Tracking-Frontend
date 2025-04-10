@@ -246,7 +246,7 @@ const handlePrint = async () => {
                         </tr>
                     </thead>
                     <tbody>
-                        ${paginatedCategories.value.map(report => `
+                        ${filteredCategories.value.map(report => `
                             <tr>
                                 <td>${report.id}</td>
                                 <td>${report.category_name}</td>
@@ -255,7 +255,7 @@ const handlePrint = async () => {
                     </tbody>
                 </table>
                 <div class="print-footer">
-                    <p>Total Categories: ${paginatedCategories.value.length}</p>
+                    <p>Total Categories: ${filteredCategories.value.length}</p>
                 </div>
             </body>
         </html>

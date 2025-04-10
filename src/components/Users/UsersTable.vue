@@ -254,12 +254,11 @@ const handlePrint = async () => {
                     <tr>
                         <th>ID</th>
                         <th>Borrower Name</th>
-                        <th>Contact Number</th>
-                        <th>Office</th>
+                        <th>Email</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${paginatedUsers.value.map(report => `
+                    ${filteredUsers.value.map(report => `
                         <tr>
                             <td>${report.id}</td>
                             <td>${report.firstName} ${report.middleName} ${report.lastName}</td>
@@ -269,7 +268,7 @@ const handlePrint = async () => {
                 </tbody>
             </table>
             <div class="print-footer">
-                <p>Total Users: ${paginatedUsers.value.length}</p>
+                <p>Total Users: ${filteredUsers.value.length}</p>
             </div>
         </body>
     </html>
