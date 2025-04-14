@@ -11,6 +11,7 @@ import { useDatabaseStore } from '../../stores/databaseStore'
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
+import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -50,7 +51,7 @@ watch(searchQuery, () => {
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(10);
+const itemsPerPage = ref(7);
 
 const totalPages = computed(() => {
     return Math.ceil(filteredUsers.value.length / itemsPerPage.value);
@@ -285,6 +286,20 @@ const handlePrint = async () => {
         printWindow.close();
     };
 };
+
+const unreturnedCount = (userId) =>
+    databaseStore.transactionHistory.filter(t =>
+        t.lender_id === userId && t.return_date === null
+    ).length;
+
+const isOpenViewTransactionHistoryModal = ref(false);
+const selectedUser = ref(null);
+
+const OpenViewTransactionHistoryModal = (user) => {
+    selectedUser.value = user;
+    isOpenViewTransactionHistoryModal.value = true;
+}
+
 </script>
 
 <template>
@@ -312,13 +327,13 @@ const handlePrint = async () => {
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
                                 placeholder="Search equipment copies..." />
                         </div>
-                    </form>   
+                    </form>
                 </div>
                 <button @click="handlePrint"
-                        class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                        <AnFilledPrinter class="w-8 h-8" />
-                        <p class="ml-1">Print Users</p>
-                    </button>
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <AnFilledPrinter class="w-8 h-8" />
+                    <p class="ml-1">Print Users</p>
+                </button>
             </div>
             <div class="rounded-lg  min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
                 <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
@@ -364,8 +379,28 @@ const handlePrint = async () => {
                             <td class="px-4 py-3 ">
                                 {{ user.email }}
                             </td>
-                            <td class="px-4 py-3 ">
-                                Napipindot na button
+
+                            <td class="px-4 py-3">
+                                <button @click.stop="OpenViewTransactionHistoryModal(user)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+               border border-gray-300 hover:border-gray-400 
+               dark:border-gray-600 dark:hover:border-gray-400 
+               text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
+                                    <div class="flex items-center gap-2">
+                                        <span>
+                                            {{(databaseStore.transactionHistory.filter(transaction =>
+                                                transaction.lender_id === user.id)?.length || 0)}}
+                                        </span>
+                                        <span class="text-gray-400">transactions</span>
+                                    </div>
+                                    <div class="flex justify-center items-center gap-2"
+                                        :class="(databaseStore.transactionHistory.filter(transaction =>
+                                            transaction.lender_id === user.id)?.length || 0) > 0 ? 'text-gray-400' : 'text-gray-700'">
+                                        <span
+                                            :class="{ 'text-red-500': unreturnedCount(user.id) > 0, 'text-green-500': unreturnedCount(user.id) === 0 }">
+                                            ( {{ unreturnedCount(user.id) }} Unreturned )
+                                        </span>
+                                    </div>
+                                </button>
                             </td>
                             <td class="px-4 py-3 flex items-center justify-center relative">
                                 <button @click.stop="toggleDropdown(user.id)"
@@ -428,7 +463,7 @@ const handlePrint = async () => {
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
-                    }}</span>
+                        }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
@@ -472,5 +507,7 @@ const handlePrint = async () => {
                 </ul>
             </nav>
         </div>
+        
+        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryModal" v-model="isOpenViewTransactionHistoryModal" :selectedUser="selectedUser" @click.stop />
     </div>
 </template>

@@ -362,6 +362,7 @@ const OpenViewItemsModal = (category) => {
                                                 || 0)
                                         }}
                                     </span>
+                                    <span class="text-gray-400">items</span>
                                 </button>
                             </td>
                             <td class="px-4 py-3 flex items-center justify-center relative">
