@@ -11,6 +11,8 @@ import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
+import ViewItemsModal from './Modals/ViewItemsModal.vue';
+import { AkEyeOpen } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -190,7 +192,7 @@ const isLoading = computed(() => {
 // for printing reports
 const handlePrint = async () => {
 
-    
+
     const printWindow = window.open('', '_blank', 'width=800,height=600');
 
     // Wait for the image to load
@@ -273,6 +275,14 @@ const handlePrint = async () => {
     };
 };
 
+const isOpenViewItemsModal = ref(false);
+const selectedCategory = ref(null);
+
+const OpenViewItemsModal = (category) => {
+    selectedCategory.value = category;
+    isOpenViewItemsModal.value = true;
+}
+
 </script>
 
 <template>
@@ -338,8 +348,21 @@ const handlePrint = async () => {
                             <td class="px-4 py-3">
                                 {{ category.category_name }}
                             </td>
-                            <td class="px-4 py-3 ">
-                                Napipindot na button
+                            <td class="px-4 py-3">
+                                <button @click.stop="OpenViewItemsModal(category)" class="flex items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+               border border-gray-300 hover:border-gray-400 
+               dark:border-gray-600 dark:hover:border-gray-400 
+               text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
+                                    <AkEyeOpen class="w-4 h-4" />
+                                    <span>
+                                        {{
+                                            (databaseStore.officeEquipments.filter(e => e.category_id ===
+                                                category.id)?.length || 0) +
+                                            (databaseStore.officeSupplies.filter(s => s.category_id === category.id)?.length
+                                                || 0)
+                                        }}
+                                    </span>
+                                </button>
                             </td>
                             <td class="px-4 py-3 flex items-center justify-center relative">
                                 <button @click.stop="toggleDropdown(category.id)"
@@ -393,7 +416,7 @@ const handlePrint = async () => {
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredCategories.length
-                        }}</span>
+                    }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
@@ -438,6 +461,8 @@ const handlePrint = async () => {
             </nav>
 
             <AddCategoryModal v-if="isOpenAddCategoryModal" v-model="isOpenAddCategoryModal" @click. stop />
+
+            <ViewItemsModal v-if="isOpenViewItemsModal" v-model="isOpenViewItemsModal" :selectedCategory="selectedCategory" :officeEquipments="databaseStore.officeEquipments" :officeSupplies="databaseStore.officeSupplies" :equipmentCopies="databaseStore.equipmentCopies" @click.stop />
         </div>
     </div>
 </template>
