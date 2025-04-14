@@ -53,7 +53,7 @@ const errors = ref({
 })
 
 // REGEX s
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/;
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const validateForm = () => {
@@ -76,7 +76,7 @@ const validateForm = () => {
     hasErrors = true;
   } else {
     if (!passwordRegex.test(data.value.password)) {
-      errors.value.password = ["Password must contain both letters and numbers"];
+      errors.value.password = ["Password must contain special characters, letters and numbers"];
       hasErrors = true;
     }
     if (data.value.password.length < 8) {
@@ -115,7 +115,7 @@ watch(() => data.value.password, (newValue) => {
     errors.value.password = ["Password is required"];
   } else {
     if (!passwordRegex.test(newValue)) {
-      errors.value.password = ["Password must contain both letters and numbers"];
+      errors.value.password = ["Password must contain special characters, letters and numbers"];
     }
     if (newValue.length < 8) {
       errors.value.password = ["Password must be at least 8 characters long"];
