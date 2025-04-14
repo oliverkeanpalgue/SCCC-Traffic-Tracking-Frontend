@@ -64,6 +64,8 @@ const selectedOffice = ref(null)
 const selectedCategory = ref(null)
 const equipmentName = ref('')
 const equipmentDescription = ref('')
+const equipmentIcs = ref('')
+const supplyIcs = ref('')
 const supplyName = ref('')
 const supplyDescription = ref('')
 const serialNumber = ref('')
@@ -86,6 +88,8 @@ const errors = ref({
   serialNumber: [],
   supplyQuantity: [],
   equipmentQuantity: [],
+  equipmentIcs: [],
+  supplyIcs: []
 })
 
 // watch effect for validation
@@ -169,6 +173,22 @@ watch(() => equipmentQuantity.value, (newValue) => {
   }
 });
 
+watch(() => equipmentIcs.value, (newValue) => {
+  if (!newValue) {
+    errors.value.equipmentIcs = ["Equipment ICS/ARE is required"];
+  } else {
+    errors.value.equipmentIcs = [];
+  }
+});
+
+watch(() => supplyIcs.value, (newValue) => {
+  if (!newValue) {
+    errors.value.supplyIcs = ["Supply ICS/ARE is required"];
+  } else {
+    errors.value.supplyIcs = [];
+  }
+});
+
 const validateEquipmentForm = () => {
   Object.keys(errors.value).forEach(key => {
     errors.value[key] = [];
@@ -203,6 +223,11 @@ const validateEquipmentForm = () => {
 
   if (!equipmentQuantity.value) {
     errors.value.equipmentQuantity = ["Equipment quantity is required"];
+    hasErrors = true;
+  }
+
+  if (!equipmentIcs.value) {
+    errors.value.equipmentIcs = ["Equipment ICS/ARE is required"];
     hasErrors = true;
   }
 
@@ -248,6 +273,11 @@ const validateSupplyForm = () => {
 
   if (!supplyQuantity.value) {
     errors.value.supplyQuantity = ["Supply quantity is required"];
+    hasErrors = true;
+  }
+
+  if (!supplyIcs.value) {
+    errors.value.supplyIcs = ["Supply ICS/ARE is required"];
     hasErrors = true;
   }
 
@@ -305,6 +335,7 @@ const confirmAddItem = async () => {
         formData.append('equipment_name', equipmentName.value);
         formData.append('equipment_description', equipmentDescription.value);
         formData.append('category_id', selectedCategory.value);
+        formData.append('isc', equipmentIcs.value)
 
         if (selectedImage.value) {
           formData.append('image', selectedImage.value);
@@ -364,6 +395,7 @@ const confirmAddItem = async () => {
         formData.append('serial_number', serialNumber.value);
         formData.append('category_id', selectedCategory.value);
         formData.append('supply_quantity', supplyQuantity.value);
+        formData.append('isc', supplyIcs.value);
 
         if (selectedImage.value) {
           formData.append('image', selectedImage.value);
