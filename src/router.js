@@ -31,6 +31,15 @@ const routes = [
       {path: '/categories', name: 'Categories', component: Categories},
       {path: '/borrowers', name: 'Borrowers', component: Borrowers},
       {path: '/users', name: 'Users', component: Users},
+      {
+        path: '/forgotpassword',
+        name: 'ForgotPassword',
+        component: ForgotPassword,
+        props: route => ({
+            token: route.query.token,
+            email: route.query.email
+        })
+    },
     ],
     beforeEnter: async (to, from, next) => {
       try {

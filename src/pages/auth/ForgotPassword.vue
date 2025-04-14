@@ -9,6 +9,12 @@ import emitter from "../../eventBus.js";
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
+const props = defineProps({
+  token: String,
+  email: String,
+  reset: Boolean
+});
+
 const isLoading = ref(false);
 
 // fetching data
@@ -37,6 +43,7 @@ const data = ref({
   email: '',
   password: '',
   password_confirmation: '',
+  token: '',
 })
 
 const errors = ref({
@@ -87,9 +94,7 @@ const validateForm = () => {
     hasErrors = true;
   }
 
-  if (hasErrors) {
-    return;
-  }
+  return !hasErrors;
 }
 
 // watch effect for validation
@@ -128,66 +133,103 @@ watch(() => data.value.password_confirmation, (newValue) => {
   }
 });
 
-// fetching user data if there is a email in the users database and getting it's data
-const foundUser = ref(null)
-
-const checkEmailExists = () => {
-  const userMatch = users.value.find(user => user.email === data.value.email);
-  if (userMatch) {
-    foundUser.value = userMatch;
-    console.log("Found user:", foundUser.value);
-    return true;
-  } else {
-    errors.value.email = ['Email not found in our records'];
-    return false;
-  }
-}
-
-const forgotPassword = async () => {
+const sendResetLink = async () => {
   try {
-
-    if (!validateForm()) {
+    isLoading.value = true;
+    
+    // Check if email exists first
+    const userMatch = users.value.find(user => user.email === data.value.email);
+    if (!userMatch) {
+      errors.value.email = ['Email not found in our records'];
       return;
     }
 
-    isLoading.value = true
+    // Send reset link email
+    const response = await axiosClient.post('/forgot-password', {
+      email: data.value.email
+    });
 
-    if (data.value.password !== data.value.password_confirmation) {
-      errors.value.password_confirmation = ['Passwords do not match'];
-      return;
-    }
-
-    const updatePassword = {
-      firstName: foundUser.value.firstName,
-      middleName: foundUser.value.middleName,
-      lastName: foundUser.value.lastName,
-      email: foundUser.value.email,
-      is_deleted: foundUser.value.is_deleted,
-      password: data.value.password
-    }
-
-    console.log("Forgot password data sent: ", updatePassword)
-
-    const response = await axiosClient.put(
-      `/api/users/${foundUser.value.id}`,
-      updatePassword,
-      {
-        headers: {
-          "x-api-key": API_KEY,
-        },
-      }
-    );
-    console.log('Forgot Password API response:', response);
-    emitter.emit("show-toast", { message: "Password updated successfully!", type: "success" });
-    router.push('/login')
+    emitter.emit("show-toast", { 
+      message: "Password reset link has been sent to your email!", 
+      type: "success" 
+    });
+    
+    // Clear the form after successful send
+    data.value.email = '';
   } catch (error) {
-    console.error('Error updating password:', error);
-    console.error('Error details:', error.response?.data);
-    emitter.emit("show-toast", { message: "Error updating password. Please try again.", type: "error" });
+    console.error('Error sending reset link:', error);
+    emitter.emit("show-toast", { 
+      message: error.response?.data?.message || "Error sending reset link", 
+      type: "error" 
+    });
   } finally {
     isLoading.value = false;
   }
-}
+};
+
+const resetPassword = async () => {
+  try {
+    if (!validateForm()) {
+      return;
+    }
+    
+    isLoading.value = true;
+    const response = await axiosClient.post('/reset-password', {
+      email: data.value.email,
+      password: data.value.password,
+      password_confirmation: data.value.password_confirmation,
+      token: data.value.token
+    });
+
+    emitter.emit("show-toast", { 
+      message: "Password reset successfully!", 
+      type: "success" 
+    });
+    
+    // Clear sensitive data
+    data.value = {
+      email: '',
+      password: '',
+      password_confirmation: '',
+      token: ''
+    };
+    
+    // Redirect to login
+    router.push('/login');
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    emitter.emit("show-toast", { 
+      message: error.response?.data?.message || "Error resetting password", 
+      type: "error" 
+    });
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Add this in the setup section:
+onMounted(() => {
+  // Check URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const email = urlParams.get('email');
+  
+  // If we have token and email from URL, go to phase 2
+  if (token && email) {
+    data.value = {
+      ...data.value,
+      token: token,
+      email: email
+    };
+    phaseNum.value = 2; // Switch to password reset phase
+  }
+
+  // Initialize data fetching
+  databaseStore.fetchData();
+  refreshInterval = setInterval(() => {
+    databaseStore.fetchData();
+  }, 30000);
+});
 
 const breadcrumbItems = ref([
   { text: 'Input Email' },
@@ -200,11 +242,11 @@ const phaseOne = () => {
   phaseNum.value = 1
 }
 
-const phaseTwo = () => {
-  if (checkEmailExists()) {
-    phaseNum.value = 2;
-  }
-}
+// const phaseTwo = () => {
+//   if (checkEmailExists()) {
+//     phaseNum.value = 2;
+//   }
+// }
 </script>
 
 <template>
@@ -249,9 +291,13 @@ const phaseTwo = () => {
 
         </div>
         <div class="flex justify-center">
-          <button @click="phaseTwo"
-            class="w-full items-center bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Next</button>
-        </div>
+  <!-- Replace this existing button -->
+  <button @click="sendResetLink"
+    :disabled="isLoading"
+    class="w-full items-center bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+    {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
+  </button>
+</div>
       </div>
 
       <!-- FOR PHASE 2 -->
@@ -280,12 +326,15 @@ const phaseTwo = () => {
 
 
         <div class="flex gap-2">
-          <button @click="phaseOne"
-            class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Back</button>
-          <button @click="forgotPassword"
-            class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Change
-            Password</button>
-        </div>
+  <button @click="phaseOne"
+    class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Back</button>
+  <!-- Replace this existing button -->
+  <button @click="resetPassword"
+    :disabled="isLoading"
+    class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+    {{ isLoading ? 'Resetting...' : 'Reset Password' }}
+  </button>
+</div>
       </div>
     </div>
   </div>
