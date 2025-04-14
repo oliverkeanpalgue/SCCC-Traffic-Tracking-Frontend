@@ -3,6 +3,8 @@
 import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed } from 'vue'
 import Loading from '../components/Loading.vue';
 import { GlCloseXs } from '@kalimahapps/vue-icons';
+import { useDatabaseStore } from '../stores/databaseStore';
+import TransactionHistoryTable from './Dashboard/TransactionHistoryTable.vue';
 
 const isLoading = ref(false)
 
@@ -33,6 +35,72 @@ onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
 })
 
+const formatDate = (date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
+const selectedEndDate = ref(formatDate(new Date())); // Current day
+const selectedStartDate = ref(formatDate(new Date(new Date().setDate(new Date().getDate() - 6)))); // 6 days ago
+
+const selectedDateRange = ref({ start: selectedStartDate.value, end: selectedEndDate.value });
+
+
+// fetching data
+const databaseStore = useDatabaseStore()
+
+let refreshInterval = null;
+
+onMounted(() => {
+    databaseStore.fetchData()
+    // Optionally, set an interval to auto-refresh:
+    refreshInterval = setInterval(() => {
+        databaseStore.fetchData()
+    }, 30000)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
+})
+
+const computedProperties = {
+    transactionItems: "transactionItems",
+    transactionHistory: "transactionHistory",
+    officeEquipments: "officeEquipments",
+    officeSupplies: "officeSupplies",
+    officeList: "officeList",
+    users: "users",
+    borrowers: "borrowers",
+    equipmentCopies: "equipmentCopies",
+    categoryList: "categoryList",
+    transactionHistories: "transactionHistories",
+};
+
+const {
+    transactionItems,
+    transactionHistory,
+    officeEquipments,
+    officeSupplies,
+    officeList,
+    users,
+    borrowers,
+    equipmentCopies,
+    categoryList,
+    transactionHistories
+} = Object.fromEntries(
+    Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
+);
+
+const computedArrays = (source) => computed(() => Object.values(source.value));
+
+const transactionItemsArray = computedArrays(transactionItems);
+const transactionHistoryArray = computedArrays(transactionHistory);
+const officeEquipmentsArray = computedArrays(officeEquipments);
+const officeSuppliesArray = computedArrays(officeSupplies);
+const officeListArray = computedArrays(officeList);
+const usersArray = computedArrays(users);
+const borrowersArray = computedArrays(borrowers);
+const equipmentCopiesArray = computedArrays(equipmentCopies);
+const categoryListArray = computedArrays(categoryList);
+const transactionHistoriesArray = computedArrays(transactionHistories);
+
 </script>
 
 <template>
@@ -53,24 +121,13 @@ onUnmounted(() => {
                     <GlCloseXs class="w-8 h-8" />
                 </button>
             </div>
-            <div class="rounded-lg max-h-[70vh] overflow-y-auto dark:bg-gray-900 ">
-                <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-                    <thead class=" dark:bg-gray-600 dark:text-gray-300">
-                        <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
-                            <th class="py-3">Item Name</th>
-                            <th class="py-3">Item Type</th>
-                            <th class="py-3 w-100">Quantity/Copy</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr
-                            class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                            <td class="px-4 py-3 ">a</td>
-                            <td class="px-4 py-3 ">a</td>
-                            <td class="px-4 py-3 ">a</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div>
+                <TransactionHistoryTable :transactionItems="transactionItemsArray"
+                    :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
+                    :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
+                    :borrowers="borrowersArray" :equipmentCopies="equipmentCopiesArray"
+                    :categoryList="categoryListArray" :transactionHistories="transactionHistoriesArray"
+                    :selectedDateRange="selectedDateRange" />
             </div>
         </div>
     </div>

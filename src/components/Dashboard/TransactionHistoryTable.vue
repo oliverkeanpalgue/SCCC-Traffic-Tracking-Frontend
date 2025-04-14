@@ -453,7 +453,7 @@ const handlePrint = async () => {
 
 <template>
   <div class="w-full mt-3">
-    <section class="bg-gray-200 dark:bg-gray-900 w-full">
+    <section class="w-full">
       <div
         class="shadow-lg mx-4 px-3 py-2 border-2 rounded-lg bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
         <!-- Start coding here -->
