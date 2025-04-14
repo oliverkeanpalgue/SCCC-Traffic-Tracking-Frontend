@@ -24,7 +24,7 @@ const errors = ref({
 
 // REGEXE s
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/
+const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?])[A-Za-z\d!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]{8,}$/;
 
 function submit() {
   Object.keys(errors.value).forEach(key => {
@@ -46,7 +46,7 @@ function submit() {
     hasErrors = true;
   } else {
     if (!passwordRegex.test(data.value.password)) {
-      errors.value.password = ["Password must contain both letters and numbers"];
+      errors.value.password = ["Password must contain special characters, letters and numbers"];
       hasErrors = true;
     }
     if (data.value.password.length < 8) {
