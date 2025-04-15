@@ -139,7 +139,8 @@ const validateForm = () => {
         hasErrors = true;
     }
 
-    return !hasErrors
+    return !hasErrors;
+    
 }
 
 
