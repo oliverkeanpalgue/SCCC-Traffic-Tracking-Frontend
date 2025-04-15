@@ -101,7 +101,7 @@ watch(() => selectedImage.value, (newValue) => {
   }
 });
 
-watch(() => selectedOffice.vakye, (newValue) => {
+watch(() => selectedOffice.value, (newValue) => {
   if (!newValue) {
     errors.value.selectedOffice = ["Office is required"];
   } else {

@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard.vue";
 import Reports from "./pages/Reports.vue";
 import Inventory from "./pages/Inventory.vue";
 import Borrowed from "./pages/Borrowed.vue";
+import Offices from "./pages/Offices.vue";
 import MainLayout from "./components/MainLayout.vue";
 import Categories from "./pages/Categories.vue";
 import Borrowers from "./pages/Borrowers.vue";
@@ -30,6 +31,7 @@ const routes = [
       { path: '/borrowed', name: 'Borrowed', component: Borrowed },
       { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
       { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
+      { path: '/offices', name: 'Offices', component: Offices, meta: { permission: 'for_offices' }},
       { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
       {
         path: '/forgotpassword',
