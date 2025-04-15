@@ -65,39 +65,33 @@ const router = createRouter({
   routes
 })
 
-import {useDatabaseStore} from "./stores/databaseStore.js";
-
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
-  const databaseStore = useDatabaseStore();
 
-  // No access restriction on this route
+  // No special permission needed, allow
   if (!to.meta.permission) {
     return next();
   }
 
   try {
-    // Load user and inventory access if not yet loaded
-    if (!userStore.user) await userStore.fetchUser();
-    if (databaseStore.inventoryAccesses.length === 0) {
-      await databaseStore.fetchData();
+    // Make sure user and access info is loaded
+    if (!userStore.user || !userStore.inventoryAccess) {
+      await userStore.fetchUser();
     }
 
-    const userAccess = databaseStore.inventoryAccesses.find(
-      access => access.user_id === userStore.user.id
-    );
-
     const permissionKey = to.meta.permission;
+    const access = userStore.inventoryAccess;
 
-    if (userAccess && userAccess[permissionKey] === 1) {
+    if (access && access[permissionKey] === 1) {
       return next();
     } else {
-      return next({ name: 'NotFound' }); // or a 403 page
+      return next({ name: "NotFound" }); // or show 403
     }
   } catch (err) {
     console.error("Navigation guard error:", err);
-    return next('/login');
+    return next("/login");
   }
 });
+
 
 export default router

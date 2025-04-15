@@ -12,8 +12,6 @@ import { FlFilledPeopleSwap } from '@kalimahapps/vue-icons';
 import { FaUserGear } from '@kalimahapps/vue-icons';
 import { BxSolidBuildings } from '@kalimahapps/vue-icons';
 
-import { useDatabaseStore } from '../stores/databaseStore'
-
 const theme = ref(localStorage.getItem("theme") || "light");
 
 const signout_visible = ref(false);
@@ -47,26 +45,9 @@ onMounted(() => {
     }
 });
 
-// fetching data
-const databaseStore = useDatabaseStore()
-const selectedUserInventoryAccess = ref([])
-
-let refreshInterval = null;
-
-onMounted(async () => {
-    databaseStore.fetchData()    
-
-    selectedUserInventoryAccess.value = databaseStore.inventoryAccesses.find((access) => access.user_id === user.value.id)
-    console.log("🚀 ~ onMounted ~ selectedUserInventoryAccess.value:", selectedUserInventoryAccess.value)
-})
-
-onUnmounted(() => {
-    clearInterval(refreshInterval)
-})
-
-
 const userStore = useUserStore();
 const user = computed(() => userStore.user);
+const inventoryAccess = computed(() => userStore.inventoryAccess);
 
 function logout() {
     axiosClient.post('/logout').then(() => {
@@ -109,8 +90,8 @@ const closeSignOutModal = () => {
 </script>
 
 <template>
-    <div>
-        <nav class="fixed top-0 z-50 w-full bg-white border-b-2 border-gray-300 dark:bg-black dark:border-black">
+    <div class="bg-gradient-to-br from-blue-300 from-0% via-blue-200 via-12% to-white to-90% dark:from-blue-900 dark:from-0% dark:via-blue-950 dark:via-12% dark:to-black dark:to-80%">
+        <nav class="fixed top-0 z-50 w-full border-b-2 border-gray-300  dark:border-black">
             <div class="px-3 py-3 lg:px-5 lg:pl-3">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
@@ -155,10 +136,10 @@ const closeSignOutModal = () => {
                                     </button>
                                     <button @click="openSignOutModal()" data-modal-target="popup-modal"
                                         data-modal-toggle="popup-modal"
-                                        class="w-full flex flex-row text-start block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                                        class="w-full flex flex-row text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                                         type="button">
-                                        
-                                <FeLogOut class="w-5 h-5 mr-1"/>
+
+                                        <FeLogOut class="w-5 h-5 mr-1" />
                                         Sign out
                                     </button>
                                 </div>
@@ -170,17 +151,17 @@ const closeSignOutModal = () => {
         </nav>
 
         <aside id="logo-sidebar"
-            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform  bg-white border-r-2 border-gray-300 lg:translate-x-0 dark:bg-black dark:border-black"
+            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform border-r-2 border-gray-300 lg:translate-x-0 dark:border-white/10"
             :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
             <div class="h-full px-3 pb-4 overflow-y-auto">
                 <ul class="space-y-2 font-medium">
                     <li>
                         <RouterLink to="/"
                             :class="[$route.name === 'Dashboard' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_dashboard === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_dashboard === 1">
                             <span
                                 :class="[$route.name === 'Dashboard' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdDashboard/>
+                                <MdDashboard />
                             </span>
                             <span class="ms-3">Dashboard</span>
                         </RouterLink>
@@ -188,10 +169,10 @@ const closeSignOutModal = () => {
                     <li>
                         <RouterLink to="/inventory"
                             :class="[$route.name === 'Inventory' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_inventory === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1">
                             <span
                                 :class="[$route.name === 'Inventory' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdInventory2/>
+                                <MdInventory2 />
                             </span>
                             <span class="ms-3">Inventory</span>
                         </RouterLink>
@@ -199,10 +180,10 @@ const closeSignOutModal = () => {
                     <li>
                         <RouterLink to="/categories"
                             :class="[$route.name === 'Categories' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_categories === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1">
                             <span
                                 :class="[$route.name === 'Categories' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdRoundCategory/>
+                                <MdRoundCategory />
                             </span>
                             <span class="ms-3">Categories</span>
                         </RouterLink>
@@ -210,10 +191,10 @@ const closeSignOutModal = () => {
                     <li>
                         <RouterLink to="/borrowers"
                             :class="[$route.name === 'Borrowers' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_borrowers === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1">
                             <span
                                 :class="[$route.name === 'Borrowers' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <FlFilledPeopleSwap/>
+                                <FlFilledPeopleSwap />
                             </span>
                             <span class="ms-3">Borrowers</span>
                         </RouterLink>
@@ -221,10 +202,10 @@ const closeSignOutModal = () => {
                     <li>
                         <RouterLink to="/users"
                             :class="[$route.name === 'Users' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_users === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_users === 1">
                             <span
                                 :class="[$route.name === 'Users' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <FaUserGear/>
+                                <FaUserGear />
                             </span>
                             <span class="ms-3">Users</span>
                         </RouterLink>
@@ -232,10 +213,10 @@ const closeSignOutModal = () => {
                     <li>
                         <RouterLink to="/offices"
                             :class="[$route.name === 'Offices' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_offices === 1">
+                            @click="closeSidebar()" v-if="inventoryAccess.for_offices === 1">
                             <span
                                 :class="[$route.name === 'Offices' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <BxSolidBuildings/>
+                                <BxSolidBuildings />
                             </span>
                             <span class="ms-3">Offices</span>
                         </RouterLink>
@@ -245,14 +226,15 @@ const closeSignOutModal = () => {
         </aside>
 
 
-        <div class="min-h-screen max-h-full pt-16 p-4 lg:ml-64 bg-gray-200 dark:bg-gray-900 dark:text-gray-200">
+        <div class="min-h-screen max-h-full pt-16 p-4 lg:ml-64 dark:text-gray-200">
             <!-- MAIN CONTENT -->
             <router-view class="" />
 
             <!-- SIGN OUT modal -->
             <div v-show="signout_visible" class="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
                 <div class="relative p-4 w-full max-w-md">
-                    <div class="relative bg-white rounded-lg shadow-sm border-2 border-gray-700 dark:bg-gray-800 dark:border-gray-500">
+                    <div
+                        class="relative bg-white rounded-lg shadow-sm border-2 border-gray-700 dark:bg-gray-800 dark:border-gray-500">
                         <button type="button"
                             class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white"
                             @click="closeSignOutModal()">
@@ -260,9 +242,10 @@ const closeSignOutModal = () => {
                         </button>
                         <div class="p-4 md:p-5 text-center">
                             <div class="flex mb-5 w-full items-center justify-center ">
-                                <FeLogOut class="w-10 h-10 "/>
+                                <FeLogOut class="w-10 h-10 " />
                             </div>
-                            <h3 class="mb-6 text-lg font-normal text-gray-800 dark:text-gray-200">Are you sure you want to sign out?</h3>
+                            <h3 class="mb-6 text-lg font-normal text-gray-800 dark:text-gray-200">Are you sure you want
+                                to sign out?</h3>
                             <button @click="logout" type="button"
                                 class="text-white bg-red-700 hover:bg-red-500 focus:ring-4 focus:outline-none focus:ring-red-300 dark:focus:ring-red-800 font-medium rounded-lg text-sm inline-flex items-center px-5 py-2.5 text-center">
                                 Yes, Sign Out
