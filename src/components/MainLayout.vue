@@ -5,6 +5,14 @@ import useUserStore from "../stores/user.js";
 import axiosClient from "../axios.js";
 import { FeLogOut } from '@kalimahapps/vue-icons';
 import { ClCloseMd } from '@kalimahapps/vue-icons';
+import { MdDashboard } from '@kalimahapps/vue-icons';
+import { MdInventory2 } from '@kalimahapps/vue-icons';
+import { MdRoundCategory } from '@kalimahapps/vue-icons';
+import { FlFilledPeopleSwap } from '@kalimahapps/vue-icons';
+import { FaUserGear } from '@kalimahapps/vue-icons';
+import { BxSolidBuildings } from '@kalimahapps/vue-icons';
+
+import { useDatabaseStore } from '../stores/databaseStore'
 
 const theme = ref(localStorage.getItem("theme") || "light");
 
@@ -39,20 +47,26 @@ onMounted(() => {
     }
 });
 
+// fetching data
+const databaseStore = useDatabaseStore()
+const selectedUserInventoryAccess = ref([])
+
+let refreshInterval = null;
+
+onMounted(async () => {
+    databaseStore.fetchData()    
+
+    selectedUserInventoryAccess.value = databaseStore.inventoryAccesses.find((access) => access.user_id === user.value.id)
+    console.log("🚀 ~ onMounted ~ selectedUserInventoryAccess.value:", selectedUserInventoryAccess.value)
+})
+
+onUnmounted(() => {
+    clearInterval(refreshInterval)
+})
+
+
 const userStore = useUserStore();
 const user = computed(() => userStore.user);
-
-const navigation = [
-    { name: 'Dashboard', to: { name: 'Dashboard' }, icon: 'dashboard' },
-    { name: 'Inventory', to: { name: 'Inventory' }, icon: 'inventory' },
-    { name: 'Categories', to: { name: 'Categories' }, icon: 'category' },
-    { name: 'Borrowers', to: { name: 'Borrowers' }, icon: 'transfer_within_a_station' },
-    { name: 'Users', to: { name: 'Users' }, icon: 'groups' },
-    { name: 'Reports', to: { name: 'Reports' }, icon: 'analytics' },
-    { name: 'Borrowed', to: { name: 'Borrowed' }, icon: 'transfer_within_a_station' },
-    { name: 'Upload', to: { name: 'Upload' }, icon: 'upload' },
-    { name: 'My Images', to: { name: 'MyImages' }, icon: 'photo_library' },
-]
 
 function logout() {
     axiosClient.post('/logout').then(() => {
@@ -161,14 +175,69 @@ const closeSignOutModal = () => {
             <div class="h-full px-3 pb-4 overflow-y-auto">
                 <ul class="space-y-2 font-medium">
                     <li>
-                        <RouterLink v-for='item in navigation' :to="item.to" :key="item.name"
-                            :class="[$route.name === item.to.name ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()">
+                        <RouterLink to="/"
+                            :class="[$route.name === 'Dashboard' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_dashboard === 1">
                             <span
-                                :class="[$route.name === item.to.name ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                {{ item.icon }}
+                                :class="[$route.name === 'Dashboard' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <MdDashboard/>
                             </span>
-                            <span class="ms-3">{{ item.name }}</span>
+                            <span class="ms-3">Dashboard</span>
+                        </RouterLink>
+                    </li>
+                    <li>
+                        <RouterLink to="/inventory"
+                            :class="[$route.name === 'Inventory' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_inventory === 1">
+                            <span
+                                :class="[$route.name === 'Inventory' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <MdInventory2/>
+                            </span>
+                            <span class="ms-3">Inventory</span>
+                        </RouterLink>
+                    </li>
+                    <li>
+                        <RouterLink to="/categories"
+                            :class="[$route.name === 'Categories' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_categories === 1">
+                            <span
+                                :class="[$route.name === 'Categories' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <MdRoundCategory/>
+                            </span>
+                            <span class="ms-3">Categories</span>
+                        </RouterLink>
+                    </li>
+                    <li>
+                        <RouterLink to="/borrowers"
+                            :class="[$route.name === 'Borrowers' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_borrowers === 1">
+                            <span
+                                :class="[$route.name === 'Borrowers' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <FlFilledPeopleSwap/>
+                            </span>
+                            <span class="ms-3">Borrowers</span>
+                        </RouterLink>
+                    </li>
+                    <li>
+                        <RouterLink to="/users"
+                            :class="[$route.name === 'Users' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_users === 1">
+                            <span
+                                :class="[$route.name === 'Users' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <FaUserGear/>
+                            </span>
+                            <span class="ms-3">Users</span>
+                        </RouterLink>
+                    </li>
+                    <li>
+                        <RouterLink to="/offices"
+                            :class="[$route.name === 'Offices' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
+                            @click="closeSidebar()" v-if="selectedUserInventoryAccess.for_offices === 1">
+                            <span
+                                :class="[$route.name === 'Offices' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
+                                <BxSolidBuildings/>
+                            </span>
+                            <span class="ms-3">Offices</span>
                         </RouterLink>
                     </li>
                 </ul>
