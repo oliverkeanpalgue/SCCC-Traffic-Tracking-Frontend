@@ -334,7 +334,7 @@ const toggleCheckbox = (user, accessId, type) => {
         }
     )
     .then(() => {
-        emitter.emit("show-toast", { message: "Access updated successfully!", type: "success" });
+        
     })
     .catch((error) => {
         console.error('Error updating inventory access:', error);

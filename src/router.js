@@ -22,24 +22,24 @@ const routes = [
     path: "/",
     component: MainLayout,
     children: [
-      {path: '/', name: 'Dashboard', component: Dashboard},
-      {path: '/upload', name: 'Upload', component: Upload},
-      {path: '/images', name: 'MyImages', component: MyImages},
-      {path: '/reports', name: 'Reports', component: Reports},
-      {path: '/inventory', name: 'Inventory', component: Inventory},
-      {path: '/borrowed', name: 'Borrowed', component: Borrowed},
-      {path: '/categories', name: 'Categories', component: Categories},
-      {path: '/borrowers', name: 'Borrowers', component: Borrowers},
-      {path: '/users', name: 'Users', component: Users},
+      { path: '/', name: 'Dashboard', component: Dashboard, meta: { permission: 'for_dashboard' }},
+      { path: '/upload', name: 'Upload', component: Upload },
+      { path: '/images', name: 'MyImages', component: MyImages },
+      { path: '/reports', name: 'Reports', component: Reports },
+      { path: '/inventory', name: 'Inventory', component: Inventory, meta: { permission: 'for_inventory' }},
+      { path: '/borrowed', name: 'Borrowed', component: Borrowed },
+      { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
+      { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
+      { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
       {
         path: '/forgotpassword',
         name: 'ForgotPassword',
         component: ForgotPassword,
         props: route => ({
-            token: route.query.token,
-            email: route.query.email
+          token: route.query.token,
+          email: route.query.email
         })
-    },
+      },
     ],
     beforeEnter: async (to, from, next) => {
       try {
@@ -47,36 +47,55 @@ const routes = [
         await userStore.fetchUser();
         next();
       } catch (error) {
-        next(false);
+        next('/login');
       }
     },
   },
-  {
-    path: '/login',
-    name: 'Login',
-    component: Login,
-  },
-  {
-    path: '/signup',
-    name: 'Signup',
-    component: Signup,
-  },
-  {
-    path: '/forgotpassword',
-    name: 'ForgotPassword',
-    component: ForgotPassword,
-  },
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: NotFoundPage
-  },
-  {path: '/main', name: 'Main', component: MainLayout},
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/signup', name: 'Signup', component: Signup },
+  { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage },
 ];
+
 
 const router = createRouter({
   history: createWebHistory(),
   routes
 })
+
+import {useDatabaseStore} from "./stores/databaseStore.js";
+
+router.beforeEach(async (to, from, next) => {
+  const userStore = useUserStore();
+  const databaseStore = useDatabaseStore();
+
+  // No access restriction on this route
+  if (!to.meta.permission) {
+    return next();
+  }
+
+  try {
+    // Load user and inventory access if not yet loaded
+    if (!userStore.user) await userStore.fetchUser();
+    if (databaseStore.inventoryAccesses.length === 0) {
+      await databaseStore.fetchData();
+    }
+
+    const userAccess = databaseStore.inventoryAccesses.find(
+      access => access.user_id === userStore.user.id
+    );
+
+    const permissionKey = to.meta.permission;
+
+    if (userAccess && userAccess[permissionKey] === 1) {
+      return next();
+    } else {
+      return next({ name: 'NotFound' }); // or a 403 page
+    }
+  } catch (err) {
+    console.error("Navigation guard error:", err);
+    return next('/login');
+  }
+});
 
 export default router
