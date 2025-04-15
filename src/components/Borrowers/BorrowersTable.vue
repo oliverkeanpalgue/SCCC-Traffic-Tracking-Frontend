@@ -206,30 +206,31 @@ const isLoading = computed(() => {
         databaseStore.users.length === 0 ||
         databaseStore.borrowers.length === 0 ||
         databaseStore.equipmentCopies.length === 0 ||
-        databaseStore.categoryList.length === 0
+        databaseStore.categoryList.length === 0 ||
+        databaseStore.inventoryAccesses.length === 0
     );
 });
 
 // for printing reports
 const handlePrint = async () => {
 
-    
-const printWindow = window.open('', '_blank', 'width=800,height=600');
 
-// Wait for the image to load
-await new Promise((resolve) => {
-    const img = new Image();
-    img.src = baguioLogo;
-    img.onload = resolve;
-    img.onerror = resolve; // Avoid hanging if image fails
-});
+    const printWindow = window.open('', '_blank', 'width=800,height=600');
 
-// Wait for the reports data to be fully available
-await new Promise((resolve) => {
-    setTimeout(resolve, 100); // Small delay to ensure data is processed
-});
+    // Wait for the image to load
+    await new Promise((resolve) => {
+        const img = new Image();
+        img.src = baguioLogo;
+        img.onload = resolve;
+        img.onerror = resolve; // Avoid hanging if image fails
+    });
 
-printWindow.document.write(`
+    // Wait for the reports data to be fully available
+    await new Promise((resolve) => {
+        setTimeout(resolve, 100); // Small delay to ensure data is processed
+    });
+
+    printWindow.document.write(`
     <html>
         <head>
             <title>Printed Borrowers Reports</title>
@@ -288,16 +289,16 @@ printWindow.document.write(`
     </html>
 `);
 
-printWindow.document.close();
+    printWindow.document.close();
 
-// Wait for the new window to finish rendering before printing
-await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait for the new window to finish rendering before printing
+    await new Promise((resolve) => setTimeout(resolve, 500));
 
-printWindow.print();
+    printWindow.print();
 
-printWindow.onafterprint = () => {
-    printWindow.close();
-};
+    printWindow.onafterprint = () => {
+        printWindow.close();
+    };
 };
 </script>
 
@@ -312,82 +313,83 @@ printWindow.onafterprint = () => {
                 <!-- Search Box -->
                 <div class="w-full md:w-8/9">
                     <form class="flex items-center">
-                    <label for="simple-search" class="sr-only">Search</label>
-                    <div class="relative w-full">
-                        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                            <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400" fill="currentColor"
-                                viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path fill-rule="evenodd"
-                                    d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
-                                    clip-rule="evenodd" />
-                            </svg>
+                        <label for="simple-search" class="sr-only">Search</label>
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <svg aria-hidden="true" class="w-5 h-5 text-gray-500 dark:text-gray-400"
+                                    fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd"
+                                        d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                            <input v-model="searchQuery" type="text" id="simple-search"
+                                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                placeholder="Search equipment copies..." />
                         </div>
-                        <input v-model="searchQuery" type="text" id="simple-search"
-                            class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                            placeholder="Search equipment copies..." />
-                    </div>
-                </form>
-            </div>
-            <!-- ADD BUTTON -->
-            <button @click.stop="OpenAddBorrowerModal()"
-                class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
-                <ClAddPlus class="w-8 h-8" />
-                <p class="ml-1">Add Borrower</p>
-            </button>
-            <button @click="handlePrint"
+                    </form>
+                </div>
+                <!-- ADD BUTTON -->
+                <button @click.stop="OpenAddBorrowerModal()"
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-8" />
+                    <p class="ml-1">Add Borrower</p>
+                </button>
+                <button @click="handlePrint"
                     class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <AnFilledPrinter class="w-8 h-8" />
                     <p class="ml-1 text-sm">Print Borrowers</p>
                 </button>
-        </div>
-        <div class="rounded-lg min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
-            <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
-                <thead class=" dark:bg-gray-600 dark:text-gray-300">
-                    <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
-                    <th class="py-3" @click="sortByField('id')">
-                        ID
-                        <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('borrowers_name')">
-                        Borrower Name
-                        <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('contact_number')">
-                        Contact Number
-                        <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3" @click="sortByField('office')">
-                        Office
-                        <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                    </th>
-                    <th class="py-3">Transactions</th>
-                    <th class="py-3">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
-                class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                    <td class="px-4 py-3 ">{{ borrower.id }}</td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.borrowers_name }}
-                    </td>
-                    <td class="px-4 py-3 ">
-                        {{ borrower.contact_number }}
-                    </td>
-                    <td class="px-4 py-3 min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
-                            :title="borrower.office_name">
-                            {{ borrower.office_name }}
-                        </td>
-                    <td class="px-4 py-3 ">
-                        Napipindot na button
-                    </td>
-                    <td class="px-4 py-3 flex items-center justify-center relative">
-                        <button @click.stop="toggleDropdown(borrower.id)"
-                            class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
-                            type="button">
-                            <ChMenuMeatball class="w-5 h-5" />
-                        </button>
-
+            </div>
+            <div class="rounded-lg min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
+                <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
+                    <thead class=" dark:bg-gray-600 dark:text-gray-300">
+                        <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
+                            <th class="py-3" @click="sortByField('id')">
+                                ID
+                                <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('borrowers_name')">
+                                Borrower Name
+                                <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('contact_number')">
+                                Contact Number
+                                <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
+                            </th>
+                            <th class="py-3" @click="sortByField('office')">
+                                Office
+                                <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            </th>
+                            <th class="py-3">Transactions</th>
+                            <th class="py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
+                            class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
+                            <td class="px-4 py-3 ">{{ borrower.id }}</td>
+                            <td class="px-4 py-3 ">
+                                {{ borrower.borrowers_name }}
+                            </td>
+                            <td class="px-4 py-3 ">
+                                {{ borrower.contact_number }}
+                            </td>
+                            <td class="px-4 py-3 min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                :title="borrower.office_name">
+                                {{ borrower.office_name }}
+                            </td>
+                            <td class="px-4 py-3 ">
+                                Napipindot na button
+                            </td>
+                            <td class="px-4 py-3 flex items-center justify-center relative">
+                                <button @click.stop="toggleDropdown(borrower.id)"
+                                    class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
+                                    type="button">
+                                    <ChMenuMeatball class="w-5 h-5" />
+                                </button>
                                 <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
                                     class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
                                     <ul class="text-sm text-gray-700 dark:text-gray-200">
@@ -434,7 +436,7 @@ printWindow.onafterprint = () => {
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
-                        }}</span>
+                    }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
@@ -478,8 +480,8 @@ printWindow.onafterprint = () => {
                 </ul>
             </nav>
 
-            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal" :officeList="databaseStore.officeList"
-                @click.stop />
+            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal"
+                :officeList="databaseStore.officeList" @click.stop />
         </div>
     </div>
 </template>

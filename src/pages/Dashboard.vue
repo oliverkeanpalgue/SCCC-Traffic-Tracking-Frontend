@@ -34,7 +34,6 @@ const computedProperties = {
     borrowers: "borrowers",
     equipmentCopies: "equipmentCopies",
     categoryList: "categoryList",
-    transactionHistories: "transactionHistories",
 };
 
 const {
@@ -47,7 +46,6 @@ const {
     borrowers,
     equipmentCopies,
     categoryList,
-    transactionHistories
 } = Object.fromEntries(
     Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
 );
@@ -63,7 +61,6 @@ const usersArray = computedArrays(users);
 const borrowersArray = computedArrays(borrowers);
 const equipmentCopiesArray = computedArrays(equipmentCopies);
 const categoryListArray = computedArrays(categoryList);
-const transactionHistoriesArray = computedArrays(transactionHistories);
 
 
 const formatDate = (date) => date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
@@ -123,8 +120,8 @@ const isLoading = computed(() => {
     usersArray.value.length === 0 ||
     borrowersArray.value.length === 0 ||
     equipmentCopiesArray.value.length === 0 ||
-    categoryListArray.value.length === 0 ||
-    transactionHistoriesArray.value.length === 0
+    categoryListArray.value.length === 0  ||
+    databaseStore.inventoryAccesses.length === 0
   );
 });
 
@@ -200,8 +197,7 @@ const isLoading = computed(() => {
                     :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
                     :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
                     :borrowers="borrowersArray" :equipmentCopies="equipmentCopiesArray"
-                    :categoryList="categoryListArray" :transactionHistories="transactionHistoriesArray"
-                    :selectedDateRange="selectedDateRange" />
+                    :categoryList="categoryListArray" :selectedDateRange="selectedDateRange" />
             </div>
         </div>
     </div>

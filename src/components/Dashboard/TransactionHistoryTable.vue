@@ -14,7 +14,6 @@ import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
-// const transactionHistories = ref([]);
 const officeSupplies = ref([]);
 
 const searchQuery = ref("");
@@ -34,7 +33,6 @@ const props = defineProps({
   borrowers: Array,
   equipmentCopies: Array,
   categoryList: Array,
-  transactionHistories: Array,
   selectedDateRange: Object,
 })
 

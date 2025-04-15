@@ -70,7 +70,6 @@ const computedProperties = {
     borrowers: "borrowers",
     equipmentCopies: "equipmentCopies",
     categoryList: "categoryList",
-    transactionHistories: "transactionHistories",
 };
 
 const {
@@ -83,7 +82,6 @@ const {
     borrowers,
     equipmentCopies,
     categoryList,
-    transactionHistories
 } = Object.fromEntries(
     Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
 );
@@ -99,7 +97,6 @@ const usersArray = computedArrays(users);
 const borrowersArray = computedArrays(borrowers);
 const equipmentCopiesArray = computedArrays(equipmentCopies);
 const categoryListArray = computedArrays(categoryList);
-const transactionHistoriesArray = computedArrays(transactionHistories);
 
 </script>
 
@@ -126,8 +123,7 @@ const transactionHistoriesArray = computedArrays(transactionHistories);
                     :transactionHistory="transactionHistoryArray" :officeEquipments="officeEquipmentsArray"
                     :officeSupplies="officeSuppliesArray" :officeList="officeListArray" :users="usersArray"
                     :borrowers="borrowersArray" :equipmentCopies="equipmentCopiesArray"
-                    :categoryList="categoryListArray" :transactionHistories="transactionHistoriesArray"
-                    :selectedDateRange="selectedDateRange" />
+                    :categoryList="categoryListArray" :selectedDateRange="selectedDateRange" />
             </div>
         </div>
     </div>

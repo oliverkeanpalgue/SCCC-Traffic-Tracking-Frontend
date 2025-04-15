@@ -12,6 +12,7 @@ import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
 import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
+import AccessCheckbox from './AccessCheckbox.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -195,7 +196,8 @@ const isLoading = computed(() => {
         databaseStore.users.length === 0 ||
         databaseStore.borrowers.length === 0 ||
         databaseStore.equipmentCopies.length === 0 ||
-        databaseStore.categoryList.length === 0
+        databaseStore.categoryList.length === 0 ||
+        databaseStore.inventoryAccesses.length === 0
     );
 });
 
@@ -300,6 +302,55 @@ const OpenViewTransactionHistoryModal = (user) => {
     isOpenViewTransactionHistoryModal.value = true;
 }
 
+const toggleCheckbox = (user, accessId, type) => {
+    const access = databaseStore.inventoryAccesses.find(
+        (inv) => inv.id === accessId && inv.user_id === user.id
+    );
+
+    if (!access) return;
+
+    // Optimistically toggle the permission value
+    access[type] = access[type] === 1 ? 0 : 1;
+
+    const updateInventoryAccess = {
+        id: accessId,
+        user_id: user.id,
+        for_dashboard: access.for_dashboard,
+        for_inventory: access.for_inventory,
+        for_categories: access.for_categories,
+        for_borrowers: access.for_borrowers,
+        for_offices: access.for_offices,
+        for_users: access.for_users,
+    };
+
+    // Fire-and-forget async update
+    axiosClient.put(
+        `/api/inventory_access/${accessId}`,
+        updateInventoryAccess,
+        {
+            headers: {
+                "x-api-key": API_KEY,
+            },
+        }
+    )
+    .then(() => {
+        emitter.emit("show-toast", { message: "Access updated successfully!", type: "success" });
+    })
+    .catch((error) => {
+        console.error('Error updating inventory access:', error);
+        console.error('Error details:', error.response?.data);
+        emitter.emit("show-toast", { message: "Error updating access. Please try again.", type: "error" });
+    });
+};
+
+const permissionTypes = [
+    'for_dashboard',
+    'for_inventory',
+    'for_categories',
+    'for_borrowers',
+    'for_offices',
+    'for_users',
+];
 </script>
 
 <template>
@@ -360,6 +411,12 @@ const OpenViewTransactionHistoryModal = (user) => {
                                 <span v-if="sortBy === 'email'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             </th>
                             <th class="py-3 ">Transactions</th>
+                            <th class="py-3 ">Dashboard</th>
+                            <th class="py-3 ">Inventory</th>
+                            <th class="py-3 ">Categories</th>
+                            <th class="py-3 ">Borrower</th>
+                            <th class="py-3 ">Offices</th>
+                            <th class="py-3 ">Users</th>
                             <th class="py-3 ">Actions</th>
                         </tr>
                     </thead>
@@ -402,6 +459,12 @@ const OpenViewTransactionHistoryModal = (user) => {
                                     </div>
                                 </button>
                             </td>
+                            <td v-for="perm in permissionTypes" :key="perm" class="px-4 py-3">
+                                <AccessCheckbox v-for="invAccess in databaseStore.inventoryAccesses" :key="invAccess.id"
+                                    :invAccess="invAccess" :userId="user.id" :user="user" :type="perm"
+                                    :onToggle="toggleCheckbox" />
+                            </td>
+
                             <td class="px-4 py-3 flex items-center justify-center relative">
                                 <button @click.stop="toggleDropdown(user.id)"
                                     class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
@@ -507,7 +570,8 @@ const OpenViewTransactionHistoryModal = (user) => {
                 </ul>
             </nav>
         </div>
-        
-        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryModal" v-model="isOpenViewTransactionHistoryModal" :selectedUser="selectedUser" @click.stop />
+
+        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryModal"
+            v-model="isOpenViewTransactionHistoryModal" :selectedUser="selectedUser" @click.stop />
     </div>
 </template>

@@ -216,7 +216,8 @@ const isLoading = computed(() => {
     databaseStore.users.length === 0 ||
     databaseStore.borrowers.length === 0 ||
     databaseStore.equipmentCopies.length === 0 ||
-    databaseStore.categoryList.length === 0
+    databaseStore.categoryList.length === 0 ||
+    databaseStore.inventoryAccesses.length === 0
   );
 });
 

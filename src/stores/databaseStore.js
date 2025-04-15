@@ -13,7 +13,7 @@ export const useDatabaseStore = defineStore('database', {
     users: [],
     borrowers: [],
     officeList: [],
-    transactionHistories: [],
+    inventoryAccesses: [],
     fetchedDataCount: 0,
     isLoading: true,
   }),
@@ -34,7 +34,7 @@ export const useDatabaseStore = defineStore('database', {
           resUsers,
           resBorrowers,
           resOfficeList,
-          resTransactionHistories,
+          resInventoryAccesses,
         ] = await Promise.all([
           axiosClient.get('/api/office_equipments', { headers: { 'x-api-key': API_KEY } }),
           axiosClient.get('/api/office_supplies', { headers: { 'x-api-key': API_KEY } }),
@@ -45,7 +45,7 @@ export const useDatabaseStore = defineStore('database', {
           axiosClient.get('/api/users', { headers: { 'x-api-key': API_KEY } }),
           axiosClient.get('/api/borrowers', { headers: { 'x-api-key': API_KEY } }),
           axiosClient.get('/api/offices', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/transaction_history', { headers: { 'x-api-key': API_KEY } }),
+          axiosClient.get('/api/inventory_access', { headers: { 'x-api-key': API_KEY } }),
         ])
 
         // Map or assign the fetched data
@@ -61,35 +61,19 @@ export const useDatabaseStore = defineStore('database', {
           ...supply,
           type: supply.type || 'Office Supply',
         }))
-        this.fetchedDataCount += 1
 
         this.equipmentCopies = resEquipmentCopies.data
-        this.fetchedDataCount += 1
-
         this.categoryList = resCategories.data
-        this.fetchedDataCount += 1
-
         this.transactionItems = resTransactionItems.data
-        this.fetchedDataCount += 1
-
         this.transactionHistory = resTransactionHistory.data
-        this.fetchedDataCount += 1
-
         this.users = resUsers.data
-        this.fetchedDataCount += 1
-
         this.borrowers = resBorrowers.data
-        this.fetchedDataCount += 1
-
         this.officeList = resOfficeList.data
-        this.fetchedDataCount += 1
-
-        this.transactionHistories = resTransactionHistories.data
-        this.fetchedDataCount += 1
+        this.inventoryAccesses = resInventoryAccesses.data
       } catch (error) {
-        console.error('Error fetching data:', error)
+        console.error("Error fetching data:", error);
       } finally {
-        this.isLoading = false
+        this.isLoading = false;
       }
     },
 

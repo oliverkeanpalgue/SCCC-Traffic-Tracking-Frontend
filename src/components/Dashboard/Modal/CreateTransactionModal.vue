@@ -56,7 +56,6 @@ const computedProperties = {
     borrowers: "borrowers",
     equipmentCopies: "equipmentCopies",
     categoryList: "categoryList",
-    transactionHistories: "transactionHistories",
 };
 
 const {
@@ -69,7 +68,6 @@ const {
     borrowers,
     equipmentCopies,
     categoryList,
-    transactionHistories
 } = Object.fromEntries(
     Object.entries(computedProperties).map(([key, value]) => [key, computed(() => databaseStore[value])])
 );
@@ -85,7 +83,6 @@ const usersArray = computedArrays(users);
 const borrowersArray = computedArrays(borrowers);
 const equipmentCopiesArray = computedArrays(equipmentCopies);
 const categoryListArray = computedArrays(categoryList);
-const transactionHistoriesArray = computedArrays(transactionHistories);
 
 
 // FOR THE TOAST
