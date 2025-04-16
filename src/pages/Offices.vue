@@ -18,11 +18,11 @@ const API_KEY = import.meta.env.VITE_API_KEY;
         </header>
 
         <!-- MAIN CONTAINER -->
-        <div class="border-2 px-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
+        <!-- <div class="border-2 px-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
             <div class="h-[78vh]">
                 <OfficeTable />
             </div>
-        </div>
+        </div> -->
     </div>
 </template>
 

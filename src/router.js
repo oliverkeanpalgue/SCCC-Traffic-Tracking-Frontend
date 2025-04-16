@@ -77,6 +77,9 @@ router.beforeEach(async (to, from, next) => {
     // Make sure user and access info is loaded
     if (!userStore.user || !userStore.inventoryAccess) {
       await userStore.fetchUser();
+      if (!userStore.user) {
+        return next("/login");
+      }
     }
 
     const permissionKey = to.meta.permission;

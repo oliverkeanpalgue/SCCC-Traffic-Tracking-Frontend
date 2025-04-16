@@ -90,70 +90,28 @@ const closeSignOutModal = () => {
 </script>
 
 <template>
-    <div class="bg-gradient-to-br from-blue-300 from-0% via-blue-200 via-12% to-white to-90% dark:from-blue-900 dark:from-0% dark:via-blue-950 dark:via-12% dark:to-black dark:to-80%">
-        <nav class="fixed top-0 z-50 w-full border-b-2 border-gray-300  dark:border-black">
-            <div class="px-3 py-3 lg:px-5 lg:pl-3">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center justify-start rtl:justify-end">
-                        <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button"
-                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
-                            <span class="sr-only">Open sidebar</span>
-                            <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <path clip-rule="evenodd" fill-rule="evenodd"
-                                    d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
-                                </path>
-                            </svg>
-                        </button>
-                        <a href="#" class="flex ms-2 md:me-24">
-                            <img src="../assets/baguio-logo.png" class="h-10 me-3" alt="Smart City Baguio" />
-                            <span
-                                class="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">SCCC-Inventory
-                                System</span>
-                        </a>
-                    </div>
+    <div class="bg-gradient-to-br 
+from-slate-300 from-0% 
+via-slate-200 via-12% 
+via-white via-66% 
+to-slate-300 to-100% 
+dark:from-slate-950 dark:from-0% 
+dark:via-slate-900 dark:via-12% 
+dark:via-slate-800 dark:via-66% 
+dark:to-slate-950 dark:to-100%
+">
 
-                    <section class="">
-                        <div class="">
-                            <div
-                                class="border-2 relative inline-block min-w-30 rounded-2xl px-4 py-1 bg-gray-200 border-gray-400 dark:bg-gray-800 dark:border-gray-600 ">
-                                <button @click="toggleProfileSettingsDropdown" ref="profileSettingsDropdownButtonRef"
-                                    class="flex items-center text-left">
-                                    <div class="relative mr-4 h-9 w-9 rounded-full">
-                                        <img src="https://cdn.tailgrids.com/2.2/assets/core-components/images/avatar/image-05.jpg"
-                                            alt="avatar"
-                                            class="h-full w-full rounded-full object-cover object-center" />
-                                    </div>
-                                    <span class="text-base font-medium text-dark dark:text-white"> {{ user.firstName }}
-                                    </span>
-                                </button>
-                                <div v-show="profileSettingsDropdownOpen"
-                                    class="absolute right-0 top-full z-40 w-[200px] space-y-1 mt-1 rounded-xl bg-gray-300 p-2 shadow-card border-2 font-bold border-gray-500 dark:bg-gray-800 dark:shadow-box-dark dark:border-gray-700">
-                                    <button @click="toggleTheme"
-                                        class="block w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        <div v-if="theme === 'light'">🌞 Light Mode</div>
-                                        <div v-else>🌙 Dark Mode</div>
-                                    </button>
-                                    <button @click="openSignOutModal()" data-modal-target="popup-modal"
-                                        data-modal-toggle="popup-modal"
-                                        class="w-full flex flex-row text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                                        type="button">
-
-                                        <FeLogOut class="w-5 h-5 mr-1" />
-                                        Sign out
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </nav>
 
         <aside id="logo-sidebar"
-            class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform border-r-2 border-gray-300 lg:translate-x-0 dark:border-white/10"
+            class="fixed top-0 left-0 w-64 h-screen pt-20 lg:pt-4 transition-transform border-r-2 border-gray-300 lg:translate-x-0 dark:border-white/10"
             :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
             <div class="h-full px-3 pb-4 overflow-y-auto">
+
+                <div class="flex">
+                    <img src="../assets/baguio-logo.png" class="h-15 me-1" alt="Smart City Baguio" />
+                    <span
+                        class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">SCCC-Inventory</span>
+                </div>
                 <ul class="space-y-2 font-medium">
                     <li>
                         <RouterLink to="/"
@@ -225,6 +183,68 @@ const closeSignOutModal = () => {
             </div>
         </aside>
 
+        <nav class="fixed top-0 w-full">
+            <div class="px-3 py-3 lg:px-5 lg:pl-3">
+                <div class="flex items-center lg:pl-64 justify-between">
+                    <div class="flex items-center justify-start rtl:justify-end">
+                        <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button"
+                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                            <span class="sr-only">Open sidebar</span>
+                            <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path clip-rule="evenodd" fill-rule="evenodd"
+                                    d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
+                                </path>
+                            </svg>
+                        </button>
+                        <div class="hidden lg:flex lg:items-center ms-2 md:me-24">
+                            <FaUserGear class="w-7 h-7 mr-2 dark:text-white" />
+                            <span class="self-center text-3xl font-bold whitespace-nowrap dark:text-white">Users</span>
+                        </div>
+                    </div>
+                    <div class="lg:hidden">
+                        <div class="flex items-center ">
+                            <FaUserGear class="w-7 h-7 mr-2 dark:text-white" />
+                            <span class="self-center text-3xl font-bold whitespace-nowrap dark:text-white">Users</span>
+                        </div>
+                    </div>
+
+                    <section class="justify-end">
+                        <div class="">
+                            <div
+                                class="border-2 relative inline-block min-w-30 rounded-2xl px-4 py-1 bg-gray-200 border-gray-400 dark:bg-gray-800 dark:border-gray-600 ">
+                                <button @click="toggleProfileSettingsDropdown" ref="profileSettingsDropdownButtonRef"
+                                    class="flex items-center text-left">
+                                    <div class="relative mr-4 h-9 w-9 rounded-full">
+                                        <img src="https://cdn.tailgrids.com/2.2/assets/core-components/images/avatar/image-05.jpg"
+                                            alt="avatar"
+                                            class="h-full w-full rounded-full object-cover object-center" />
+                                    </div>
+                                    <span class="text-base font-medium text-dark dark:text-white"> {{ user.firstName }}
+                                    </span>
+                                </button>
+                                <div v-show="profileSettingsDropdownOpen"
+                                    class="absolute right-0 top-full z-40 w-[200px] space-y-1 mt-1 rounded-xl bg-gray-300 p-2 shadow-card border-2 font-bold border-gray-500 dark:bg-gray-800 dark:shadow-box-dark dark:border-gray-700">
+                                    <button @click="toggleTheme"
+                                        class="block w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
+                                        <div v-if="theme === 'light'">🌞 Light Mode</div>
+                                        <div v-else>🌙 Dark Mode</div>
+                                    </button>
+                                    <button @click="openSignOutModal()" data-modal-target="popup-modal"
+                                        data-modal-toggle="popup-modal"
+                                        class="w-full flex flex-row text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                                        type="button">
+
+                                        <FeLogOut class="w-5 h-5 mr-1" />
+                                        Sign out
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </nav>
 
         <div class="min-h-screen max-h-full pt-16 p-4 lg:ml-64 dark:text-gray-200">
             <!-- MAIN CONTENT -->

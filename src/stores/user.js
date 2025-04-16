@@ -34,6 +34,7 @@ const useUserStore = defineStore("user", {
           console.log("🔐 inventoryAccess:", this.inventoryAccess);
         } else {
           this.inventoryAccess = null;
+          router.push("/login");
         }
       } catch (error) {
         console.warn("⚠️ User not logged in or failed to fetch:", error);
