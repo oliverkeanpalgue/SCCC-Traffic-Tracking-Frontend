@@ -111,37 +111,36 @@ const unreturnedCount = computed(() => {
 });
 
 const isLoading = computed(() => {
-  return (
-    transactionItemsArray.value.length === 0 ||
-    transactionHistoryArray.value.length === 0 ||
-    officeEquipmentsArray.value.length === 0 ||
-    officeSuppliesArray.value.length === 0 ||
-    officeListArray.value.length === 0 ||
-    usersArray.value.length === 0 ||
-    borrowersArray.value.length === 0 ||
-    equipmentCopiesArray.value.length === 0 ||
-    categoryListArray.value.length === 0  ||
-    databaseStore.inventoryAccesses.length === 0
-  );
+    return (
+        transactionItemsArray.value.length === 0 ||
+        transactionHistoryArray.value.length === 0 ||
+        officeEquipmentsArray.value.length === 0 ||
+        officeSuppliesArray.value.length === 0 ||
+        officeListArray.value.length === 0 ||
+        usersArray.value.length === 0 ||
+        borrowersArray.value.length === 0 ||
+        equipmentCopiesArray.value.length === 0 ||
+        categoryListArray.value.length === 0 ||
+        databaseStore.inventoryAccesses.length === 0
+    );
 });
 
 </script>
 
 <template>
-        <div class="">
-            <header class="">
-                <div class="p-4 md:px-6 md:py-6 sm:px-6 ">
-                    <h1 class="text-3xl font-bold tracking-tight dark:text-gray-200">
-                        Dashboard
-                    </h1>
-                </div>
-            </header>
-            
-            <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
-                <Loading />
-                <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
-            </div>
-            <div v-else>
+    <div class="">
+        <div
+            class="sticky top-2 z-20 backdrop-blur-sm px-6 py-4 border-2 rounded-2xl bg-gray-200/45 border-blue-500/85 dark:bg-gray-800/45 dark:border-gray-300/85">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-950 dark:text-gray-100">
+                Dashboard
+            </h1>
+        </div>
+
+        <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
+            <Loading />
+            <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
+        </div>
+        <div v-else>
 
             <div class="grid h-25 md:p-4 grid-cols-3 md:grid-cols-2">
                 <!-- Date Range Picker -->
@@ -154,14 +153,16 @@ const isLoading = computed(() => {
                         <h5
                             class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
                             Total Transactions</h5>
-                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ totalTransactionsCount }}</p>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{
+                            totalTransactionsCount }}</p>
                     </div>
                     <div
                         class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
                         <h5
                             class="inline-flex items-center text-gray-900 dark:text-gray-400 leading-none font-normal mb-2">
                             Total Unreturned</h5>
-                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ unreturnedCount }}</p>
+                        <p class="text-gray-900 dark:text-white text-2xl leading-none font-bold">{{ unreturnedCount }}
+                        </p>
                     </div>
                     <div
                         class="border-2 shadow-lg p-2 pb-5 rounded-lg mx-1 bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
@@ -178,7 +179,8 @@ const isLoading = computed(() => {
                 <div class="w-full shadow-lg h-85 md:h-124 md:span-cols-1">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between">
-                        <BarGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full" />
+                        <BarGraph :dateRange="selectedDateRange" :isLoading="isLoading"
+                            :transactionHistory="transactionHistoryArray" class="w-full" />
                     </div>
                 </div>
 
@@ -186,7 +188,8 @@ const isLoading = computed(() => {
                 <div class="w-full shadow-lg h-70 md:h-124 md:span-cols-1 ">
                     <div
                         class="card w-full h-full bg-white rounded-lg shadow-sm border-2 border-gray-300 dark:border-gray-700 dark:bg-gray-800 flex justify-between ">
-                        <LineGraph :dateRange="selectedDateRange" :isLoading="isLoading" :transactionHistory="transactionHistoryArray" class="w-full " />
+                        <LineGraph :dateRange="selectedDateRange" :isLoading="isLoading"
+                            :transactionHistory="transactionHistoryArray" class="w-full " />
                     </div>
                 </div>
             </div>

@@ -11,6 +11,10 @@ import { MdRoundCategory } from '@kalimahapps/vue-icons';
 import { FlFilledPeopleSwap } from '@kalimahapps/vue-icons';
 import { FaUserGear } from '@kalimahapps/vue-icons';
 import { BxSolidBuildings } from '@kalimahapps/vue-icons';
+import lightBlueBg from "../assets/lightBlueBg.jpg";
+import darkBlueBg from "../assets/darkBlueBg.jpg";
+import { MdRoundDarkMode } from '@kalimahapps/vue-icons';
+import { MdRoundLightMode } from '@kalimahapps/vue-icons';
 
 const theme = ref(localStorage.getItem("theme") || "light");
 
@@ -43,6 +47,7 @@ onMounted(() => {
         document.documentElement.classList.add("dark");
         theme.value = "dark";
     }
+    document.addEventListener('click', handleClickOutside);
 });
 
 const userStore = useUserStore();
@@ -61,20 +66,28 @@ const profileSettingsDropdownButtonRef = ref(null)
 const toggleProfileSettingsDropdown = () => {
     profileSettingsDropdownOpen.value = !profileSettingsDropdownOpen.value
 }
+const toggleButtonRef = ref(null);
+const sidebarRef = ref(null);
 
 // Custom composition function to handle click outside
 const handleClickOutside = (event) => {
+    console.log("clicked outside");
     if (
         profileSettingsDropdownButtonRef.value &&
         !profileSettingsDropdownButtonRef.value.contains(event.target)
     ) {
-        profileSettingsDropdownOpen.value = false
+        profileSettingsDropdownOpen.value = false;
     }
-}
-
-onMounted(() => {
-    document.addEventListener('click', handleClickOutside)
-})
+    if (
+        sidebarVisible.value &&
+        sidebarRef.value &&
+        toggleButtonRef.value &&
+        !sidebarRef.value.contains(event.target) &&
+        !toggleButtonRef.value.contains(event.target)
+    ) {
+        sidebarVisible.value = false;
+    }
+};
 
 onUnmounted(() => {
     document.removeEventListener('click', handleClickOutside)
@@ -87,108 +100,165 @@ const openSignOutModal = () => {
 const closeSignOutModal = () => {
     signout_visible.value = false;
 };
+
+
 </script>
 
 <template>
-    <div class="bg-gradient-to-br 
-from-slate-300 from-0% 
-via-slate-200 via-12% 
-via-white via-66% 
-to-slate-300 to-100% 
-dark:from-slate-950 dark:from-0% 
-dark:via-slate-900 dark:via-12% 
-dark:via-slate-800 dark:via-66% 
-dark:to-slate-950 dark:to-100%
-">
+    <div :style="{ backgroundImage: `url(${theme === 'dark' ? darkBlueBg : lightBlueBg})` }"
+        class="bg-cover bg-center min-h-screen">
 
-
-        <aside id="logo-sidebar"
-            class="fixed top-0 left-0 w-64 h-screen pt-20 lg:pt-4 transition-transform border-r-2 border-gray-300 lg:translate-x-0 dark:border-white/10"
+        <aside id="logo-sidebar" ref="sidebarRef"
+            class="fixed top-0 left-0 w-64 h-screen pt-4 pl-3 xl:pt-4 transition-transform z-100 xl:z-5 backdrop-blur-sm xl:translate-x-0 bg-gray-200/80 dark:bg-gray-900/80 xl:bg-transparent xl:dark:bg-transparent"
             :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
-            <div class="h-full px-3 pb-4 overflow-y-auto">
+            <div class="h-full px-3 pb-4 overflow-y-auto flex flex-col justify-between">
 
-                <div class="flex">
-                    <img src="../assets/baguio-logo.png" class="h-15 me-1" alt="Smart City Baguio" />
-                    <span
-                        class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">SCCC-Inventory</span>
-                </div>
                 <ul class="space-y-2 font-medium">
-                    <li>
-                        <RouterLink to="/"
-                            :class="[$route.name === 'Dashboard' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_dashboard === 1">
+                    <div class="mb-4">
+                        <div class="flex">
+                            <img src="../assets/baguio-logo.png" class="h-12 me-1" alt="Smart City Baguio" />
                             <span
-                                :class="[$route.name === 'Dashboard' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdDashboard />
+                                class="self-center text-xl font-semibold whitespace-nowrap dark:text-white">SCCC-Inventory</span>
+                        </div>
+                        <div
+                            class="h-0.5 bg-gradient-to-r from-blue-100 via-blue-500 to-blue-100 dark:from-blue-950 dark:via-blue-500 dark:to-blue-950">
+                        </div>
+                    </div>
+                    <li>
+                        <RouterLink to="/" @click="closeSidebar()" v-if="inventoryAccess.for_dashboard === 1"
+                            :class="[$route.name === 'Dashboard' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Dashboard' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <MdDashboard class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Dashboard</span>
+                            <span :class="[$route.name === 'Dashboard' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Dashboard</span>
                         </RouterLink>
                     </li>
                     <li>
-                        <RouterLink to="/inventory"
-                            :class="[$route.name === 'Inventory' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1">
-                            <span
-                                :class="[$route.name === 'Inventory' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdInventory2 />
+                        <RouterLink to="/inventory" @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1"
+                            :class="[$route.name === 'Inventory' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Inventory' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <MdInventory2 class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Inventory</span>
+                            <span :class="[$route.name === 'Inventory' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Inventory</span>
                         </RouterLink>
                     </li>
                     <li>
-                        <RouterLink to="/categories"
-                            :class="[$route.name === 'Categories' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1">
-                            <span
-                                :class="[$route.name === 'Categories' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <MdRoundCategory />
+                        <RouterLink to="/categories" @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1"
+                            :class="[$route.name === 'Categories' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Categories' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <MdRoundCategory class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Categories</span>
+                            <span :class="[$route.name === 'Categories' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Categories</span>
                         </RouterLink>
                     </li>
                     <li>
-                        <RouterLink to="/borrowers"
-                            :class="[$route.name === 'Borrowers' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1">
-                            <span
-                                :class="[$route.name === 'Borrowers' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <FlFilledPeopleSwap />
+                        <RouterLink to="/borrowers" @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1"
+                            :class="[$route.name === 'Borrowers' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Borrowers' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <FlFilledPeopleSwap class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Borrowers</span>
+                            <span :class="[$route.name === 'Borrowers' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Borrowers</span>
                         </RouterLink>
                     </li>
                     <li>
-                        <RouterLink to="/users"
-                            :class="[$route.name === 'Users' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_users === 1">
-                            <span
-                                :class="[$route.name === 'Users' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <FaUserGear />
+                        <RouterLink to="/users" @click="closeSidebar()" v-if="inventoryAccess.for_users === 1"
+                            :class="[$route.name === 'Users' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Users' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <FaUserGear class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Users</span>
+                            <span :class="[$route.name === 'Users' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Users</span>
                         </RouterLink>
                     </li>
                     <li>
-                        <RouterLink to="/offices"
-                            :class="[$route.name === 'Offices' ? 'text-gray-900 bg-white-400 hover:text-gray-800 hover:bg-white-300 dark:text-gray-300 dark:bg-gray-600 dark:hover:text-gray-300 dark:hover:bg-gray-600' : 'text-gray-900 hover:text-gray-700 hover:bg-gray-300 dark:text-white dark:hover:text-gray-400 dark:hover:bg-gray-700', 'flex my-2 items-center p-2 rounded-lg group']"
-                            @click="closeSidebar()" v-if="inventoryAccess.for_offices === 1">
-                            <span
-                                :class="[$route.name === 'Offices' ? 'text-gray-900 group-hover:text-gray-800 dark:text-gray-300 dark:group-hover:text-gray-300' : 'text-gray-900 group-hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-400 dark:group-hover:text-gray-400', 'material-icons w-5 h-5 transition duration-75']">
-                                <BxSolidBuildings />
+                        <RouterLink to="/offices" @click="closeSidebar()" v-if="inventoryAccess.for_offices === 1"
+                            :class="[$route.name === 'Offices' ?
+                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
+                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
+                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                            <span :class="[$route.name === 'Offices' ?
+                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
+                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
+                                'p-1.5 rounded-xl transition duration-75']">
+                                <BxSolidBuildings class="w-6 h-6" />
                             </span>
-                            <span class="ms-3">Offices</span>
+                            <span :class="[$route.name === 'Offices' ? 'font-semibold dark:font-bold' : '']"
+                                class="ml-3 text-gray-800 dark:text-white ">Offices</span>
                         </RouterLink>
                     </li>
                 </ul>
+
+                <div class="w-full space-y-2 font-medium">
+                    <button
+                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
+                        <span
+                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
+                            <BxSolidBuildings class="w-6 h-6" />
+                        </span>
+                        <span class="ml-3 text-gray-800 dark:text-white">{{ user.firstName }}</span>
+                    </button>
+                    <button @click="toggleTheme"
+                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
+                        <span
+                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
+                            <MdRoundLightMode v-if="theme === 'light'" class="w-6 h-6" />
+                            <MdRoundDarkMode v-else class="w-6 h-6" />
+                        </span>
+                        <span v-if="theme === 'light'" class="ml-3 text-gray-800 dark:text-white">Light Mode</span>
+                        <span v-else class="ml-3 text-gray-800 dark:text-white">Dark Mode</span>
+                    </button>
+                    <button @click="openSignOutModal()" data-modal-target="popup-modal" data-modal-toggle="popup-modal"
+                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
+                        <span
+                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
+                            <FeLogOut class="w-6 h-6" />
+                        </span>
+                        <span class="ml-3 text-gray-800 dark:text-white">Sign Out</span>
+                    </button>
+                </div>
             </div>
         </aside>
 
         <nav class="fixed top-0 w-full">
-            <div class="px-3 py-3 lg:px-5 lg:pl-3">
-                <div class="flex items-center lg:pl-64 justify-between">
+            <div class="px-3 py-3 xl:px-5 xl:pl-3">
+                <div class="flex items-center xl:pl-64 justify-between">
                     <div class="flex items-center justify-start rtl:justify-end">
-                        <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button"
-                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                        <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button" ref="toggleButtonRef"
+                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg xl:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                             <span class="sr-only">Open sidebar</span>
                             <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -197,56 +267,12 @@ dark:to-slate-950 dark:to-100%
                                 </path>
                             </svg>
                         </button>
-                        <div class="hidden lg:flex lg:items-center ms-2 md:me-24">
-                            <FaUserGear class="w-7 h-7 mr-2 dark:text-white" />
-                            <span class="self-center text-3xl font-bold whitespace-nowrap dark:text-white">Users</span>
-                        </div>
                     </div>
-                    <div class="lg:hidden">
-                        <div class="flex items-center ">
-                            <FaUserGear class="w-7 h-7 mr-2 dark:text-white" />
-                            <span class="self-center text-3xl font-bold whitespace-nowrap dark:text-white">Users</span>
-                        </div>
-                    </div>
-
-                    <section class="justify-end">
-                        <div class="">
-                            <div
-                                class="border-2 relative inline-block min-w-30 rounded-2xl px-4 py-1 bg-gray-200 border-gray-400 dark:bg-gray-800 dark:border-gray-600 ">
-                                <button @click="toggleProfileSettingsDropdown" ref="profileSettingsDropdownButtonRef"
-                                    class="flex items-center text-left">
-                                    <div class="relative mr-4 h-9 w-9 rounded-full">
-                                        <img src="https://cdn.tailgrids.com/2.2/assets/core-components/images/avatar/image-05.jpg"
-                                            alt="avatar"
-                                            class="h-full w-full rounded-full object-cover object-center" />
-                                    </div>
-                                    <span class="text-base font-medium text-dark dark:text-white"> {{ user.firstName }}
-                                    </span>
-                                </button>
-                                <div v-show="profileSettingsDropdownOpen"
-                                    class="absolute right-0 top-full z-40 w-[200px] space-y-1 mt-1 rounded-xl bg-gray-300 p-2 shadow-card border-2 font-bold border-gray-500 dark:bg-gray-800 dark:shadow-box-dark dark:border-gray-700">
-                                    <button @click="toggleTheme"
-                                        class="block w-full text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white">
-                                        <div v-if="theme === 'light'">🌞 Light Mode</div>
-                                        <div v-else>🌙 Dark Mode</div>
-                                    </button>
-                                    <button @click="openSignOutModal()" data-modal-target="popup-modal"
-                                        data-modal-toggle="popup-modal"
-                                        class="w-full flex flex-row text-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                                        type="button">
-
-                                        <FeLogOut class="w-5 h-5 mr-1" />
-                                        Sign out
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
                 </div>
             </div>
         </nav>
 
-        <div class="min-h-screen max-h-full pt-16 p-4 lg:ml-64 dark:text-gray-200">
+        <div class="min-h-[100vh] max-h-[100vh] overflow-auto px-4 pl-8 xl:pl-4 xl:ml-64 dark:text-gray-200">
             <!-- MAIN CONTENT -->
             <router-view class="" />
 

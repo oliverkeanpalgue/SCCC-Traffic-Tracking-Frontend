@@ -17,11 +17,6 @@ const useUserStore = defineStore("user", {
         });
         this.user = data;
 
-        // Fetch inventory access for this user
-        const accessRes = await axiosClient.get("/api/inventory_access", {
-          headers: { "x-api-key": API_KEY },
-        });
-
         if (this.user && this.user.id) {
           const accessRes = await axiosClient.get("/api/inventory_access", {
             headers: { "x-api-key": API_KEY },

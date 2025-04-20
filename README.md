@@ -17,3 +17,6 @@ style:      formatting, missing semicolons, etc.; no code change
 perf:       code improved in terms of processing performance
 vendor:     update version for dependencies, packages.
 test:       adding missing tests, refactoring tests; no production code change
+
+https://demos.creative-tim.com/vision-ui-dashboard-react/#/dashboard
+https://demos.creative-tim.com/vision-ui-dashboard-react/#/dashboard

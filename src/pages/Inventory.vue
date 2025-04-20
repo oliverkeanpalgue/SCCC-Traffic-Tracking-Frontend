@@ -318,6 +318,12 @@ const handlePrint = async () => {
 
 <template>
   <div class="">
+        <div
+            class="sticky top-2 z-20 backdrop-blur-sm px-6 py-4 border-2 rounded-2xl bg-gray-200/45 border-blue-500/85 dark:bg-gray-800/45 dark:border-gray-300/85">
+            <h1 class="text-3xl font-bold tracking-tight text-gray-950 dark:text-gray-100">
+                Inventory
+            </h1>
+        </div>
     <!-- HEADER -->
     <header class="shadow">
       <div class="flex md:px-6 py-4 ">
@@ -352,7 +358,7 @@ const handlePrint = async () => {
         </label>
       </div>
     </header>
-    <div class="grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2 ">
+    <div class="mt-4 grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2 ">
       <!-- SEARCH BAR -->
       <div class="col-span-1 mb-2 md:mb-0 md:col-span-3 xl:col-span-5 pr-2 md:pr-3">
         <form class="flex items-center" @submit.prevent>
