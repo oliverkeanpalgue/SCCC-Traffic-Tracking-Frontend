@@ -9,6 +9,8 @@ import emitter from "../../eventBus.js";
 import Loading from "../../components/Loading.vue";
 import { useDatabaseStore } from "../../stores/databaseStore.js";
 
+const API_KEY = import.meta.env.VITE_API_KEY;
+
 // fetching users
 const databaseStore = useDatabaseStore()
 
@@ -187,17 +189,69 @@ function submit() {
   }
 
   isLoading.value = true
-  axiosClient.get('/sanctum/csrf-cookie').then(response => {
+
+  const addAccess = async (userId) => {
+    try {
+      isLoading.value = true
+
+      const addInventoryAccess = {
+        for_dashboard: 1,
+        for_inventory: 0,
+        for_offices: 0,
+        for_categories: 0,
+        for_borrowers: 0,
+        for_users: 0,
+        user_id: userId
+      }
+
+      console.log("Add copy data sent: ", addInventoryAccess)
+
+      const response = await axiosClient.post(
+        `/api/inventory_access/`,
+        addInventoryAccess,
+        {
+          headers: {
+            "x-api-key": API_KEY,
+          },
+        }
+      );
+      console.log('Add Access API response:', response);
+    } catch (error) {
+      console.error('Error adding access:', error);
+      console.error('Error details:', error.response?.data);
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  axiosClient.get('/sanctum/csrf-cookie')
+  .then(() => {
     axiosClient.post("/register", data.value)
-      .then(response => {
-        isLoading.value = false
-        emitter.emit("show-toast", { message: "Signed Up successfully!", type: "success" });
-        router.push({ name: 'Login' })
+      .then(async (response) => {
+        try {
+          // Get the user ID from the response
+          const userId = response.data.user.id;
+          
+          // Add access for the new user
+          await addAccess(userId);
+          
+          emitter.emit("show-toast", { message: "Signed up successfully!", type: "success" });
+          router.push({ name: 'Login' });
+        } catch (error) {
+          console.error('Registration process error:', error);
+          emitter.emit("show-toast", { message: "Error during registration", type: "error" });
+        }
       })
       .catch(error => {
-        console.log(error.response.data)
-        errors.value = error.response.data.errors;
+        console.error('Registration error:', error);
+        if (error.response?.data?.errors) {
+          errors.value = error.response.data.errors;
+        }
+        emitter.emit("show-toast", { message: "Registration failed", type: "error" });
       })
+      .finally(() => {
+        isLoading.value = false;
+      });
   });
 }
 
