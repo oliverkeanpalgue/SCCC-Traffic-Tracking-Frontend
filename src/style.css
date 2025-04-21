@@ -1,3 +1,70 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
-@import '../node_modules/flowbite-vue/dist/index.css';
+@import "../node_modules/flowbite-vue/dist/index.css";
+
+@property --border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@theme {
+  --animate-rotate-border: border-rotate 3s linear infinite;
+
+  @keyframes border-rotate {
+    to {
+      --border-angle: 360deg;
+    }
+  }
+}
+
+@layer components {
+    /* ICONS DEFAULT SIZING */
+    .icon-6 {
+        @apply w-6 h-6
+    }
+
+    /* NAVIGATION: MAIN DIV */
+    .profile-div {
+        @apply animate-rotate-border cursor-pointer rounded-xl p-1 transition-all duration-500 ease-out hover:scale-105 hover:bg-conic/[from_var(--border-angle)] 
+    }
+    .profile-div-not-active{
+        @apply bg-transparent from-white/10 via-cyan-400/80 to-white/10 dark:from-blue-950/20 dark:via-cyan-500/60 dark:to-blue-950/20
+    }
+    .profile-div-active{
+        @apply bg-transparent from-white/10 via-cyan-400/80 to-white/10 dark:from-blue-950/20 dark:via-cyan-500/60 dark:to-blue-950/20
+    }
+
+    /* NAVIGATION: MAIN BUTTON */
+    .profile-button {
+        @apply flex w-full items-center cursor-pointer rounded-xl backdrop-blur-md p-1.5 px-3 transition duration-75 
+    }
+    .profile-button-not-active {
+        @apply bg-gray-200/10 group-hover:bg-gray-200/30 dark:bg-gray-500/2 dark:group-hover:bg-gray-900/20
+    }
+    .profile-button-active {
+        @apply bg-sky-500/50 group-hover:bg-sky-300/70 dark:bg-sky-200/50 dark:group-hover:bg-sky-300/70
+    }
+
+    /* NAVIGATION: MAIN ICON */
+    .profile-icon-span {
+        @apply rounded-xl p-1.5 text-blue-500 transition duration-25 ease-in-out 
+    }
+    .profile-icon-span-not-active {
+        @apply bg-gray-300 dark:bg-gray-800 group-hover:bg-blue-300 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:bg-gray-300/70 dark:group-hover:text-blue-500
+    }
+    .profile-icon-span-active {
+        @apply bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100
+    }
+
+    /* NAVIGATION: MAIN TITLE */
+    .profile-title-span {
+        @apply ml-3 transition duration-25 ease-in-out 
+    }
+    .profile-title-span-not-active {
+        @apply text-gray-800 group-hover:text-gray-900 dark:text-white dark:group-hover:text-gray-100
+    }
+    .profile-title-span-active {
+        @apply font-semibold dark:font-bold text-gray-800 group-hover:text-gray-900 dark:text-white dark:group-hover:text-gray-100
+    }
+}

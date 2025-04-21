@@ -12,7 +12,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
     <div class="">
         <div
             class="sticky top-2 z-20 backdrop-blur-sm px-6 py-4 border-2 rounded-2xl bg-gray-200/45 border-blue-500/85 dark:bg-gray-800/45 dark:border-gray-300/85">
-            <h1 class="text-3xl font-bold tracking-tight text-gray-950 dark:text-gray-100">
+            <h1 class="text-3xl ml-8 xl:ml-0 font-bold tracking-tight text-gray-950 dark:text-gray-100">
                 Categories
             </h1>
         </div>

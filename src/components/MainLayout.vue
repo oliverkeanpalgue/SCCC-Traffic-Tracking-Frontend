@@ -109,12 +109,12 @@ const closeSignOutModal = () => {
         class="bg-cover bg-center min-h-screen">
 
         <aside id="logo-sidebar" ref="sidebarRef"
-            class="fixed top-0 left-0 w-64 h-screen pt-4 pl-3 xl:pt-4 transition-transform z-100 xl:z-5 backdrop-blur-sm xl:translate-x-0 bg-gray-200/80 dark:bg-gray-900/80 xl:bg-transparent xl:dark:bg-transparent"
+            class="fixed top-0 left-0 w-64 h-screen pt-4 pl-3 xl:pt-4 transition-transform z-100 xl:z-5 backdrop-blur-lg xl:translate-x-0 bg-sky-200/10 dark:bg-gray-900/80 xl:bg-transparent xl:dark:bg-transparent"
             :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
             <div class="h-full px-3 pb-4 overflow-y-auto flex flex-col justify-between">
 
-                <ul class="space-y-2 font-medium">
-                    <div class="mb-4">
+                <ul class=" font-medium">
+                    <div class="mb-6 mt-2">
                         <div class="flex">
                             <img src="../assets/baguio-logo.png" class="h-12 me-1" alt="Smart City Baguio" />
                             <span
@@ -125,142 +125,161 @@ const closeSignOutModal = () => {
                         </div>
                     </div>
                     <li>
-                        <RouterLink to="/" @click="closeSidebar()" v-if="inventoryAccess.for_dashboard === 1"
-                            :class="[$route.name === 'Dashboard' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/" @click="closeSidebar()" v-if="inventoryAccess.for_dashboard === 1"
+                                :class="[$route.name === 'Dashboard' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
                             <span :class="[$route.name === 'Dashboard' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <MdDashboard class="w-6 h-6" />
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdDashboard class="icon-6" />
                             </span>
-                            <span :class="[$route.name === 'Dashboard' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Dashboard</span>
+                            <span :class="[$route.name === 'Dashboard' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Dashboard</span>
                         </RouterLink>
+                        </div>
                     </li>
                     <li>
-                        <RouterLink to="/inventory" @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1"
-                            :class="[$route.name === 'Inventory' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/inventory" @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1"
+                                :class="[$route.name === 'Inventory' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
                             <span :class="[$route.name === 'Inventory' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <MdInventory2 class="w-6 h-6" />
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdInventory2 class="icon-6" />
                             </span>
-                            <span :class="[$route.name === 'Inventory' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Inventory</span>
+                            <span :class="[$route.name === 'Inventory' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Inventory</span>
                         </RouterLink>
+                        </div>
                     </li>
                     <li>
-                        <RouterLink to="/categories" @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1"
-                            :class="[$route.name === 'Categories' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/categories" @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1"
+                                :class="[$route.name === 'Categories' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
                             <span :class="[$route.name === 'Categories' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <MdRoundCategory class="w-6 h-6" />
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdRoundCategory class="icon-6" />
                             </span>
-                            <span :class="[$route.name === 'Categories' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Categories</span>
+                            <span :class="[$route.name === 'Categories' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Categories</span>
                         </RouterLink>
+                        </div>
                     </li>
                     <li>
-                        <RouterLink to="/borrowers" @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1"
-                            :class="[$route.name === 'Borrowers' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/borrowers" @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1"
+                                :class="[$route.name === 'Borrowers' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
                             <span :class="[$route.name === 'Borrowers' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <FlFilledPeopleSwap class="w-6 h-6" />
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <FlFilledPeopleSwap class="icon-6" />
                             </span>
-                            <span :class="[$route.name === 'Borrowers' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Borrowers</span>
+                            <span :class="[$route.name === 'Borrowers' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Borrowers</span>
                         </RouterLink>
+                        </div>
                     </li>
                     <li>
-                        <RouterLink to="/users" @click="closeSidebar()" v-if="inventoryAccess.for_users === 1"
-                            :class="[$route.name === 'Users' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/users" @click="closeSidebar()" v-if="inventoryAccess.for_users === 1"
+                                :class="[$route.name === 'Users' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
                             <span :class="[$route.name === 'Users' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <FaUserGear class="w-6 h-6" />
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <FaUserGear class="icon-6" />
                             </span>
-                            <span :class="[$route.name === 'Users' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Users</span>
-                        </RouterLink>
+                            <span :class="[$route.name === 'Users' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Users</span>
+                            </RouterLink>
+                        </div>
                     </li>
                     <li>
-                        <RouterLink to="/offices" @click="closeSidebar()" v-if="inventoryAccess.for_offices === 1"
-                            :class="[$route.name === 'Offices' ?
-                                'bg-gray-400/30 hover:bg-gray-400/35 dark:bg-gray-200/35 dark:hover:bg-gray-300/30' :
-                                'bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30',
-                                'flex my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75']">
-                            <span :class="[$route.name === 'Offices' ?
-                                'bg-blue-500 dark:bg-blue-600 text-blue-100 dark:text-blue-100' :
-                                'bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500',
-                                'p-1.5 rounded-xl transition duration-75']">
-                                <BxSolidBuildings class="w-6 h-6" />
-                            </span>
-                            <span :class="[$route.name === 'Offices' ? 'font-semibold dark:font-bold' : '']"
-                                class="ml-3 text-gray-800 dark:text-white ">Offices</span>
-                        </RouterLink>
+                        <div class="profile-div profile-div-not-active group">
+                            <RouterLink to="/offices" @click="closeSidebar()" v-if="inventoryAccess.for_offices === 1"
+                                :class="[$route.name === 'Offices' ?
+                                    'profile-button-active' :
+                                    'profile-button-not-active',
+                                    'profile-button']">
+                                <span :class="[$route.name === 'Offices' ?
+                                    'profile-icon-span-active' :
+                                    'profile-icon-span-not-active',
+                                    'profile-icon-span']">
+                                    <BxSolidBuildings class="icon-6" />
+                                </span>
+                                <span :class="[$route.name === 'Offices' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                    class="profile-title-span">Offices</span>
+                            </RouterLink>
+                        </div>
                     </li>
                 </ul>
 
-                <div class="w-full space-y-2 font-medium">
-                    <button
-                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
-                        <span
-                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
-                            <BxSolidBuildings class="w-6 h-6" />
-                        </span>
-                        <span class="ml-3 text-gray-800 dark:text-white">{{ user.firstName }}</span>
-                    </button>
-                    <button @click="toggleTheme"
-                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
-                        <span
-                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
-                            <MdRoundLightMode v-if="theme === 'light'" class="w-6 h-6" />
-                            <MdRoundDarkMode v-else class="w-6 h-6" />
-                        </span>
-                        <span v-if="theme === 'light'" class="ml-3 text-gray-800 dark:text-white">Light Mode</span>
-                        <span v-else class="ml-3 text-gray-800 dark:text-white">Dark Mode</span>
-                    </button>
-                    <button @click="openSignOutModal()" data-modal-target="popup-modal" data-modal-toggle="popup-modal"
-                        class="flex w-full my-2 items-center p-1.5 px-3 rounded-xl group hover:scale-105 transition duration-75 bg-gray-200/30 hover:bg-gray-400/30 dark:bg-gray-500/5 dark:hover:bg-gray-300/30">
-                        <span
-                            class="p-1.5 rounded-xl transition duration-75 bg-gray-300 group-hover:bg-blue-300 dark:bg-gray-800 dark:group-hover:bg-gray-300/70 text-blue-500 group-hover:text-blue-700 dark:text-blue-500 dark:group-hover:text-blue-500">
-                            <FeLogOut class="w-6 h-6" />
-                        </span>
-                        <span class="ml-3 text-gray-800 dark:text-white">Sign Out</span>
-                    </button>
+                <div class="w-full font-medium">
+                    <div class="profile-div profile-div-not-active group">
+                        <button class="profile-button profile-button-not-active">
+                            <span class="profile-icon-span profile-icon-span-not-active">
+                                <FaUserGear class="icon-6" />
+                            </span>
+                            <span class="profile-title-span profile-title-span-not-active">
+                                {{ user.firstName }}
+                            </span>
+                        </button>
+                    </div>
+
+                    <div @click="toggleTheme" class="profile-div profile-div-not-active group">
+                        <button class="profile-button profile-button-not-active">
+                            <span class="profile-icon-span profile-icon-span-not-active">
+                                <MdRoundLightMode v-if="theme === 'light'" class="icon-6" />
+                                <MdRoundDarkMode v-else class="icon-6" />
+                            </span>
+                            <span v-if="theme === 'light'"
+                                class="profile-title-span profile-title-span-not-active">Light Mode</span>
+                            <span v-else class="profile-title-span profile-title-span-not-active">Dark Mode</span>
+                        </button>
+                    </div>
+
+                    <div @click="openSignOutModal()" class="profile-div profile-div-not-active group">
+                        <button class="profile-button profile-button-not-active">
+                            <span class="profile-icon-span profile-icon-span-not-active">
+                                <FeLogOut class="icon-6" />
+                            </span>
+                            <span class="profile-title-span profile-title-span-not-active">
+                                Sign Out
+                            </span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </aside>
 
-        <nav class="fixed top-0 w-full">
+        <nav class="fixed top-3 w-full z-55 ">
             <div class="px-3 py-3 xl:px-5 xl:pl-3">
                 <div class="flex items-center xl:pl-64 justify-between">
-                    <div class="flex items-center justify-start rtl:justify-end">
+                    <div class="flex items-center ml-8 justify-start rtl:justify-end">
                         <button @click="toggleSidebar" aria-controls="logo-sidebar" type="button" ref="toggleButtonRef"
-                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg xl:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
+                            class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg border xl:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600 border-blue-500 dark:border-gray-600">
                             <span class="sr-only">Open sidebar</span>
-                            <svg class="w-6 h-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
+                            <svg class="icon-6" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path clip-rule="evenodd" fill-rule="evenodd"
                                     d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 10.5a.75.75 0 01.75-.75h7.5a.75.75 0 010 1.5h-7.5a.75.75 0 01-.75-.75zM2 10a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 10z">
@@ -284,7 +303,7 @@ const closeSignOutModal = () => {
                         <button type="button"
                             class="absolute top-3 end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:text-gray-200 dark:hover:bg-gray-600 dark:hover:text-white"
                             @click="closeSignOutModal()">
-                            <ClCloseMd class="w-6 h-6" aria-hidden="true" />
+                            <ClCloseMd class="icon-6" aria-hidden="true" />
                         </button>
                         <div class="p-4 md:p-5 text-center">
                             <div class="flex mb-5 w-full items-center justify-center ">
