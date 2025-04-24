@@ -17,46 +17,13 @@ import Borrowers from "./pages/Borrowers.vue";
 import Users from "./pages/Users.vue";
 import NotFoundPage from "./pages/NotFound.vue";
 import ForgotPassword from "./pages/auth/ForgotPassword.vue";
-
+import Traffic from "./pages/Traffic.vue"
 const routes = [
   {
     path: "/",
-    component: MainLayout,
-    children: [
-      { path: '/', name: 'Dashboard', component: Dashboard, meta: { permission: 'for_dashboard' }},
-      { path: '/upload', name: 'Upload', component: Upload },
-      { path: '/images', name: 'MyImages', component: MyImages },
-      { path: '/reports', name: 'Reports', component: Reports },
-      { path: '/inventory', name: 'Inventory', component: Inventory, meta: { permission: 'for_inventory' }},
-      { path: '/borrowed', name: 'Borrowed', component: Borrowed },
-      { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
-      { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
-      { path: '/offices', name: 'Offices', component: Offices, meta: { permission: 'for_offices' }},
-      { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
-      {
-        path: '/forgotpassword',
-        name: 'ForgotPassword',
-        component: ForgotPassword,
-        props: route => ({
-          token: route.query.token,
-          email: route.query.email
-        })
-      },
-    ],
-    beforeEnter: async (to, from, next) => {
-      try {
-        const userStore = useUserStore();
-        await userStore.fetchUser();
-        next();
-      } catch (error) {
-        next('/login');
-      }
-    },
+    component: Traffic,
+    
   },
-  { path: '/login', name: 'Login', component: Login },
-  { path: '/signup', name: 'Signup', component: Signup },
-  { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage },
 ];
 
 
