@@ -257,7 +257,7 @@ function updateLineColor(index, dir, color) {
     class="bg-cover bg-center min-h-screen bg-[#1b1a1a]">
 
     <aside id="logo-sidebar" ref="sidebarRef"
-      class="fixed top-0 left-0 w-[20%] h-screen pt-4 pl-3 xl:pt-4 transition-transform z-100 xl:z-5 backdrop-blur-lg xl:translate-x-0"
+      class="fixed top-0 left-0 w-[20%] h-screen p-4 xl:pt-4 transition-transform z-100 xl:z-5 xl:translate-x-0"
       :class="sidebarVisible ? 'translate-x-0' : '-translate-x-full'" aria-label="Sidebar">
       <div class="h-full px-3 pb-4 overflow-y-auto flex flex-col justify-between">
 
@@ -265,7 +265,7 @@ function updateLineColor(index, dir, color) {
         <div class="rounded-2xl p-1">
           <!-- Logo and Header -->
           <div class="flex flex-row w-full justify-center h-[80px]">
-            <div class="w-[70px] h-full">
+            <div class="w-[90px] h-full">
               <img src="/img/Logo.png" alt="Logo" class="h-full w-full" />
             </div>
             <div class="flex items-center justify-center w-[200px]">
@@ -390,7 +390,7 @@ function updateLineColor(index, dir, color) {
       </div>
     </nav>
 
-    <div class="min-h-[100vh] max-h-[100vh] px-4 pl-8 xl:pl-4 xl:ml-64 dark:text-gray-200">
+    <div class="min-h-[100vh] max-h-[100vh] px-4 pl-8 xl:pl-4 xl:ml-64">
       <!-- MAIN CONTENT -->
       <router-view class="" />
 
