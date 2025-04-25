@@ -45,8 +45,8 @@ const routes = [
       try {
         const userStore = useUserStore();
         await userStore.fetchUser();
-        if (userStore.user.for_inventory === 0){
-          console.log('userStore.user.for_inventory', userStore.user.for_inventory)
+        if (userStore.user.for_traffic === 0){
+          console.log('userStore.user.for_traffic', userStore.user.for_traffic)
           next('/no_inventory_access');
         } 
         else if (userStore.user.email_verified_at === null){
