@@ -17,13 +17,14 @@ import EmailNotVerified from "./pages/access/EmailNotVerified.vue";
 import NoAccess from "./pages/access/NoAccess.vue";
 import NoInventoryAccess from "./pages/access/NoInventoryAccess.vue";
 import Transactions from "./pages/Transactions.vue";
+import Traffic from "./pages/Traffic.vue";
 
 const routes = [
   {
     path: "/",
     component: MainLayout,
     children: [
-      { path: '/', name: 'Dashboard', component: Dashboard, meta: { permission: 'for_dashboard' }},
+      { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
       { path: '/inventory', name: 'Inventory', component: Inventory, meta: { permission: 'for_inventory' }},
       { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
       { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
