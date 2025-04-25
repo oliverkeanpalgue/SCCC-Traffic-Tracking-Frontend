@@ -22,9 +22,8 @@ import Traffic from "./pages/Traffic.vue";
 const routes = [
   {
     path: "/",
-    component: MainLayout,
+    component: Traffic,
     children: [
-      { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
       { path: '/inventory', name: 'Inventory', component: Inventory, meta: { permission: 'for_inventory' }},
       { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
       { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
