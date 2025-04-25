@@ -34,7 +34,7 @@
     .profile-div-active{
         @apply bg-transparent from-white/10 via-cyan-400/80 to-white/10 dark:from-blue-950/20 dark:via-cyan-500/60 dark:to-blue-950/20
     }
-
+    
     /* NAVIGATION: MAIN BUTTON */
     .profile-button {
         @apply flex w-full items-center cursor-pointer rounded-xl backdrop-blur-md p-1.5 px-3 transition duration-75 
@@ -67,16 +67,4 @@
     .profile-title-span-active {
         @apply font-semibold dark:font-bold text-gray-800 group-hover:text-gray-900 dark:text-white dark:group-hover:text-gray-100
     }
-}
-
-.primary{
-    background-color: #238943ff;
-}
-
-.text-primary{
-    color: #238943ff;
-}
-
-.bg-primary{
-    background-color: #238943ff;
 }

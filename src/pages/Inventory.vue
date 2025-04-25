@@ -318,47 +318,42 @@ const handlePrint = async () => {
 
 <template>
   <div class="">
-        <div
-            class="sticky top-2 z-20 backdrop-blur-sm px-6 py-4 border-2 rounded-2xl bg-gray-200/45 border-blue-500/85 dark:bg-gray-800/45 dark:border-gray-300/85">
-            <h1 class="text-3xl ml-8 xl:ml-0 font-bold tracking-tight text-gray-950 dark:text-gray-100">
-                Inventory
-            </h1>
-        </div>
-    <!-- HEADER -->
-    <header class="shadow">
-      <div class="flex md:px-6 py-4 ">
-        <h1 class="text-3xl w-10/12 font-bold tracking-tight dark:text-gray-200">Inventory</h1>
-        <!-- TOGGLE OF TABLE OR GRID -->
-        <label class="justify-end relative inline-flex cursor-pointer select-none items-center">
-          <input type="checkbox" class="sr-only" @click="toggleTableView" :checked="tableView" />
-          <label class="text-lg mr-2 font-bold"
-            :class="{ 'text-blue-600': !tableView, 'text-gray-500 dark:text-gray-500': tableView }">Grid</label>
+    <div
+      class="sticky flex justify-between top-2 z-20 backdrop-blur-sm px-6 py-4 border-2 rounded-2xl bg-gray-200/45 border-blue-500/85 dark:bg-gray-800/45 dark:border-gray-300/85">
+      <h1 class="text-3xl ml-8 xl:ml-0 font-bold tracking-tight text-gray-950 dark:text-gray-100">
+        Inventory
+      </h1>
+      <!-- TOGGLE OF TABLE OR GRID -->
+      <label class="justify-end relative inline-flex cursor-pointer select-none items-center">
+        <input type="checkbox" class="sr-only" @click="toggleTableView" :checked="tableView" />
+        <label class="text-lg mr-2 font-bold"
+          :class="{ 'text-blue-600': !tableView, 'text-gray-500 dark:text-gray-500': tableView }">Grid</label>
 
-          <span
-            class="slider flex h-12 w-[75px] p-1 items-center rounded-full bg-gray-700 duration-200 relative overflow-hidden"
-            :class="{ 'bg-blue-400': tableView }">
-            <!-- Grid Icon (Shows when tableView is false) -->
-            <div class="transition-transform duration-300"
-              :class="{ 'translate-x-[30px] translate-y-[-13px] opacity-100 text-blue-600': tableView, 'z-10 translate-x-[6px] translate-y-[-13px] opacity-100 text-blue-600': !tableView }">
-              <FlFilledGrid class="absolute w-7 h-7 " />
+        <span
+          class="slider flex h-12 w-[75px] p-1 items-center rounded-full bg-gray-700 duration-200 relative overflow-hidden"
+          :class="{ 'bg-blue-400': tableView }">
+          <!-- Grid Icon (Shows when tableView is false) -->
+          <div class="transition-transform duration-300"
+            :class="{ 'translate-x-[30px] translate-y-[-13px] opacity-100 text-blue-600': tableView, 'z-10 translate-x-[6px] translate-y-[-13px] opacity-100 text-blue-600': !tableView }">
+            <FlFilledGrid class="absolute w-7 h-7 " />
+          </div>
+
+          <!-- Toggle Button -->
+          <span class="dot h-10 w-10 rounded-full bg-white duration-200 transform flex items-center justify-center"
+            :class="{ 'translate-x-[28px]': tableView, 'translate-x-0': !tableView }">
+            <!-- Table Icon (Appears inside the button when tableView is true) -->
+            <div class="transition-transform duration-400"
+              :class="{ 'opacity-100 text-blue-600': tableView, 'translate-x-[-7px] opacity-0 text-blue-600': !tableView }">
+              <BxTable class="w-7 h-7" />
             </div>
-
-            <!-- Toggle Button -->
-            <span class="dot h-10 w-10 rounded-full bg-white duration-200 transform flex items-center justify-center"
-              :class="{ 'translate-x-[28px]': tableView, 'translate-x-0': !tableView }">
-              <!-- Table Icon (Appears inside the button when tableView is true) -->
-              <div class="transition-transform duration-400"
-                :class="{ 'opacity-100 text-blue-600': tableView, 'translate-x-[-7px] opacity-0 text-blue-600': !tableView }">
-                <BxTable class="w-7 h-7" />
-              </div>
-            </span>
           </span>
-          <label class="text-lg ml-2 font-bold"
-            :class="{ 'text-blue-600': tableView, 'text-gray-500 dark:text-gray-500': !tableView }">Table</label>
-        </label>
-      </div>
-    </header>
-    <div class="mt-4 grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2 ">
+        </span>
+        <label class="text-lg ml-2 font-bold"
+          :class="{ 'text-blue-600': tableView, 'text-gray-500 dark:text-gray-500': !tableView }">Table</label>
+      </label>
+    </div>
+
+    <div class="mt-6 grid grid-cols-2 md:grid-cols-6 xl:grid-cols-8 items-center px-1 mb-2 ">
       <!-- SEARCH BAR -->
       <div class="col-span-1 mb-2 md:mb-0 md:col-span-3 xl:col-span-5 pr-2 md:pr-3">
         <form class="flex items-center" @submit.prevent>
@@ -432,8 +427,8 @@ const handlePrint = async () => {
     </div>
 
     <!-- MAIN CONTAINER -->
-    <div class="border-2 p-4 h-[71vh] md:h-[77vh] border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-      <div v-if="isLoading" class="h-[67vh] xl:h-[73vh] flex flex-col items-center justify-center">
+    <div class="border-2 p-4 h-[82vh] border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
+      <div v-if="isLoading" class="h-[76vh] flex flex-col items-center justify-center">
         <Loading />
         <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
       </div>
@@ -441,7 +436,7 @@ const handlePrint = async () => {
         :class="selectedItem ? 'grid grid-cols-5 gap-4' : 'grid grid-cols-1'">
         <!-- IMAGE LIST -->
         <div
-          class="grid gap-4 h-[67vh] md:h-[72vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
+          class="grid gap-4 max-h-[78vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden col-span-1"
           :class="selectedItem ? 'hidden md:grid md:grid-cols-1 xl:grid-cols-2' : 'grid grid-cols-3 md:grid-cols-4 xl:grid-cols-5'">
           <div v-for="item in filteredInventory" :key="item.newId" @click="selectImage(item)"
             class="cursor-pointer p-2 border rounded-lg hover:shadow-lg transition duration-300 ease-in-out dark:font-bold"
@@ -457,7 +452,7 @@ const handlePrint = async () => {
 
         <!-- IMAGE DETAILS (Shown when an image is clicked) -->
         <div v-if="selectedItem"
-          class="relative max-h-[67vh] xl:max-h-[73vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-5 md:col-span-4">
+          class="relative min-h-[74vh] overflow-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden p-4 border rounded-lg transition duration-300 ease-in-out dark:bg-gray-900 col-span-5 md:col-span-4">
           <!-- CLOSE BUTTON -->
           <button @click="closeDetails"
             class="absolute top-2 right-2 bg-gray-200 text-gray-700 px-1 py-1 rounded-full hover:bg-gray-300 transition">

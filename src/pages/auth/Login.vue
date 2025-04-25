@@ -15,8 +15,6 @@ const data = ref({
   password: '',
 })
 
-const errorMessage = ref('')
-
 const errors = ref({
   email: [],
   password: []
@@ -70,7 +68,7 @@ function submit() {
       })
       .catch(error => {
         console.log(error.response)
-        errorMessage.value = error.response.data.message;
+        emitter.emit("show-toast", { message: "These credentials do not match our records.", type: "error" });
         isLoading.value = false
       })
   });
@@ -118,12 +116,9 @@ onUnmounted(() => {
         <p class="text-gray-800 text-2xl text-center font-bold mb-4">Sign in to your Account</p>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4">
-          <div v-if="errorMessage" class="mt-4 py-2 px-3 rounded text-white bg-red-400">
-            {{ errorMessage }}
-          </div>
           <div>
             <div class="flex flex-row">
-              <label for="email" class="block text-md font-medium text-gray-700">Email: </label>
+              <label for="email" class="block text-md font-medium text-gray-700">Email</label>
               <p class="text-red-700 ml-2 font-semibold italic">
                 {{ errors.email ? errors.email[0] : '' }}
               </p>
@@ -133,7 +128,7 @@ onUnmounted(() => {
           </div>
           <div>
             <div class="flex flex-row">
-              <label for="password" class="block text-md font-medium text-gray-700">Password: </label>
+              <label for="password" class="block text-md font-medium text-gray-700">Password</label>
               <p class="text-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
             </div>
 

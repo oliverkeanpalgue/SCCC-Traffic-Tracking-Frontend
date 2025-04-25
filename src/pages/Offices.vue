@@ -1,7 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import Loading from "../components/Loading.vue";
-import OfficeTable from "../components/Category/CategoryTable.vue";
+import OfficeTable from "../components/Office/OfficeTable.vue";
 
 const isLoading = ref(false);
 
@@ -19,7 +18,7 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 
         <!-- MAIN CONTAINER -->
         <div class="border-2 mt-4 px-4 border-gray-300 dark:border-gray-800 dark:bg-black rounded-xl">
-            <div class="h-[78vh]">
+            <div class="min-h-[88vh]">
                 <OfficeTable />
             </div>
         </div>

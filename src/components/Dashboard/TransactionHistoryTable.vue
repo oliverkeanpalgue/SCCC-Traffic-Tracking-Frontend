@@ -34,6 +34,9 @@ const props = defineProps({
   equipmentCopies: Array,
   categoryList: Array,
   selectedDateRange: Object,
+  filterBorrowerId: String,
+  filterLenderId: String,
+  filterOfficeId: String
 })
 
 watch(() => props.selectedDateRange, () => {
@@ -86,6 +89,22 @@ const filteredTransactions = computed(() => {
     .filter(item => item.isActive)
     .map(item => item.id);
 
+  const activeBorrowerIds = borrowerDropDownItems.value
+    .filter(item => item.isActive)
+    .map(item => item.id);
+
+  const activeLenderIds = userDropDownItems.value
+    .filter(item => item.isActive)
+    .map(item => item.id);
+
+  const activeReturnStatuses = returnStatusDropDownItems.value
+    .filter(item => item.isActive)
+    .map(item => item.id);
+
+  const activeIcsIds = icsDropDownItems.value
+    .filter(item => item.isActive)
+    .map(item => item.id);
+
   return props.transactionHistory.filter(transaction => {
     const borrowDate = new Date(transaction.borrow_date);
 
@@ -102,6 +121,28 @@ const filteredTransactions = computed(() => {
     // If there are active filters, check if the transaction's office is in the active list
     if (activeOfficeIds.length > 0 && !activeOfficeIds.includes(borrowerOfficeId)) {
       return false;
+    }
+
+    if (activeBorrowerIds.length > 0 && !activeBorrowerIds.includes(transaction.borrower_id)) {
+      return false;
+    }
+
+    if (activeLenderIds.length > 0 && !activeLenderIds.includes(transaction.lender_id)) {
+      return false;
+    }
+
+    if (activeIcsIds.length > 0 && !activeIcsIds.includes(transaction.id)) {
+      return false;
+    }
+
+    if (activeReturnStatuses.length > 0) {
+      const hasReturnDate = !!transaction.return_date;
+      const isReturned = activeReturnStatuses.includes('returned') && hasReturnDate;
+      const isNotReturned = activeReturnStatuses.includes('not_returned') && !hasReturnDate;
+
+      if (!isReturned && !isNotReturned) {
+        return false;
+      }
     }
 
     const borrowerName = borrower?.borrowers_name?.toLowerCase() || "";
@@ -237,10 +278,19 @@ const openDropdownId = ref(null);
 
 const dropdownRefs = ref([]);
 
-onMounted(() => props.officeList, () => {
+onMounted(() => {
+  console.log("🚀 ~ officeDropDownItems.value=props.officeList.map ~ props.filterOfficeId:", props.filterOfficeId)
   officeDropDownItems.value = props.officeList.map((office) => ({
     id: office.id,
     type: office.office_name,
+    isActive: Number(props.filterOfficeId) === Number(office.id), // true if it matches
+  }));
+});
+
+onMounted(() => {
+  borrowerDropDownItems.value = props.borrowers.map((borrower) => ({
+    id: borrower.id,
+    type: borrower.borrowers_name,
     isActive: true,
   }));
 });
@@ -253,7 +303,9 @@ const officeDropDownFilter = ref(false);
 const officeDropDownButtonRef = ref(null);
 const officeDropDownMenuRef = ref(null); // Reference to officeDropDown menu
 
+
 const officeDropDownItems = ref([]);
+
 
 const resetOfficeFilters = () => {
   officeDropDownItems.value = props.officeList.map((office) => ({
@@ -263,7 +315,7 @@ const resetOfficeFilters = () => {
   }));
 };
 
-const toggleofficeDropDown = () => {
+const toggleOfficeDropDown = () => {
   if (!officeDropDownFilter.value) {
     resetOfficeFilters(); // Reset when opening the dropdown
   }
@@ -292,6 +344,186 @@ const handleClickOutside = (event) => {
   openDropdownId.value = null;
 };
 
+// dropdown borrowers
+const borrowerDropDownItems = ref([]);
+const borrowerDropDownFilter = ref(false);
+const borrowerDropDownButtonRef = ref(null);
+const borrowerDropDownMenuRef = ref(null);
+
+const resetBorrowerFilters = () => {
+  borrowerDropDownItems.value = props.borrowers.map((borrower) => ({
+    id: borrower.id,
+    type: borrower.borrowers_name,
+    isActive: false, // Set initial state to false
+  }));
+};
+
+const toggleborrowerDropDown = () => {
+  if (!borrowerDropDownFilter.value) {
+    resetBorrowerFilters(); // Reset when opening the dropdown
+  }
+  borrowerDropDownFilter.value = !borrowerDropDownFilter.value;
+};
+
+// Function to handle checkbox toggle
+const handleCheckboxChangeBorrower = (id, event) => {
+  event.stopPropagation(); // Prevent event from closing the officeDropDown
+  const item = borrowerDropDownItems.value.find((item) => item.id === id);
+  if (item) {
+    item.isActive = !item.isActive;
+  }
+};
+
+// Custom function to handle click outside
+const handleClickOutsideBorrowers = (event) => {
+  if (
+    borrowerDropDownButtonRef.value &&
+    !borrowerDropDownButtonRef.value.contains(event.target) &&
+    borrowerDropDownMenuRef.value &&
+    !borrowerDropDownMenuRef.value.contains(event.target)
+  ) {
+    borrowerDropDownFilter.value = false;
+  }
+  openDropdownId.value = null;
+};
+
+// dropdown borrowers
+const userDropDownItems = ref([]);
+const userDropDownFilter = ref(false);
+const userDropDownButtonRef = ref(null);
+const userDropDownMenuRef = ref(null);
+
+const resetUserFilters = () => {
+  userDropDownItems.value = props.users.map((user) => ({
+    id: user.id,
+    type: `${user.firstName} ${user.lastName || ''}`.trim(),
+    isActive: false, // Set initial state to false
+  }));
+};
+
+const toggleuserDropDown = () => {
+  if (!userDropDownFilter.value) {
+    resetUserFilters(); // Reset when opening the dropdown
+  }
+  userDropDownFilter.value = !userDropDownFilter.value;
+};
+
+// Function to handle checkbox toggle
+const handleCheckboxChangeUser = (id, event) => {
+  event.stopPropagation(); // Prevent event from closing the officeDropDown
+  const item = userDropDownItems.value.find((item) => item.id === id);
+  if (item) {
+    item.isActive = !item.isActive;
+  }
+};
+
+// Custom function to handle click outside
+const handleClickOutsideUsers = (event) => {
+  if (
+    userDropDownButtonRef.value &&
+    !userDropDownButtonRef.value.contains(event.target) &&
+    userDropDownMenuRef.value &&
+    !userDropDownMenuRef.value.contains(event.target)
+  ) {
+    userDropDownFilter.value = false;
+  }
+  openDropdownId.value = null;
+};
+
+// Return status dropdown
+const returnStatusDropDownItems = ref([
+  { id: 'returned', type: 'Returned', isActive: false },
+  { id: 'not_returned', type: 'Not Returned', isActive: false }
+]);
+const returnStatusDropDownFilter = ref(false);
+const returnStatusDropDownButtonRef = ref(null);
+const returnStatusDropDownMenuRef = ref(null);
+
+const resetReturnStatusFilters = () => {
+  returnStatusDropDownItems.value = [
+    { id: 'returned', type: 'Returned', isActive: false },
+    { id: 'not_returned', type: 'Not Returned', isActive: false }
+  ];
+};
+
+const toggleReturnStatusDropDown = () => {
+  if (!returnStatusDropDownFilter.value) {
+    resetReturnStatusFilters(); // Reset when opening the dropdown
+  }
+  returnStatusDropDownFilter.value = !returnStatusDropDownFilter.value;
+};
+
+// Function to handle checkbox toggle
+const handleCheckboxChangeReturnStatus = (id, event) => {
+  event.stopPropagation(); // Prevent event from closing the dropdown
+  const item = returnStatusDropDownItems.value.find((item) => item.id === id);
+  if (item) {
+    item.isActive = !item.isActive;
+  }
+};
+
+// Custom function to handle click outside
+const handleClickOutsideReturnStatus = (event) => {
+  if (
+    returnStatusDropDownButtonRef.value &&
+    !returnStatusDropDownButtonRef.value.contains(event.target) &&
+    returnStatusDropDownMenuRef.value &&
+    !returnStatusDropDownMenuRef.value.contains(event.target)
+  ) {
+    returnStatusDropDownFilter.value = false;
+  }
+  openDropdownId.value = null;
+};
+
+// dropdown borrowers
+const icsDropDownItems = ref([]);
+const icsDropDownFilter = ref(false);
+const icsDropDownButtonRef = ref(null);
+const icsDropDownMenuRef = ref(null);
+
+const resetIcsFilters = () => {
+  // Filter out unique isc values
+  const uniqueIcs = Array.from(
+    new Set(props.transactionHistory.map((ics) => ics.isc))
+  );
+
+  // Map the unique isc values to the drop-down items
+  icsDropDownItems.value = uniqueIcs.map((isc) => ({
+    id: props.transactionHistory.find((ics) => ics.isc === isc).id, // Get the first matching transaction id
+    type: isc,
+    isActive: false, // Set initial state to false
+  }));
+};
+
+const toggleicsDropDown = () => {
+  if (!icsDropDownFilter.value) {
+    resetIcsFilters(); // Reset when opening the dropdown
+  }
+  icsDropDownFilter.value = !icsDropDownFilter.value;
+};
+
+// Function to handle checkbox toggle
+const handleCheckboxChangeIcs = (id, event) => {
+  event.stopPropagation(); // Prevent event from closing the officeDropDown
+  const item = icsDropDownItems.value.find((item) => item.id === id);
+  if (item) {
+    item.isActive = !item.isActive;
+  }
+};
+
+// Custom function to handle click outside
+const handleClickOutsideIcs = (event) => {
+  if (
+    icsDropDownButtonRef.value &&
+    !icsDropDownButtonRef.value.contains(event.target) &&
+    icsDropDownMenuRef.value &&
+    !icsDropDownMenuRef.value.contains(event.target)
+  ) {
+    icsDropDownFilter.value = false;
+  }
+  openDropdownId.value = null;
+};
+
 const formatDate = (dateString) => {
   if (!dateString) return "N/A"; // Handle null values
   const date = new Date(dateString);
@@ -311,6 +543,38 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener("click", handleClickOutside);
+});
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutsideBorrowers);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutsideBorrowers);
+});
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutsideUsers);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutsideUsers);
+});
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutsideIcs);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutsideIcs);
+});
+
+onMounted(() => {
+  document.addEventListener("click", handleClickOutsideReturnStatus);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", handleClickOutsideReturnStatus);
 });
 
 // FOR CREATE TRANSACTION MODAL
@@ -454,9 +718,10 @@ const handlePrint = async () => {
     <section class="w-full">
       <div
         class="shadow-lg mx-4 px-3 py-2 border-2 rounded-lg bg-white border-gray-300 dark:bg-gray-950 dark:border-gray-700">
-        <!-- Start coding here -->
-        <div class="relative shadow-md sm:rounded-lg overflow-hidden border border-gray-200 dark:border-gray-800">
-          <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+        <div class="relative shadow-md sm:rounded-lg overflow-hidden">
+          <!-- First Row Search and Buttons -->
+          <div
+            class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 px-2 py-2">
             <div class="w-full md:w-8/9">
               <form class="flex items-center" @submit.prevent>
                 <label for="simple-search" class="sr-only">Search</label>
@@ -475,75 +740,10 @@ const handlePrint = async () => {
                 </div>
               </form>
             </div>
+
             <div
               class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
               <div class="flex items-center space-x-3 w-full md:w-auto">
-                <div id="actionsDropdown"
-                  class="hidden z-10 w-44 bg-white rounded divide-y divide-gray-100 shadow dark:bg-gray-700 dark:divide-gray-600">
-                  <ul class="py-1 text-sm text-gray-700 dark:text-gray-200" aria-labelledby="actionsDropdownButton">
-                    <li>
-                      <a href="#"
-                        class="block py-2 px-4 hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">Mass
-                        Edit</a>
-                    </li>
-                  </ul>
-                  <div class="py-1">
-                    <a href="#"
-                      class="block py-2 px-4 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white">Delete
-                      all</a>
-                  </div>
-                </div>
-
-                <!--OFFICE DROPDOWN -->
-                <section class="">
-                  <div class="container">
-                    <div class="">
-                      <div ref="domNode" class="">
-                        <div class="text-center">
-                          <div class="relative inline-block text-left">
-                            <button @click="toggleofficeDropDown" ref="officeDropDownButtonRef"
-                              class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
-                              <IcSolidFilter class="w-5 h-5 mr-1" />
-                              Filter
-                              <MdOutlinedArrowDropDown class="w-5 h-5" />
-                            </button>
-                            <div v-show="officeDropDownFilter" ref="officeDropDownMenuRef"
-                              class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
-                              :class="{
-                                'top-full visible': officeDropDownFilter,
-                                'top-[110%] invisible': !officeDropDownFilter,
-                              }">
-                              <label
-                                class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
-                                v-for="item in officeDropDownItems" :key="item.id">
-                                <div class="relative">
-                                  <input type="checkbox" class="sr-only" :checked="item.isActive"
-                                    @change="handleCheckboxChange(item.id, $event)" />
-                                  <div
-                                    class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
-                                    <span :class="{
-                                      'opacity-100': item.isActive,
-                                      'opacity-0': !item.isActive,
-                                    }">
-                                      <svg width="11" height="8" viewBox="0 0 11 8" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                          d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
-                                          fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
-                                      </svg>
-                                    </span>
-                                  </div>
-                                </div>
-                                {{ item.type }}
-                              </label>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <!-- End -->
-                    </div>
-                  </div>
-                </section>
 
                 <button @click.stop="OpenCreateTransactionModal()"
                   class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
@@ -552,19 +752,215 @@ const handlePrint = async () => {
                 </button>
 
                 <button @click="handlePrint"
-                    class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
-                    <AnFilledPrinter class="w-5 h-5 mr-1" />
-                    <p class="ml-1">Print Transaction</p>
+                  class="flex border items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-green-700 dark:text-white dark:border-green-800 dark:hover:bg-green-800 dark:hover:text-white">
+                  <AnFilledPrinter class="w-5 h-5 mr-1" />
+                  <p class="ml-1">Print Transaction</p>
                 </button>
 
                 <!--CREATE TRANSACTION MODAL -->
                 <CreateTransactionModal v-if="isOpenCreateTransactionModal" v-model="isOpenCreateTransactionModal"
                   @click.stop />
 
-                
               </div>
             </div>
+
           </div>
+
+          <!-- Second Row Filters -->
+          <div class="flex flex-row w-full justify-evenly gap-12 px-2 mb-4">
+            <!--BORROWER DROPDOWN -->
+            <div class="relative inline-block text-left w-1/4">
+              <button @click="toggleborrowerDropDown" ref="borrowerDropDownButtonRef"
+                class="flex justify-between gap-1 border w-full items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <IcSolidFilter class="w-5 h-5 mr-1" />
+                Borrower Filter
+                <MdOutlinedArrowDropDown class="w-5 h-5" />
+              </button>
+              <div v-show="borrowerDropDownFilter" ref="borrowerDropDownMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                  'top-full visible': borrowerDropDownFilter,
+                  'top-[110%] invisible': !borrowerDropDownFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
+                  v-for="item in borrowerDropDownItems" :key="item.id">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="item.isActive"
+                      @change="handleCheckboxChangeBorrower(item.id, $event)" />
+                    <div
+                      class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                      <span :class="{
+                        'opacity-100': item.isActive,
+                        'opacity-0': !item.isActive,
+                      }">
+                        <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  {{ item.type }}
+                </label>
+              </div>
+            </div>
+
+            <!--OFFICE DROPDOWN -->
+            <div class="relative inline-block text-left w-1/4">
+              <button @click="toggleOfficeDropDown" ref="officeDropDownButtonRef"
+                class="flex justify-between gap-1 border w-full items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <IcSolidFilter class="w-5 h-5 mr-1" />
+                Office Filter
+                <MdOutlinedArrowDropDown class="w-5 h-5" />
+              </button>
+              <div v-show="officeDropDownFilter" ref="officeDropDownMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                  'top-full visible': officeDropDownFilter,
+                  'top-[110%] invisible': !officeDropDownFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
+                  v-for="item in officeDropDownItems" :key="item.id">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="item.isActive"
+                      @change="handleCheckboxChange(item.id, $event)" />
+                    <div
+                      class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                      <span :class="{
+                        'opacity-100': item.isActive,
+                        'opacity-0': !item.isActive,
+                      }">
+                        <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  {{ item.type }}
+                </label>
+              </div>
+            </div>
+
+            <!--LENDER DROPDOWN -->
+            <div class="relative inline-block text-left w-1/4">
+              <button @click="toggleuserDropDown" ref="userDropDownButtonRef"
+                class="flex justify-between gap-1 border w-full items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <IcSolidFilter class="w-5 h-5 mr-1" />
+                Lender Filter
+                <MdOutlinedArrowDropDown class="w-5 h-5" />
+              </button>
+              <div v-show="userDropDownFilter" ref="userDropDownMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                  'top-full visible': userDropDownFilter,
+                  'top-[110%] invisible': !userDropDownFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
+                  v-for="item in userDropDownItems" :key="item.id">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="item.isActive"
+                      @change="handleCheckboxChangeUser(item.id, $event)" />
+                    <div
+                      class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                      <span :class="{
+                        'opacity-100': item.isActive,
+                        'opacity-0': !item.isActive,
+                      }">
+                        <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  {{ item.type }}
+                </label>
+              </div>
+            </div>
+
+            <!--ICS DROPDOWN -->
+            <div class="relative inline-block text-left w-1/4">
+              <button @click="toggleicsDropDown" ref="icsDropDownButtonRef"
+                class="flex justify-between gap-1 border w-full items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <IcSolidFilter class="w-5 h-5 mr-1" />
+                ICS Filter
+                <MdOutlinedArrowDropDown class="w-5 h-5" />
+              </button>
+              <div v-show="icsDropDownFilter" ref="icsDropDownMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                  'top-full visible': icsDropDownFilter,
+                  'top-[110%] invisible': !icsDropDownFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2  "
+                  v-for="item in icsDropDownItems" :key="item.id">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="item.isActive"
+                      @change="handleCheckboxChangeIcs(item.id, $event)" />
+                    <div
+                      class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                      <span :class="{
+                        'opacity-100': item.isActive,
+                        'opacity-0': !item.isActive,
+                      }">
+                        <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  {{ item.type }}
+                </label>
+              </div>
+            </div>
+
+            <!--RETURN STATUS DROPDOWN -->
+            <div class="relative inline-block text-left w-1/4">
+              <button @click="toggleReturnStatusDropDown" ref="returnStatusDropDownButtonRef"
+                class="flex justify-between gap-1 border w-full items-center rounded-lg px-10 py-2 text-base font-medium border-gray-400 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-white dark:border-gray-600">
+                <IcSolidFilter class="w-5 h-5 mr-1" />
+                Return Status
+                <MdOutlinedArrowDropDown class="w-5 h-5" />
+              </button>
+              <div v-show="returnStatusDropDownFilter" ref="returnStatusDropDownMenuRef"
+                class="shadow-1 dark:shadow-box-dark absolute border border-gray-500 max-h-70 overflow-auto w-3xs right-0 z-40 mt-2 rounded-md bg-gray-200 dark:bg-gray-900 px-4 pt-2 transition-all"
+                :class="{
+                  'top-full visible': returnStatusDropDownFilter,
+                  'top-[110%] invisible': !returnStatusDropDownFilter,
+                }">
+                <label class="flex items-center cursor-pointer select-none text-dark dark:text-white mb-2"
+                  v-for="item in returnStatusDropDownItems" :key="item.id">
+                  <div class="relative">
+                    <input type="checkbox" class="sr-only" :checked="item.isActive"
+                      @change="handleCheckboxChangeReturnStatus(item.id, $event)" />
+                    <div
+                      class="box mr-4 flex h-5 w-5 items-center justify-center rounded border border-stroke dark:border-dark-3">
+                      <span :class="{
+                        'opacity-100': item.isActive,
+                        'opacity-0': !item.isActive,
+                      }">
+                        <svg width="11" height="8" viewBox="0 0 11 8" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path
+                            d="M10.0915 0.951972L10.0867 0.946075L10.0813 0.940568C9.90076 0.753564 9.61034 0.753146 9.42927 0.939309L4.16201 6.22962L1.58507 3.63469C1.40401 3.44841 1.11351 3.44879 0.932892 3.63584C0.755703 3.81933 0.755703 4.10875 0.932892 4.29224L0.932878 4.29225L0.934851 4.29424L3.58046 6.95832C3.73676 7.11955 3.94983 7.2 4.1473 7.2C4.36196 7.2 4.55963 7.11773 4.71406 6.9584L10.0468 1.60234C10.2436 1.4199 10.2421 1.1339 10.0915 0.951972ZM4.2327 6.30081L4.2317 6.2998C4.23206 6.30015 4.23237 6.30049 4.23269 6.30082L4.2327 6.30081Z"
+                            fill="#3056D3" stroke="#3056D3" strokeWidth="0.4"></path>
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                  {{ item.type }}
+                </label>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Table -->
           <div class="min-h-125 dark:bg-gray-900 ">
             <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
               <thead class=" dark:bg-gray-600 dark:text-gray-300">
@@ -586,7 +982,7 @@ const handlePrint = async () => {
                     <span v-if="sortBy === 'lender'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                   </th>
                   <th @click="sortByField('isc')">
-                    ISC/AREE
+                    ICS/ARE
                     <span v-if="sortBy === 'isc'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                   </th>
                   <th>Item</th>
@@ -723,6 +1119,8 @@ const handlePrint = async () => {
               </tbody>
             </table>
           </div>
+
+          <!-- Pagination -->
           <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4"
             aria-label="Table navigation">
             <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
@@ -780,5 +1178,3 @@ const handlePrint = async () => {
     </section>
   </div>
 </template>
-
-<style></style>
