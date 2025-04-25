@@ -68,3 +68,15 @@
         @apply font-semibold dark:font-bold text-gray-800 group-hover:text-gray-900 dark:text-white dark:group-hover:text-gray-100
     }
 }
+
+.primary{
+    background-color: #238943ff;
+}
+
+.text-primary{
+    color: #238943ff;
+}
+
+.bg-primary{
+    background-color: #238943ff;
+}
