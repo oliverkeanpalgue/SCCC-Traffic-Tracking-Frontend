@@ -6,7 +6,7 @@ import router from "../../router.js";
 import logo from '../../assets/baguio-logo.png';
 import Loading from "../../components/Loading.vue";
 import emitter from "../../eventBus.js";
-import {useDatabaseStore} from "../../stores/databaseStore";
+import { useDatabaseStore } from "../../stores/databaseStore";
 
 const isLoading = ref(false);
 
@@ -64,7 +64,7 @@ function submit() {
       .then(response => {
         emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
         router.push({ name: 'Dashboard' })
-        
+
       })
       .catch(error => {
         console.log(error.response)
@@ -80,21 +80,21 @@ const databaseStore = useDatabaseStore()
 let refreshInterval = null;
 
 onMounted(() => {
+  databaseStore.fetchData()
+  // Optionally, set an interval to auto-refresh:
+  refreshInterval = setInterval(() => {
     databaseStore.fetchData()
-    // Optionally, set an interval to auto-refresh:
-    refreshInterval = setInterval(() => {
-        databaseStore.fetchData()
-    }, 30000)
+  }, 30000)
 })
 
 onUnmounted(() => {
-    clearInterval(refreshInterval)
+  clearInterval(refreshInterval)
 })
 
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+  <div class="min-h-screen flex items-center justify-center ">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
@@ -113,7 +113,7 @@ onUnmounted(() => {
 
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg w-md h-94">
-        <p class="text-gray-800 text-2xl text-center font-bold mb-4">Sign in to your Account</p>
+        <p class="text-gray-800 text-2xl text-center font-bold mb-4">Login</p>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4">
           <div>
@@ -127,9 +127,16 @@ onUnmounted(() => {
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
-            <div class="flex flex-row">
+            <div class="flex flex-row justify-between align-center">
+
               <label for="password" class="block text-md font-medium text-gray-700">Password</label>
               <p class="text-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+
+              <div class="text-sm text-center">
+                <RouterLink :to="{ name: 'ForgotPassword' }" class="text-md text-blue-600 hover:underline">Forgot
+                  Password?
+                </RouterLink>
+              </div>
             </div>
 
             <input type="password" name="password" id="password" autocomplete="current-password" v-model="data.password"
@@ -137,7 +144,8 @@ onUnmounted(() => {
           </div>
 
           <button type="submit"
-            class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Sign in</button>
+            class="w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 cursor-pointer">Sign
+            in</button>
         </form>
 
         <div class="text-sm text-center mt-4">
@@ -146,10 +154,7 @@ onUnmounted(() => {
           </RouterLink>
         </div>
 
-        <div class="text-sm text-center mt-2">
-          <RouterLink :to="{ name: 'ForgotPassword' }" class="text-md text-blue-600 hover:underline">Forgot Password?
-          </RouterLink>
-        </div>
+
       </div>
     </div>
   </div>
