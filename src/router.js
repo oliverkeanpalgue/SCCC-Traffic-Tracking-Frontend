@@ -3,12 +3,6 @@ import Login from "./pages/auth/Login.vue";
 import Signup from "./pages/auth/Signup.vue";
 // import NotFound from "./pages/access/NotFound.vue";
 import useUserStore from "./stores/user.js";
-import Dashboard from "./pages/Dashboard.vue";
-import Inventory from "./pages/Inventory.vue";
-import Offices from "./pages/Offices.vue";
-import MainLayout from "./components/MainLayout.vue";
-import Categories from "./pages/Categories.vue";
-import Borrowers from "./pages/Borrowers.vue";
 import Users from "./pages/Users.vue";
 import NotFoundPage from "./pages/access/NotFound.vue";
 import ForgotPassword from "./pages/auth/ForgotPassword.vue";
@@ -16,7 +10,6 @@ import EmailVerified from "./pages/access/EmailVerified.vue";
 import EmailNotVerified from "./pages/access/EmailNotVerified.vue";
 import NoAccess from "./pages/access/NoAccess.vue";
 import NoInventoryAccess from "./pages/access/NoInventoryAccess.vue";
-import Transactions from "./pages/Transactions.vue";
 import Traffic from "./pages/Traffic.vue";
 
 const routes = [
@@ -26,7 +19,6 @@ const routes = [
     children: [
       { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
       { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
-      { path: '/transactions', name: 'Transactions', component: Transactions, meta: { permission: 'for_dashboard' }},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
       {
         path: '/password-reset',
