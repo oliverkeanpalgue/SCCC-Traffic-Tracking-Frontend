@@ -94,7 +94,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center ">
+  <div class="min-h-screen flex items-center justify-center bg-dark relative">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
@@ -104,57 +104,57 @@ onUnmounted(() => {
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
-        <div class="w-3xs mx-auto md:w-xs">
-          <p class="text-white text-2xl font-bold leading-tight md:text-3xl">
-            Smart City Command and Control Center Inventory System
+        <!-- <div class="w-3xs mx-auto md:w-xs">
+          <p class="text-white font-semibold leading-tight text-xl">
+          Traffic Tracking System
           </p>
-        </div>
+        </div> -->
       </div>
 
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg w-md h-94">
-        <p class="text-gray-800 text-2xl text-center font-bold mb-4">Login</p>
+        <p class="text-dark text-3xl font-bold">Welcome Back</p>
+        <p class="mb-4 text-gray-600">Traffic Management System</p>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4">
           <div>
             <div class="flex flex-row">
-              <label for="email" class="block text-md font-medium text-gray-700">Email</label>
-              <p class="text-red-700 ml-2 font-semibold italic">
+              <label for="email" class="block text-sm font-semibold text-dark">Email</label>
+            </div>
+            <input name="email" id="email" autocomplete="email" v-model="data.email" class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">
                 {{ errors.email ? errors.email[0] : '' }}
               </p>
-            </div>
-            <input name="email" id="email" autocomplete="email" v-model="data.email"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
           </div>
           <div>
             <div class="flex flex-row justify-between align-center">
 
-              <label for="password" class="block text-md font-medium text-gray-700">Password</label>
-              <p class="text-red-700 ml-1 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+              <label for="password" class="block text-sm font-semibold text-dark">Password</label>
 
               <div class="text-sm text-center">
-                <RouterLink :to="{ name: 'ForgotPassword' }" class="text-md text-blue-600 hover:underline">Forgot
+                <RouterLink :to="{ name: 'ForgotPassword' }" class="text-md font-medium text-primary hover:underline">Forgot
                   Password?
                 </RouterLink>
               </div>
             </div>
 
             <input type="password" name="password" id="password" autocomplete="current-password" v-model="data.password"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.password ? errors.password[0] : '' }}</p>
+
+            </div>
 
           <button type="submit"
             class="w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 cursor-pointer">Sign
             in</button>
         </form>
 
-        <div class="text-sm text-center mt-4">
-          <RouterLink :to="{ name: 'Signup' }" class="text-md text-blue-600 hover:underline">Don't have an account? Sign
+        <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
+          <span class="text-gray-600">Don't have an account?</span> 
+          <RouterLink :to="{ name: 'Signup' }" class="text-md text-primary hover:underline">Sign
             up
           </RouterLink>
         </div>
-
-
       </div>
     </div>
   </div>
