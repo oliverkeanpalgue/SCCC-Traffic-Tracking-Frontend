@@ -25,10 +25,6 @@ const routes = [
     component: Traffic,
     children: [
       { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
-      { path: '/inventory', name: 'Inventory', component: Inventory, meta: { permission: 'for_inventory' }},
-      { path: '/categories', name: 'Categories', component: Categories, meta: { permission: 'for_categories' }},
-      { path: '/borrowers', name: 'Borrowers', component: Borrowers, meta: { permission: 'for_borrowers' }},
-      { path: '/offices', name: 'Offices', component: Offices, meta: { permission: 'for_offices' }},
       { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
       { path: '/transactions', name: 'Transactions', component: Transactions, meta: { permission: 'for_dashboard' }},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
