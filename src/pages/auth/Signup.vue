@@ -283,7 +283,7 @@ function submit() {
             <label for="firstName" class="block text-sm font-medium text-gray-800">First Name *</label>
             <input type="text" name="firstName" id="firstName" v-model="data.firstName"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.firstName ? errors.firstName[0] : '' }}</p>
+            <p class="text-red-700 font-medium text-sm mt-1">{{ errors.firstName ? errors.firstName[0] : '' }}</p>
           </div>
           <div>
             <label for="middleName" class="block text-sm font-medium text-gray-800">Middle Name</label>
@@ -294,35 +294,38 @@ function submit() {
             <label for="lastName" class="block text-sm font-medium text-gray-800">Last Name *</label>
             <input type="text" v-model="data.lastName" id="lastName"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.lastName ? errors.lastName[0] : '' }}</p>
+            <p class="text-red-700 font-medium text-sm mt-1">{{ errors.lastName ? errors.lastName[0] : '' }}</p>
 
           </div>
           <div class="col-span-3">
             <div class="flex flex-row">
               <label for="email" class="block text-sm font-medium text-gray-800">Email *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ? errors.email[0] : '' }}</p>
             </div>
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
-          </div>
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.email ? errors.email[0] : '' }}</p>
+
+            </div>
 
           <div class="col-span-3">
             <div class="flex flex-row">
               <label for="password" class="block text-sm font-medium text-gray-800">Password *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
             </div>
             <input type="password" name="password" id="password" v-model="data.password"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.password ? errors.password[0] : '' }}</p>
+
           </div>
 
           <div class="col-span-3">
             <div class="flex flex-row">
               <label for="confirmPassword" class="block text-sm font-medium text-gray-800">Confirm Password *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ?
-                errors.password_confirmation[0] : '' }}</p>
+          
             </div>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
               class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.password_confirmation ?
+                errors.password_confirmation[0] : '' }}</p>
           </div>
 
           <button type="submit"
