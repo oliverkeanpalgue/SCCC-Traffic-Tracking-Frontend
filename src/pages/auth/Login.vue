@@ -112,9 +112,9 @@ onUnmounted(() => {
       </div>
 
       <!-- Login Form -->
-      <div class="bg-white p-6 rounded-xl shadow-lg w-md h-94">
-        <p class="text-dark text-3xl font-bold">Welcome Back</p>
-        <p class="mb-4 text-gray-600">Traffic Management System</p>
+      <div class="bg-white p-6 rounded-xl shadow-lg w-md h-full">
+        <p class="text-dark text-2xl font-bold">Traffic Management System</p>
+        <p class="mb-4 text-gray-600">Login to your Account</p>
 
         <form @submit.prevent="submit" class="flex flex-col gap-4">
           <div>
