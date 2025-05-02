@@ -317,7 +317,7 @@ function submit() {
 
           <div class="col-span-3">
             <div class="flex flex-row">
-              <label for="confirmPassword" class="block text-sm font-medium text-gray-00">Confirm Password *</label>
+              <label for="confirmPassword" class="block text-sm font-medium text-gray-800">Confirm Password *</label>
               <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ?
                 errors.password_confirmation[0] : '' }}</p>
             </div>
