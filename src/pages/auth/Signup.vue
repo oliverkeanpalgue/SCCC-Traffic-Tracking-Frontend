@@ -42,6 +42,7 @@ const data = ref({
   password_confirmation: '',
   for_911: false,
   for_inventory: true,
+  for_traffic: false,
   role: false,
 })
 
@@ -225,34 +226,37 @@ function submit() {
   }
 
   axiosClient.get('/sanctum/csrf-cookie')
-  .then(() => {
-    axiosClient.post("/register", data.value)
-      .then(async (response) => {
-        try {
-          // Get the user ID from the response
-          const userId = response.data.user.id;
-          
-          // Add access for the new user
-          await addAccess(userId);
-          
-          emitter.emit("show-toast", { message: "Signed up successfully!", type: "success" });
-          router.push({ name: 'Login' });
-        } catch (error) {
-          console.error('Registration process error:', error);
-          emitter.emit("show-toast", { message: "Error during registration", type: "error" });
-        }
-      })
-      .catch(error => {
-        console.error('Registration error:', error);
-        if (error.response?.data?.errors) {
-          errors.value = error.response.data.errors;
-        }
-        emitter.emit("show-toast", { message: "Registration failed", type: "error" });
-      })
-      .finally(() => {
-        isLoading.value = false;
-      });
-  });
+    .then(() => {
+      axiosClient.post("/register", data.value)
+        .then(async (response) => {
+          try {
+            // Get the user ID from the response
+            const userId = response.data.user.id;
+            
+            // Add access for the new user
+            await addAccess(userId);
+            
+            emitter.emit("show-toast", { 
+              message: "Signed up successfully! Please check your email for verification.", 
+              type: "success" 
+            });
+            router.push({ name: 'Login' });
+          } catch (error) {
+            console.error('Registration process error:', error);
+            emitter.emit("show-toast", { message: "Error during registration", type: "error" });
+          }
+        })
+        .catch(error => {
+          console.error('Registration error:', error);
+          if (error.response?.data?.errors) {
+            errors.value = error.response.data.errors;
+          }
+          emitter.emit("show-toast", { message: "Registration failed", type: "error" });
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
+    });
 }
 
 </script>

@@ -11,8 +11,10 @@ import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
-import ViewItemsModal from './Modals/ViewItemsModal.vue';
 import { AkEyeOpen } from '@kalimahapps/vue-icons';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -282,6 +284,36 @@ const OpenViewItemsModal = (office) => {
     isOpenViewItemsModal.value = true;
 }
 
+const unreturnedCount = (officeId) =>
+    databaseStore.transactionHistory.filter(t =>
+        t.office_id === officeId && t.return_date === null
+    ).length;
+
+
+
+const getUnreturnedCountByOffice = (officeId) => {
+    const borrowersFromOffice = databaseStore.borrowers.filter(
+        borrower => borrower.office_id === officeId
+    ).map(b => b.id);
+
+    const unreturnedTransactions = databaseStore.transactionHistory.filter(
+        t => borrowersFromOffice.includes(t.borrower_id) && t.return_date === null
+    );
+
+    return unreturnedTransactions.length;
+};
+
+
+const OpenViewTransactionHistoryPage = (office) => {
+    selectedOffice.value = office;
+
+    router.push({
+        name: 'Transactions',
+        query: {
+            office_id: selectedOffice.value.id
+        }
+    });
+}
 </script>
 
 <template>
@@ -307,7 +339,7 @@ const OpenViewItemsModal = (office) => {
                             </div>
                             <input v-model="searchQuery" type="text" id="simple-search"
                                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500"
-                                placeholder="Search categories..." />
+                                placeholder="Search office..." />
                         </div>
                     </form>
                 </div>
@@ -320,7 +352,7 @@ const OpenViewItemsModal = (office) => {
                 <button @click="handlePrint"
                     class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <AnFilledPrinter class="w-8 h-8" />
-                    <p class="ml-1 text-sm">Print Categories</p>
+                    <p class="ml-1 text-sm">Print Office</p>
                 </button>
             </div>
 
@@ -336,7 +368,8 @@ const OpenViewItemsModal = (office) => {
                                 Office Name
                                 <span v-if="sortBy === 'office_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             </th>
-                            <th class="py-3">Items</th>
+                            <th class="py-3">Borrowers</th>
+                            <th class="py-3">Transactions</th>
                             <th class="py-3">Actions</th>
                         </tr>
                     </thead>
@@ -348,7 +381,7 @@ const OpenViewItemsModal = (office) => {
                                 {{ office.office_name }}
                             </td>
                             <td class="px-4 py-3">
-                                <button @click.stop="OpenViewItemsModal(office)" class="flex items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+                                <!-- <button @click.stop="OpenViewItemsModal(office)" class="flex items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
                border border-gray-300 hover:border-gray-400 
                dark:border-gray-600 dark:hover:border-gray-400 
                text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
@@ -362,6 +395,32 @@ const OpenViewItemsModal = (office) => {
                                         }}
                                     </span>
                                     <span class="text-gray-400">items</span>
+                                </button> -->
+                            </td>
+                            <td class="px-4 py-3">
+                                <button @click.stop="OpenViewTransactionHistoryPage(office)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+               border border-gray-300 hover:border-gray-400 
+               dark:border-gray-600 dark:hover:border-gray-400 
+               text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
+                                    <div class="flex items-center gap-2">
+                                        <span>
+                                            {{(databaseStore.transactionHistory.filter(transaction =>
+                                                transaction.borrower_id ===
+                                                (Number(databaseStore.borrowers.filter(borrower =>
+                                                    Number(borrower.office_id) ===
+                                                    office.id)?.length || 0)))?.length || 0)}}
+                                        </span>
+                                        <span class="text-gray-400">transactions</span>
+                                        <span></span>
+                                    </div>
+                                    <div class="flex justify-center items-center gap-2"
+                                        :class="(databaseStore.transactionHistory.filter(transaction =>
+                                            transaction.office_id === office.id)?.length || 0) > 0 ? 'text-gray-400' : 'text-gray-700'">
+                                        <span
+                                            :class="{ 'text-red-500': getUnreturnedCountByOffice(office.id) > 0, 'text-green-500': getUnreturnedCountByOffice(office.id) === 0 }">
+                                            ( {{ getUnreturnedCountByOffice(office.id) }} Unreturned )
+                                        </span>
+                                    </div>
                                 </button>
                             </td>
                             <td class="px-4 py-3 flex items-center justify-center relative">
@@ -462,7 +521,10 @@ const OpenViewItemsModal = (office) => {
 
             <AddOfficeModal v-if="isOpenAddOfficeModal" v-model="isOpenAddOfficeModal" @click. stop />
 
-            <ViewItemsModal v-if="isOpenViewItemsModal" v-model="isOpenViewItemsModal" :selectedCategory="selectedCategory" :officeEquipments="databaseStore.officeEquipments" :officeSupplies="databaseStore.officeSupplies" :equipmentCopies="databaseStore.equipmentCopies" @click.stop />
+            <!-- <ViewItemsModal v-if="isOpenViewItemsModal" v-model="isOpenViewItemsModal"
+                :selectedCategory="selectedCategory" :officeEquipments="databaseStore.officeEquipments"
+                :officeSupplies="databaseStore.officeSupplies" :equipmentCopies="databaseStore.equipmentCopies"
+                @click.stop /> -->
         </div>
     </div>
 </template>

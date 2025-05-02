@@ -11,6 +11,9 @@ import { useDatabaseStore } from "../../stores/databaseStore";
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
+import { useRouter } from 'vue-router';
+
+const router = useRouter();
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -300,6 +303,24 @@ const handlePrint = async () => {
         printWindow.close();
     };
 };
+
+const unreturnedCount = (borrowerId) =>
+    databaseStore.transactionHistory.filter(t =>
+        t.borrower_id === borrowerId && t.return_date === null
+    ).length;
+
+const selectedBorrower = ref(null);
+
+const OpenViewTransactionHistoryPage = (borrower) => {
+    selectedBorrower.value = borrower;
+
+    router.push({
+        name: 'Transactions',
+        query: {
+            borrower_id: selectedBorrower.value.id
+        }
+    });
+}
 </script>
 
 <template>
@@ -341,7 +362,7 @@ const handlePrint = async () => {
                     <p class="ml-1 text-sm">Print Borrowers</p>
                 </button>
             </div>
-            <div class="rounded-lg min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
+            <div class="rounded-lg min-h-[71vh] dark:bg-gray-900">
                 <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
                     <thead class=" dark:bg-gray-600 dark:text-gray-300">
                         <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
@@ -352,12 +373,12 @@ const handlePrint = async () => {
                             <th class="py-3" @click="sortByField('borrowers_name')">
                                 Borrower Name
                                 <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼'
-                                    }}</span>
+                                }}</span>
                             </th>
                             <th class="py-3" @click="sortByField('contact_number')">
                                 Contact Number
                                 <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼'
-                                    }}</span>
+                                }}</span>
                             </th>
                             <th class="py-3" @click="sortByField('office')">
                                 Office
@@ -381,8 +402,28 @@ const handlePrint = async () => {
                                 :title="borrower.office_name">
                                 {{ borrower.office_name }}
                             </td>
-                            <td class="px-4 py-3 ">
-                                Napipindot na button
+
+                            <td class="px-4 py-3">
+                                <button @click.stop="OpenViewTransactionHistoryPage(borrower)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+               border border-gray-300 hover:border-gray-400 
+               dark:border-gray-600 dark:hover:border-gray-400 
+               text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
+                                    <div class="flex items-center gap-2">
+                                        <span>
+                                            {{(databaseStore.transactionHistory.filter(transaction =>
+                                                transaction.borrower_id === borrower.id)?.length || 0)}}
+                                        </span>
+                                        <span class="text-gray-400">transactions</span>
+                                    </div>
+                                    <div class="flex justify-center items-center gap-2"
+                                        :class="(databaseStore.transactionHistory.filter(transaction =>
+                                            transaction.borrower_id === borrower.id)?.length || 0) > 0 ? 'text-gray-400' : 'text-gray-700'">
+                                        <span
+                                            :class="{ 'text-red-500': unreturnedCount(borrower.id) > 0, 'text-green-500': unreturnedCount(borrower.id) === 0 }">
+                                            ( {{ unreturnedCount(borrower.id) }} Unreturned )
+                                        </span>
+                                    </div>
+                                </button>
                             </td>
                             <td class="px-4 py-3 flex items-center justify-center relative">
                                 <button @click.stop="toggleDropdown(borrower.id)"
@@ -436,7 +477,7 @@ const handlePrint = async () => {
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
-                    }}</span>
+                        }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
