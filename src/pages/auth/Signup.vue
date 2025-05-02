@@ -41,8 +41,8 @@ const data = ref({
   password: '',
   password_confirmation: '',
   for_911: false,
-  for_inventory: true,
-  for_traffic: false,
+  for_inventory: false,
+  for_traffic: true,
   role: false,
 })
 
@@ -266,12 +266,15 @@ function submit() {
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
+    
     <!-- Main Container -->
     <div v-else class="flex flex-col md:flex-row items-center gap-1 z-10">
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center mb-2 md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
       </div>
+
+      <div class="dark:text-white ">{{ data }}</div>
 
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg max-w-lg">
