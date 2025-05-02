@@ -274,8 +274,6 @@ function submit() {
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
       </div>
 
-      <div class="dark:text-white ">{{ data }}</div>
-
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg max-w-lg">
         <p class="text-dark text-2xl font-bold">Traffic Management System</p>
