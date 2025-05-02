@@ -330,8 +330,9 @@ function submit() {
             Up</button>
         </form>
 
-        <div class="text-sm text-center mt-4">
-          <router-link :to="{ name: 'Login' }" class="text-md text-primary hover:underline">Already have an account?
+        <div class="text-sm text-center mt-4 text-dark">
+          <span class="text-gray-600">Already have an account?</span> 
+          <router-link :to="{ name: 'Login' }" class="text-md text-primary hover:underline">
             Sign
             in</router-link>
         </div>
