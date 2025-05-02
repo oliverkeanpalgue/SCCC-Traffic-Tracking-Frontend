@@ -282,18 +282,18 @@ function submit() {
           <div>
             <label for="firstName" class="block text-sm font-medium text-gray-800">First Name *</label>
             <input type="text" name="firstName" id="firstName" v-model="data.firstName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
             <p class="text-red-700 ml-2 font-semibold italic">{{ errors.firstName ? errors.firstName[0] : '' }}</p>
           </div>
           <div>
             <label for="middleName" class="block text-sm font-medium text-gray-800">Middle Name</label>
             <input type="text" v-model="data.middleName" id="middleName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div>
             <label for="lastName" class="block text-sm font-medium text-gray-800">Last Name *</label>
             <input type="text" v-model="data.lastName" id="lastName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
             <p class="text-red-700 ml-2 font-semibold italic">{{ errors.lastName ? errors.lastName[0] : '' }}</p>
 
           </div>
@@ -303,7 +303,7 @@ function submit() {
               <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ? errors.email[0] : '' }}</p>
             </div>
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
           <div class="col-span-3">
@@ -312,7 +312,7 @@ function submit() {
               <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
             </div>
             <input type="password" name="password" id="password" v-model="data.password"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
           <div class="col-span-3">
@@ -322,16 +322,16 @@ function submit() {
                 errors.password_confirmation[0] : '' }}</p>
             </div>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
 
           <button type="submit"
-            class="col-span-3 w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Sign
+            class="col-span-3 w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 cursor-pointer">Sign
             Up</button>
         </form>
 
         <div class="text-sm text-center mt-4">
-          <router-link :to="{ name: 'Login' }" class="text-md text-blue-600 hover:underline">Already have an account?
+          <router-link :to="{ name: 'Login' }" class="text-md text-primary hover:underline">Already have an account?
             Sign
             in</router-link>
         </div>
