@@ -276,6 +276,7 @@ function submit() {
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg max-w-lg">
         <p class="text-dark text-2xl font-bold">Traffic Management System</p>
+        <p class="mb-4 text-gray-600">Create your Account</p>
 
         <form @submit.prevent="submit" class="flex grid grid-cols-3 gap-4">
           <div>
