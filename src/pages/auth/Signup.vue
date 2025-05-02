@@ -271,11 +271,6 @@ function submit() {
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center mb-2 md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
-        <div class="w-3xs mx-auto md:w-xs">
-          <p class="text-white text-2xl font-bold leading-tight md:text-3xl">
-            Smart City Command and Control Center Inventory System
-          </p>
-        </div>
       </div>
 
       <!-- Login Form -->
