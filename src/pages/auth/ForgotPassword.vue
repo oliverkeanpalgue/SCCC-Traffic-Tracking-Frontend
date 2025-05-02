@@ -250,26 +250,26 @@ const phaseOne = () => {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+  <div class="min-h-screen flex items-center justify-center bg-dark">
     <!-- Main Container -->
     <div class="flex flex-col items-center gap-1 z-10 bg-gray-200 rounded-xl p-8 min-h-[30vh]">
 
       <!-- TITLE -->
-      <h2 class="text-gray-900 text-2xl text-center font-bold mb-2">Forgot Password</h2>
+      <h2 class="text-gray-900 text-2xl font-bold mb-2">Forgot Password</h2>
 
       <!-- BREAD CRUMB -->
-      <div class="w-full px-1 mb-4  ">
+      <div class="w-full px-1 ">
         <ul class="flex items-center">
           <li class="flex items-center">
-            <a class="text-md font-medium" @click="phaseOne"
-              :class="{ 'text-blue-600': phaseNum === 1, 'text-gray-800': phaseNum !== 1 }">Enter Email</a>
+            <a class="text-sm font-medium" @click="phaseOne"
+              :class="{ 'text-primary': phaseNum === 1, 'text-gray-800': phaseNum !== 1 }">Enter Email</a>
           </li>
           <li class="flex items-center">
             <span class="text-body-color dark:text-dark-6 px-3">
               <MdNavigateNext class="w-5 h-5" />
             </span>
-            <span class="text-md font-medium"
-              :class="{ 'text-blue-600': phaseNum === 2, 'text-gray-800': phaseNum !== 2 }">Enter Password</span>
+            <span class="text-sm font-medium"
+              :class="{ 'text-primary': phaseNum === 2, 'text-gray-800': phaseNum !== 2 }">Enter Password</span>
           </li>
         </ul>
       </div>
@@ -277,16 +277,17 @@ const phaseOne = () => {
       <!-- FOR PHASE 1 -->
       <div v-if="phaseNum === 1">
         <div
-          class="bg-gray-100 mb-4 px-6 rounded-xl shadow-lg min-w-[900px] min-h-[21vh] flex justify-center items-center w-full">
+          class=" px-6 rounded-xl min-w-[900px] min-h-[21vh] flex justify-center items-center w-full">
 
           <div class="w-full">
             <div class="flex flex-row">
-              <label for="email" class="block text-md font-medium text-gray-700">Enter Email</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ? errors.email[0] : '' }}</p>
+              <label for="email" class="block text-sm font-medium text-dark">Enter Email</label>
             </div>
 
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+           <p class="text-red-700 text-sm font-medium mt-1">{{ errors.email ? errors.email[0] : '' }}</p>
+
           </div>
 
         </div>
@@ -294,7 +295,7 @@ const phaseOne = () => {
   <!-- Replace this existing button -->
   <button @click="sendResetLink"
     :disabled="isLoading"
-    class="w-full items-center bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+    class="w-full items-center bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 disabled:bg-gray-400 cursor-pointer">
     {{ isLoading ? 'Sending...' : 'Send Reset Link' }}
   </button>
 </div>
@@ -307,31 +308,33 @@ const phaseOne = () => {
           <div class="">
             <div class="flex flex-row">
               <label for="email" class="block text-md font-medium text-gray-700">Password</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
             </div>
             <input type="password" name="password" id="password" v-model="data.password"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 text-sm font-medium mt-1">{{ errors.password ? errors.password[0] : '' }}</p>
+
+            </div>
 
           <div class="">
             <div class="flex flex-row">
               <label for="email" class="block text-md font-medium text-gray-700">Confirm Password</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ?
-                errors.password_confirmation[0] : '' }}</p>
+              
             </div>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 text-sm font-medium mt-1">{{ errors.password_confirmation ?
+                errors.password_confirmation[0] : '' }}</p>
+            </div>
         </div>
 
 
         <div class="flex gap-2">
   <button @click="phaseOne"
-    class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Back</button>
+    class="w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100">Back</button>
   <!-- Replace this existing button -->
   <button @click="resetPassword"
     :disabled="isLoading"
-    class="w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700 disabled:bg-gray-400">
+    class="w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 disabled:bg-gray-400">
     {{ isLoading ? 'Resetting...' : 'Reset Password' }}
   </button>
 </div>
