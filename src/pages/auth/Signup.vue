@@ -262,7 +262,7 @@ function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+  <div class="min-h-screen flex items-center justify-center bg-dark">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
