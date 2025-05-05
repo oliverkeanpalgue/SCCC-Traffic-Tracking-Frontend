@@ -27,7 +27,6 @@ const useUserStore = defineStore("user", {
           );
 
           console.log("🔐 inventoryAccess:", this.inventoryAccess);
-          console.log("🔐 user:", this.user);
         } else {
           this.inventoryAccess = null;
           router.push("/login");

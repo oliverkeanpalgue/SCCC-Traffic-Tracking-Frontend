@@ -1,18 +1,16 @@
 <script setup>
-import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, defineEmits, defineProps, computed, watch, watchEffect } from 'vue'
 import axiosClient from "../../axios";
-import { ChMenuMeatball } from "@kalimahapps/vue-icons";
 import { ClAddPlus } from '@kalimahapps/vue-icons';
-import UpdateUsersModal from "./Modals/UpdateUsersModal.vue";
-import UpdateUsersPasswordModal from "./Modals/UpdateUsersPasswordModal.vue";
+import { ChMenuMeatball } from "@kalimahapps/vue-icons";
+import AddBorrowerModal from './Modals/AddBorrowerModal.vue';
+import UpdateBorrowerModal from './Modals/UpdateBorrowerModal.vue';
 import DeleteConfirmationModal from '../ConfirmationModal.vue';
 import emitter from '../../eventBus';
-import { useDatabaseStore } from '../../stores/databaseStore'
+import { useDatabaseStore } from "../../stores/databaseStore";
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
-import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
-import AccessCheckbox from './AccessCheckbox.vue';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -32,53 +30,65 @@ onUnmounted(() => {
     clearInterval(refreshInterval)
 })
 
-// for search function 
-const searchQuery = ref("")
+// for search function
+const searchQuery = ref("");
 
-const filteredUsers = computed(() => {
-    return databaseStore.users
-        .filter((user) => !user.is_deleted)
-        .filter(user =>
-            user?.fistName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            user?.middleName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            user?.lastName?.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            user?.email?.toLowerCase().includes(searchQuery.value.toLowerCase())
-        );
+const filteredBorrowers = computed(() => {
+
+    return databaseStore.borrowers.filter((borrower) => !borrower.is_deleted)
+        .filter((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            const borrowerName = borrower.borrowers_name.toLowerCase();
+            const contactNumber = borrower.borrowers_contact.toLowerCase();
+            const officeName = office ? office.office_name.toLowerCase() : 'unknown';
+            const searchQueryValue = searchQuery.value.toLowerCase();
+            return (
+                borrowerName.includes(searchQueryValue) ||
+                contactNumber.includes(searchQueryValue) ||
+                officeName.includes(searchQueryValue)
+            );
+        }).map((borrower) => {
+            const office = databaseStore.officeList.find((office) => office.id === borrower.office_id);
+            return {
+                id: borrower.id,
+                borrowers_name: borrower.borrowers_name,
+                contact_number: borrower.borrowers_contact,
+                office_name: office ? office.office_name : 'Unknown',
+            };
+        });
 });
 
+// Reset to first page when searching
 watch(searchQuery, () => {
     currentPage.value = 1;
 });
 
 // for pagination
 const currentPage = ref(1);
-const itemsPerPage = ref(7);
+const itemsPerPage = ref(8);
 
 const totalPages = computed(() => {
-    return Math.ceil(filteredUsers.value.length / itemsPerPage.value);
+    return Math.ceil(filteredBorrowers.value.length / itemsPerPage.value);
 });
 
 
-const sortedUsers = computed(() => {
-    const users = [...filteredUsers.value];
+const sortedBorrowers = computed(() => {
+    const borrowers = [...filteredBorrowers.value];
 
-    return users.sort((a, b) => {
-        const getFieldValue = (user, field) => {
+    return borrowers.sort((a, b) => {
+        const getFieldValue = (borrower, field) => {
             switch (field) {
                 case 'id':
-                    return user.id;
+                    return borrower.id;
 
-                case 'first_name':
-                    return user.firstName?.toLowerCase() || '';
+                case 'borrowers_name':
+                    return borrower.borrowers_name?.toLowerCase() || '';
 
-                case 'middle_name':
-                    return user.middleName?.toLowerCase() || '';
+                case 'contact_number':
+                    return borrower.contact_number?.toLowerCase() || '';
 
-                case 'last_name':
-                    return user.lastName?.toLowerCase() || '';
-
-                case 'email':
-                    return user.email?.toLowerCase() || '';
+                case 'office':
+                    return borrower.office_name?.toLowerCase() || '';
 
                 default:
                     return '';
@@ -94,10 +104,10 @@ const sortedUsers = computed(() => {
     });
 });
 
-const paginatedUsers = computed(() => {
+const paginatedBorrowers = computed(() => {
     const start = (currentPage.value - 1) * itemsPerPage.value;
     const end = start + itemsPerPage.value;
-    return sortedUsers.value.slice(start, end);
+    return sortedBorrowers.value.slice(start, end);
 });
 
 // Pagination controls
@@ -113,65 +123,65 @@ const prevPage = () => {
     }
 };
 
-
 const goToPage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
     }
 };
 
+// FOR THE ADD BORROWER MODAL
+const isOpenAddBorrowerModal = ref(false);
+
+const OpenAddBorrowerModal = () => {
+    isOpenAddBorrowerModal.value = true;
+}
+
 // Action Dropdown
 const openDropdownId = ref(null);
 
-const toggleDropdown = (userId) => {
-    openDropdownId.value = openDropdownId.value === userId ? null : userId;
+const toggleDropdown = (borrowerId) => {
+    openDropdownId.value = openDropdownId.value === borrowerId ? null : borrowerId;
 };
 
-// FOR THE UPDATE USER MODAL
-const isOpenUpdateUsersModal = ref(false);
+// FOR THE UPDATE BORROWER MODAL
+const isOpenUpdateBorrowerModal = ref(false);
 
-const OpenUpdateUsersModal = () => {
-    isOpenUpdateUsersModal.value = true;
-}
-
-// FOR THE UPDATE USER PASSWORD MODAL
-const isOpenUpdateUsersPasswordModal = ref(false);
-
-const OpenUpdateUsersPasswordModal = () => {
-    isOpenUpdateUsersPasswordModal.value = true;
+const OpenUpdateBorrowerModal = () => {
+    isOpenUpdateBorrowerModal.value = true;
 }
 
 // FOR DELETE
 const showDeleteConfirmationModal = ref(false)
 
-const confirmDeleteUser = async (confirmed, userId) => {
+const confirmDeleteBorrower = async (confirmed, borrowerId) => {
     if (confirmed) {
         try {
-            const deleteUser = {
+            const deleteBorrower = {
                 is_deleted: 1
             }
+            const response = await axiosClient.put(`api/borrowers/${borrowerId}`, deleteBorrower, {
+                headers: { 'x-api-key': API_KEY },
+            });
 
-            const response = await axiosClient.put(`api/users/${userId}`, deleteUser,
-                {
-                    headers: { 'x-api-key': API_KEY },
-                });
+            borrowersList.value = borrowersList.value.filter(b => b.id !== borrowerId);
 
-            console.log('Delete User API response:', response);
+            console.log('Delete Borrower API response:', response);
 
-            userList.value = userList.value.filter(user => user.id !== userId);
+            console.log(`Borrower deleted successfully.`);
 
-            console.log(`User deleted successfully.`);
-            // emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
+            // Emit success toast only after a successful delete
+            // emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         } catch (error) {
-            console.error('Error deleting user:', error);
-            emitter.emit("show-toast", { message: "Error deleting user. Please try again.", type: "error" });
+            console.error('Error deleting borrower:', error);
+            emitter.emit("show-toast", { message: "Error deleting borrower. Please try again.", type: "error" });
         } finally {
             await databaseStore.fetchData();
-            emitter.emit("show-toast", { message: "User deleted successfully!", type: "success" });
             showDeleteConfirmationModal.value = false; // Close the modal
+            emitter.emit("show-toast", { message: "Borrower deleted successfully!", type: "success" });
         }
     }
-}
+};
+
 
 const sortBy = ref("id");
 const sortDirection = ref("asc");
@@ -257,21 +267,23 @@ const handlePrint = async () => {
                     <tr>
                         <th>ID</th>
                         <th>Borrower Name</th>
-                        <th>Email</th>
+                        <th>Contact Number</th>
+                        <th>Office</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${filteredUsers.value.map(report => `
+                    ${filteredBorrowers.value.map(report => `
                         <tr>
                             <td>${report.id}</td>
-                            <td>${report.firstName} ${report.middleName} ${report.lastName}</td>
-                            <td>${report.email}</td>
+                            <td>${report.borrowers_name}</td>
+                            <td>${report.contact_number}</td>
+                            <td>${report.office_name}</td>
                         </tr>
                     `).join('')}
                 </tbody>
             </table>
             <div class="print-footer">
-                <p>Total Users: ${filteredUsers.value.length}</p>
+                <p>Total Borrowers: ${filteredBorrowers.value.length}</p>
             </div>
         </body>
     </html>
@@ -288,74 +300,11 @@ const handlePrint = async () => {
         printWindow.close();
     };
 };
-
-const unreturnedCount = (userId) =>
-    databaseStore.transactionHistory.filter(t =>
-        t.lender_id === userId && t.return_date === null
-    ).length;
-
-const isOpenViewTransactionHistoryModal = ref(false);
-const selectedUser = ref(null);
-
-const OpenViewTransactionHistoryModal = (user) => {
-    selectedUser.value = user;
-    isOpenViewTransactionHistoryModal.value = true;
-}
-
-const toggleCheckbox = (user, accessId, type) => {
-    const access = databaseStore.inventoryAccesses.find(
-        (inv) => inv.id === accessId && inv.user_id === user.id
-    );
-
-    if (!access) return;
-
-    // Optimistically toggle the permission value
-    access[type] = access[type] === 1 ? 0 : 1;
-
-    const updateInventoryAccess = {
-        id: accessId,
-        user_id: user.id,
-        for_dashboard: access.for_dashboard,
-        for_inventory: access.for_inventory,
-        for_categories: access.for_categories,
-        for_borrowers: access.for_borrowers,
-        for_offices: access.for_offices,
-        for_users: access.for_users,
-    };
-
-    // Fire-and-forget async update
-    axiosClient.put(
-        `/api/inventory_access/${accessId}`,
-        updateInventoryAccess,
-        {
-            headers: {
-                "x-api-key": API_KEY,
-            },
-        }
-    )
-    .then(() => {
-        
-    })
-    .catch((error) => {
-        console.error('Error updating inventory access:', error);
-        console.error('Error details:', error.response?.data);
-        emitter.emit("show-toast", { message: "Error updating access. Please try again.", type: "error" });
-    });
-};
-
-const permissionTypes = [
-    'for_dashboard',
-    'for_inventory',
-    'for_categories',
-    'for_borrowers',
-    'for_offices',
-    'for_users',
-];
 </script>
 
 <template>
     <div>
-        <div v-if="isLoading" class="h-[62vh] flex flex-col items-center justify-center">
+        <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
             <Loading />
             <p class="text-gray-500 dark:text-gray-400">Fetching data...</p>
         </div>
@@ -380,13 +329,19 @@ const permissionTypes = [
                         </div>
                     </form>
                 </div>
+                <!-- ADD BUTTON -->
+                <button @click.stop="OpenAddBorrowerModal()"
+                    class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
+                    <ClAddPlus class="w-8 h-8" />
+                    <p class="ml-1">Add Borrower</p>
+                </button>
                 <button @click="handlePrint"
                     class="flex items-center justify-center border w-1/9 px-2 py-1 rounded-lg dark:border-gray-600 dark:bg-green-800 dark:hover:bg-green-700">
                     <AnFilledPrinter class="w-8 h-8" />
-                    <p class="ml-1">Print Users</p>
+                    <p class="ml-1 text-sm">Print Borrowers</p>
                 </button>
             </div>
-            <div class="rounded-lg  min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
+            <div class="rounded-lg min-h-[62vh] max-h-[62vh] dark:bg-gray-900">
                 <table class="w-full text-sm text-center text-gray-500 dark:text-gray-400">
                     <thead class=" dark:bg-gray-600 dark:text-gray-300">
                         <tr class="bg-gray-700 text-gray-200 uppercase text-center text-xs rounded-lg">
@@ -394,106 +349,60 @@ const permissionTypes = [
                                 ID
                                 <span v-if="sortBy === 'id'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             </th>
-                            <th class="py-3" @click="sortByField('first_name')">
-                                First Name
-                                <span v-if="sortBy === 'first_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <th class="py-3" @click="sortByField('borrowers_name')">
+                                Borrower Name
+                                <span v-if="sortBy === 'borrowers_name'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
                             </th>
-                            <th class="py-3" @click="sortByField('middle_name')">
-                                Middle Name
-                                <span v-if="sortBy === 'middle_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <th class="py-3" @click="sortByField('contact_number')">
+                                Contact Number
+                                <span v-if="sortBy === 'contact_number'">{{ sortDirection === 'asc' ? '▲' : '▼'
+                                    }}</span>
                             </th>
-                            <th class="py-3" @click="sortByField('last_name')">
-                                Last Name
-                                <span v-if="sortBy === 'last_name'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
+                            <th class="py-3" @click="sortByField('office')">
+                                Office
+                                <span v-if="sortBy === 'office'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
                             </th>
-                            <th class="py-3" @click="sortByField('email')">
-                                Email
-                                <span v-if="sortBy === 'email'">{{ sortDirection === 'asc' ? '▲' : '▼' }}</span>
-                            </th>
-                            <th class="py-3 ">Transactions</th>
-                            <th class="py-3 ">Dashboard</th>
-                            <th class="py-3 ">Inventory</th>
-                            <th class="py-3 ">Categories</th>
-                            <th class="py-3 ">Borrower</th>
-                            <th class="py-3 ">Offices</th>
-                            <th class="py-3 ">Users</th>
-                            <th class="py-3 ">Actions</th>
+                            <th class="py-3">Transactions</th>
+                            <th class="py-3">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="user in paginatedUsers" :key="user.id"
+                        <tr v-for="borrower in paginatedBorrowers" :key="borrower.id"
                             class="border-b font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300 odd:bg-white odd:dark:bg-gray-900 even:bg-gray-50 even:dark:bg-gray-800 dark:hover:bg-gray-700 dark:hover:text-white">
-                            <td class="px-4 py-3 ">{{ user.id }}</td>
+                            <td class="px-4 py-3 ">{{ borrower.id }}</td>
                             <td class="px-4 py-3 ">
-                                {{ user.firstName }}
-                            </td>
-                            <td class="px-4 py-3 ">
-                                {{ user.middleName }}
+                                {{ borrower.borrowers_name }}
                             </td>
                             <td class="px-4 py-3 ">
-                                {{ user.lastName }}
+                                {{ borrower.contact_number }}
+                            </td>
+                            <td class="px-4 py-3 min-w-[100px] max-w-[150px] overflow-hidden text-ellipsis whitespace-nowrap"
+                                :title="borrower.office_name">
+                                {{ borrower.office_name }}
                             </td>
                             <td class="px-4 py-3 ">
-                                {{ user.email }}
+                                Napipindot na button
                             </td>
-
-                            <td class="px-4 py-3">
-                                <button @click.stop="OpenViewTransactionHistoryModal(user)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
-               border border-gray-300 hover:border-gray-400 
-               dark:border-gray-600 dark:hover:border-gray-400 
-               text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
-                                    <div class="flex items-center gap-2">
-                                        <span>
-                                            {{(databaseStore.transactionHistory.filter(transaction =>
-                                                transaction.lender_id === user.id)?.length || 0)}}
-                                        </span>
-                                        <span class="text-gray-400">transactions</span>
-                                    </div>
-                                    <div class="flex justify-center items-center gap-2"
-                                        :class="(databaseStore.transactionHistory.filter(transaction =>
-                                            transaction.lender_id === user.id)?.length || 0) > 0 ? 'text-gray-400' : 'text-gray-700'">
-                                        <span
-                                            :class="{ 'text-red-500': unreturnedCount(user.id) > 0, 'text-green-500': unreturnedCount(user.id) === 0 }">
-                                            ( {{ unreturnedCount(user.id) }} Unreturned )
-                                        </span>
-                                    </div>
-                                </button>
-                            </td>
-                            <td v-for="perm in permissionTypes" :key="perm" class="px-4 py-3">
-                                <AccessCheckbox v-for="invAccess in databaseStore.inventoryAccesses" :key="invAccess.id"
-                                    :invAccess="invAccess" :userId="user.id" :user="user" :type="perm"
-                                    :onToggle="toggleCheckbox" />
-                            </td>
-
                             <td class="px-4 py-3 flex items-center justify-center relative">
-                                <button @click.stop="toggleDropdown(user.id)"
+                                <button @click.stop="toggleDropdown(borrower.id)"
                                     class="inline-flex items-center p-0.5 text-sm font-medium text-gray-500 hover:text-gray-800 rounded-lg focus:outline-none dark:text-gray-400 dark:hover:text-gray-100"
                                     type="button">
                                     <ChMenuMeatball class="w-5 h-5" />
                                 </button>
-
-                                <div v-if="openDropdownId === user.id" ref="dropdownRefs"
-                                    class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-23 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
+                                <div v-if="openDropdownId === borrower.id" ref="dropdownRefs"
+                                    class="absolute z-[10] bg-white divide-gray-100 rounded-lg right-26 shadow-sm w-44 border-2 dark:border-gray-600 dark:bg-gray-800">
                                     <ul class="text-sm text-gray-700 dark:text-gray-200">
                                         <li
                                             class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                            <button @click.stop="OpenUpdateUsersModal()"
+                                            <button @click.stop="OpenUpdateBorrowerModal()"
                                                 class="w-full text-start px-4 py-2">
                                                 Update
                                             </button>
 
-                                            <UpdateUsersModal v-if="isOpenUpdateUsersModal"
-                                                v-model="isOpenUpdateUsersModal" :user="user" @click.stop />
-                                        </li>
-                                        <li
-                                            class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
-                                            <button @click.stop="OpenUpdateUsersPasswordModal()"
-                                                class="w-full text-start px-4 py-2">
-                                                Change Password
-                                            </button>
-
-                                            <UpdateUsersPasswordModal v-if="isOpenUpdateUsersPasswordModal"
-                                                v-model="isOpenUpdateUsersPasswordModal" :user="user" @click.stop />
+                                            <UpdateBorrowerModal v-if="isOpenUpdateBorrowerModal"
+                                                v-model="isOpenUpdateBorrowerModal" :borrower="borrower"
+                                                :officeList="databaseStore.officeList" @click.stop />
                                         </li>
                                         <li
                                             class="block hover:bg-gray-100 dark:hover:bg-gray-600 dark:hover:text-white">
@@ -504,10 +413,11 @@ const permissionTypes = [
 
                                             <!-- Delete Confirmation Modal -->
                                             <DeleteConfirmationModal v-model="showDeleteConfirmationModal"
-                                                title="Confirm Deletion" :message="`You are about to delete this user.`"
-                                                :messageData="`\nName: ${user.firstName} ${user.middleName} ${user.lastName}\nEmail: ${user.email}`"
+                                                title="Confirm Deletion"
+                                                :message="`You are about to delete this borrower.`"
+                                                :messageData="`\nBorrower Name: ${borrower.borrowers_name}`"
                                                 cancelText="Cancel" confirmText="Confirm Deleting"
-                                                @confirm="() => confirmDeleteUser(true, user.id)" />
+                                                @confirm="() => confirmDeleteBorrower(true, borrower.id)" />
                                         </li>
                                     </ul>
                                 </div>
@@ -522,11 +432,11 @@ const permissionTypes = [
                     Showing
                     <span class="font-semibold text-gray-900 dark:text-white">
                         {{ (currentPage - 1) * itemsPerPage + 1 }} -
-                        {{ Math.min(currentPage * itemsPerPage, filteredUsers.length) }}
+                        {{ Math.min(currentPage * itemsPerPage, filteredBorrowers.length) }}
                     </span>
                     of
-                    <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
-                        }}</span>
+                    <span class="font-semibold text-gray-900 dark:text-white">{{ filteredBorrowers.length
+                    }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
@@ -569,9 +479,9 @@ const permissionTypes = [
                     </li>
                 </ul>
             </nav>
-        </div>
 
-        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryModal"
-            v-model="isOpenViewTransactionHistoryModal" :selectedUser="selectedUser" @click.stop />
+            <AddBorrowerModal v-if="isOpenAddBorrowerModal" v-model="isOpenAddBorrowerModal"
+                :officeList="databaseStore.officeList" @click.stop />
+        </div>
     </div>
 </template>

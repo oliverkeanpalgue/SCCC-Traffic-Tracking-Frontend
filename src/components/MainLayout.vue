@@ -15,7 +15,6 @@ import lightBlueBg from "../assets/lightBlueBg.jpg";
 import darkBlueBg from "../assets/darkBlueBg.jpg";
 import { MdRoundDarkMode } from '@kalimahapps/vue-icons';
 import { MdRoundLightMode } from '@kalimahapps/vue-icons';
-import { HuExchangeHorizontal } from '@kalimahapps/vue-icons';
 
 const theme = ref(localStorage.getItem("theme") || "light");
 
@@ -132,92 +131,69 @@ const closeSignOutModal = () => {
                                     'profile-button-active' :
                                     'profile-button-not-active',
                                     'profile-button']">
-                                <span :class="[$route.name === 'Dashboard' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <MdDashboard class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Dashboard' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Dashboard</span>
-                            </RouterLink>
+                            <span :class="[$route.name === 'Dashboard' ?
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdDashboard class="icon-6" />
+                            </span>
+                            <span :class="[$route.name === 'Dashboard' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Dashboard</span>
+                        </RouterLink>
                         </div>
                     </li>
                     <li>
                         <div class="profile-div profile-div-not-active group">
-                            <RouterLink to="/transactions" @click="closeSidebar()"
-                                v-if="inventoryAccess.for_dashboard === 1" :class="[$route.name === 'Transactions' ?
+                            <RouterLink to="/inventory" @click="closeSidebar()" v-if="inventoryAccess.for_inventory === 1"
+                                :class="[$route.name === 'Inventory' ?
                                     'profile-button-active' :
                                     'profile-button-not-active',
                                     'profile-button']">
-                                <span :class="[$route.name === 'Transactions' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <HuExchangeHorizontal class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Transactions' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Transactions</span>
-                            </RouterLink>
+                            <span :class="[$route.name === 'Inventory' ?
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdInventory2 class="icon-6" />
+                            </span>
+                            <span :class="[$route.name === 'Inventory' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Inventory</span>
+                        </RouterLink>
                         </div>
                     </li>
                     <li>
                         <div class="profile-div profile-div-not-active group">
-                            <RouterLink to="/inventory" @click="closeSidebar()"
-                                v-if="inventoryAccess.for_inventory === 1" :class="[$route.name === 'Inventory' ?
+                            <RouterLink to="/categories" @click="closeSidebar()" v-if="inventoryAccess.for_categories === 1"
+                                :class="[$route.name === 'Categories' ?
                                     'profile-button-active' :
                                     'profile-button-not-active',
                                     'profile-button']">
-                                <span :class="[$route.name === 'Inventory' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <MdInventory2 class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Inventory' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Inventory</span>
-                            </RouterLink>
+                            <span :class="[$route.name === 'Categories' ?
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <MdRoundCategory class="icon-6" />
+                            </span>
+                            <span :class="[$route.name === 'Categories' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Categories</span>
+                        </RouterLink>
                         </div>
                     </li>
                     <li>
                         <div class="profile-div profile-div-not-active group">
-                            <RouterLink to="/categories" @click="closeSidebar()"
-                                v-if="inventoryAccess.for_categories === 1" :class="[$route.name === 'Categories' ?
+                            <RouterLink to="/borrowers" @click="closeSidebar()" v-if="inventoryAccess.for_borrowers === 1"
+                                :class="[$route.name === 'Borrowers' ?
                                     'profile-button-active' :
                                     'profile-button-not-active',
                                     'profile-button']">
-                                <span :class="[$route.name === 'Categories' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <MdRoundCategory class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Categories' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Categories</span>
-                            </RouterLink>
-                        </div>
-                    </li>
-                    <li>
-                        <div class="profile-div profile-div-not-active group">
-                            <RouterLink to="/borrowers" @click="closeSidebar()"
-                                v-if="inventoryAccess.for_borrowers === 1" :class="[$route.name === 'Borrowers' ?
-                                    'profile-button-active' :
-                                    'profile-button-not-active',
-                                    'profile-button']">
-                                <span :class="[$route.name === 'Borrowers' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <FlFilledPeopleSwap class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Borrowers' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Borrowers</span>
-                            </RouterLink>
+                            <span :class="[$route.name === 'Borrowers' ?
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <FlFilledPeopleSwap class="icon-6" />
+                            </span>
+                            <span :class="[$route.name === 'Borrowers' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Borrowers</span>
+                        </RouterLink>
                         </div>
                     </li>
                     <li>
@@ -227,15 +203,14 @@ const closeSignOutModal = () => {
                                     'profile-button-active' :
                                     'profile-button-not-active',
                                     'profile-button']">
-                                <span :class="[$route.name === 'Users' ?
-                                    'profile-icon-span-active' :
-                                    'profile-icon-span-not-active',
-                                    'profile-icon-span']">
-                                    <FaUserGear class="icon-6" />
-                                </span>
-                                <span
-                                    :class="[$route.name === 'Users' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
-                                    class="profile-title-span">Users</span>
+                            <span :class="[$route.name === 'Users' ?
+                                'profile-icon-span-active' :
+                                'profile-icon-span-not-active',
+                                'profile-icon-span']">
+                                <FaUserGear class="icon-6" />
+                            </span>
+                            <span :class="[$route.name === 'Users' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                class="profile-title-span">Users</span>
                             </RouterLink>
                         </div>
                     </li>
@@ -252,8 +227,7 @@ const closeSignOutModal = () => {
                                     'profile-icon-span']">
                                     <BxSolidBuildings class="icon-6" />
                                 </span>
-                                <span
-                                    :class="[$route.name === 'Offices' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
+                                <span :class="[$route.name === 'Offices' ? 'profile-title-span-active' : 'profile-title-span-not-active']"
                                     class="profile-title-span">Offices</span>
                             </RouterLink>
                         </div>
