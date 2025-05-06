@@ -23,23 +23,23 @@
       :class="{ 'pr-2': showScrollbar }"
     >
       <div 
-        v-for="intersection in filteredIntersections" 
-        :key="intersection.properties.id"
+        v-for="road in roads" 
+        :key="road.id"
         class="intersection-item"
       >
         <div class="flex justify-between gap-2 mb-3">
-          <div class="font-bold">{{ intersection.properties.name }}</div>
+          <div class="font-bold">{{ road.road_name }}</div>
           <FeEdit2 
             class="mt-1 cursor-pointer text-gray-400 hover:text-white transition-colors" 
-            @click="openEditModal(intersection.properties.id)" 
+            @click="openEditModal(road.id)" 
           />
         </div>
         
-        <div class="flex justify-between">
+        <!-- <div class="flex justify-between">
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.inboundColor] || '#7CFC00' }"
+              :style="{ backgroundColor: colorMap[road.inboundColor] || '#7CFC00' }"
               class="w-[15px] h-[15px] rounded-xs"
             ></div>
           </div>
@@ -47,38 +47,43 @@
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.outboundColor] || '#FF6347' }"
+              :style="{ backgroundColor: colorMap[road.outboundColor] || '#FF6347' }"
               class="w-[15px] h-[15px] rounded-xs"
             ></div>
           </div>
-        </div>
+        </div> -->
         <hr class="border-t border-gray-600 mt-3 mb-4">
       </div>
 
-      <div 
+      <!-- <div 
         v-if="filteredIntersections.length === 0" 
         class="text-center text-gray-400 py-4"
       >
         No intersections found
-      </div>
+      </div> -->
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { FeEdit2 } from '@kalimahapps/vue-icons';
-
+import { CaRoadWeather, FeEdit2 } from '@kalimahapps/vue-icons';
+import { useDatabaseStore } from '../../stores/databaseStore';
 const props = defineProps({
-  intersections: {
-    type: Array,
-    default: () => []
-  },
   colorMap: {
     type: Object,
     default: () => ({})
   }
 });
+
+onMounted(() => {
+  databaseStore.fetchData();
+});
+
+const databaseStore = useDatabaseStore();
+const roads = computed(() => databaseStore.roads);
+
+console.log(roads);
 
 const emit = defineEmits(["openEditModal"]);
 
@@ -104,14 +109,14 @@ const handleSearch = () => {
 };
 
 // Filter intersections based on search term
-const filteredIntersections = computed(() => {
+/*const filteredIntersections = computed(() => {
   if (!searchTerm.value.trim()) return props.intersections;
   
   const term = searchTerm.value.toLowerCase();
   return props.intersections.filter(intersection => 
     intersection.properties.name.toLowerCase().includes(term)
   );
-});
+});*/
 
 // Open edit modal
 const openEditModal = (id) => {
