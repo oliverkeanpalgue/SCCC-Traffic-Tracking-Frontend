@@ -7,7 +7,7 @@ import LoadingAnimation from '../assets/baguio-logo.png';
     <img class="w-80 h-80 animate-pulse" :src="LoadingAnimation" alt="Loading..." />
     
     <div class="animated-text mt-6">Smart City Command Center</div>
-    <div class="animated-text">Inventory System</div>
+    <div class="animated-text">Traffic Tracking System</div>
   </div>
 </template>
 
