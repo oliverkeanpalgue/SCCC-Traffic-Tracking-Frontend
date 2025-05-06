@@ -11,7 +11,7 @@ import { useDatabaseStore } from '../../stores/databaseStore'
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
-import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
+// import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
 import AccessCheckbox from './AccessCheckbox.vue';
 import { useRouter } from 'vue-router';
 
