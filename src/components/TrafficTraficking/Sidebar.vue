@@ -8,58 +8,49 @@
 
     <!-- Search Bar -->
     <div class="mt-7 mb-7">
-      <input 
-        v-model="searchTerm"
-        placeholder="Search..."
-        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]"
-      />
+      <input v-model="searchTerm" placeholder="Search..."
+        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]" />
     </div>
 
     <!-- Loading state -->
     <div v-if="isLoading" class="text-center text-gray-400 py-4">
-      Loading intersections...
+      Loading roads...
     </div>
 
-    <!-- Intersections List -->
-    <div 
-      ref="scrollContainer" 
-      class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
-      :class="{ 'pr-2': showScrollbar }"
-    >
-      <!-- Loop through filtered intersections -->
-      <div v-for="intersection in filteredIntersections" :key="intersection.id">
+    <!-- Roads List -->
+    <div ref="scrollContainer" class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
+      :class="{ 'pr-2': showScrollbar }">
+      <!-- Loop through filtered roads -->
+      <div v-for="road in filteredRoads" :key="road.id">
         <div class="flex justify-between mb-3">
-          <div class="font-bold">{{ intersection.road_name }}</div>
-          <FeEdit2 class="mt-1 cursor-pointer" @click="openEditModal(intersection.id)" />
+          <div class="font-bold">{{ road.road_name }}</div>
+          <FeEdit2 
+            class="mt-1 cursor-pointer" 
+            @click.stop="openEditModal(road)" 
+          />
         </div>
 
         <!-- Traffic Colors -->
         <div class="flex justify-between">
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
-            <div 
-              :style="{ backgroundColor: getStatusColor(intersection.inbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs"
-              :title="getStatusLabel(intersection.inbound.status_id)"
-            ></div>
+            <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs">
+            </div>
           </div>
-
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
-            <div 
-              :style="{ backgroundColor: getStatusColor(intersection.outbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs"
-              :title="getStatusLabel(intersection.outbound.status_id)"
-            ></div>
-           
+            <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs">
+            </div>
           </div>
         </div>
         <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
       </div>
 
       <!-- Empty state -->
-      <div v-if="!isLoading && filteredIntersections.length === 0" class="text-center text-gray-400 py-4">
-        No intersections found
+      <div v-if="!isLoading && filteredRoads.length === 0" class="text-center text-gray-400 py-4">
+        No roads found
       </div>
     </div>
   </div>
@@ -72,42 +63,27 @@ import { FeEdit2 } from '@kalimahapps/vue-icons';
 
 const databaseStore = useDatabaseStore();
 const roads = computed(() => databaseStore.roads);
-const isLoading = ref(true);
+const isLoading = computed(() => databaseStore.isLoading);
 const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
 
 // Traffic status mapping
 const trafficStatus = {
-  1: {
-    color: '#7CFC00',
-    label: 'Light'
-  },
-  2: {
-    color: '#FFFF00',
-    label: 'Moderate'
-  },
-  3: {
-    color: '#FF0000',
-    label: 'Heavy'
-  }
+  1: { color: '#7CFC00' }, // green
+  2: { color: '#FFFF00' }, // yellow
+  3: { color: '#FF0000' }  // red
 };
 
-// Helper functions to get status color and label
 const getStatusColor = (statusId) => {
-  return trafficStatus[statusId]?.color || '#CCCCCC'; // Default gray if status not found
+  return trafficStatus[statusId]?.color || '#CCCCCC';
 };
 
-const getStatusLabel = (statusId) => {
-  return trafficStatus[statusId]?.label || 'Unknown'; // Default 'Unknown' if status not found
-};
-
-// Filter intersections based on search term
-const filteredIntersections = computed(() => {
+// Filter roads based on search term
+const filteredRoads = computed(() => {
   if (!roads.value) return [];
-  
   const term = searchTerm.value.toLowerCase();
-  return roads.value.filter(road => 
+  return roads.value.filter(road =>
     road.road_name.toLowerCase().includes(term)
   );
 });
@@ -119,30 +95,22 @@ const checkScrollbar = () => {
   }
 };
 
-// Fetch data on mount
-onMounted(async () => {
-  try {
-    await databaseStore.fetchData();
-    console.log("Data fetched successfully:", databaseStore.roads);
-  } catch (error) {
-    console.error('Error fetching data:', error);
-  } finally {
-    isLoading.value = false;
-    checkScrollbar();
-  }
+onMounted(() => {
+  checkScrollbar();
 });
 
 const emit = defineEmits(["openEditModal"]);
 
-const openEditModal = (id) => {
-  emit("openEditModal", id);
+const openEditModal = (road) => {
+  console.log("Opening modal for road:", road);
+  emit("openEditModal", road);
 };
 </script>
 
 <style scoped>
-/* Custom scrollbar styles to make it thin and minimalistic */
+/* Your existing styles remain the same */
 .scrollbar-custom::-webkit-scrollbar {
-  width: 5px; /* Thin scrollbar */
+  width: 5px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {
@@ -150,17 +118,17 @@ const openEditModal = (id) => {
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
-  background: #333; /* Dark thumb color */
+  background: #333;
   border-radius: 10px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background: #555; /* Darker thumb color when hovered */
+  background: #555;
 }
 
 .scrollbar-custom {
-  -ms-overflow-style: none;  /* For Internet Explorer */
-  scrollbar-width: thin;  /* For Firefox */
-  scrollbar-color: #333 transparent; /* For Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
 }
 </style>

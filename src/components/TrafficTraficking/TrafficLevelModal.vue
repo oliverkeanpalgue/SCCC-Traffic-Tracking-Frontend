@@ -1,13 +1,13 @@
 <template>
   <div 
-    v-if="activeIndex !== null"
+    v-if="activeRoad"
     class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-[24px] left-[930px] -translate-x-1/2 p-5 rounded-xl"
     @click.stop
   >
     <div class="flex flex-col gap-4">
       <div class="relative">
-        <!-- Intersection Name -->
-        <div class="text-center">{{ activeIndex.properties.name }}</div>
+        <!-- Road Name -->
+        <div class="text-center">{{ activeRoad.properties.name }}</div>
 
         <!-- Close Button -->
         <CdChromeClose 
@@ -22,7 +22,7 @@
           <div class="flex gap-4 items-center">
             <h1>Inbound</h1>
             <div class="flex items-center cursor-pointer relative" @click.stop="toggleDropdown('inbound')">
-              <div :style="{ backgroundColor: colorMap[activeIndex.inboundColor] }"
+              <div :style="{ backgroundColor: colorMap[activeRoad.inboundColor] }"
                 class="w-[20px] h-[20px] rounded-xs"></div>
 
               <!-- Dropdown Menu -->
@@ -30,7 +30,7 @@
                 class="absolute mt-2 bg-[#1b1a1a] p-2 rounded-lg top-full left-0 z-[1001]">
                 <div v-for="color in ['green', 'yellow', 'red']" :key="color"
                   class="p-2 cursor-pointer flex items-center gap-2"
-                  @click.stop="changeTrafficLevel(activeIndex.properties.id, 'inbound', color)">
+                  @click.stop="changeTrafficLevel(activeRoad.properties.id, 'inbound', color)">
                   <div class="w-[20px] h-[20px] rounded-xs" :style="{ backgroundColor: colorMap[color] }"></div>
                   <span class="text-white">{{ color.charAt(0).toUpperCase() + color.slice(1) }}</span>
                 </div>
@@ -44,7 +44,7 @@
           <div class="flex gap-4 items-center">
             <h1>Outbound</h1>
             <div class="flex items-center cursor-pointer relative" @click.stop="toggleDropdown('outbound')">
-              <div :style="{ backgroundColor: colorMap[activeIndex.outboundColor] }"
+              <div :style="{ backgroundColor: colorMap[activeRoad.outboundColor] }"
                 class="w-[20px] h-[20px] rounded-xs"></div>
 
               <!-- Dropdown Menu -->
@@ -52,7 +52,7 @@
                 class="absolute mt-2 bg-[#1b1a1a] p-2 rounded-lg top-full left-0 z-[1001]">
                 <div v-for="color in ['green', 'yellow', 'red']" :key="color"
                   class="p-2 cursor-pointer flex items-center gap-2"
-                  @click.stop="changeTrafficLevel(activeIndex.properties.id, 'outbound', color)">
+                  @click.stop="changeTrafficLevel(activeRoad.properties.id, 'outbound', color)">
                   <div class="w-[20px] h-[20px] rounded-xs" :style="{ backgroundColor: colorMap[color] }"></div>
                   <span class="text-white">{{ color.charAt(0).toUpperCase() + color.slice(1) }}</span>
                 </div>
@@ -69,36 +69,25 @@
 import { CdChromeClose } from '@kalimahapps/vue-icons';
 import { ref, defineProps, defineEmits } from 'vue';
 
-// Define the props for intersections, activeIndex, colorMap, and activeDropdown
 const props = defineProps({
-  intersections: Array,
-  activeIndex: Object,
-  colorMap: Object,
-  activeDropdown: String,
+  activeRoad: Object,
+  colorMap: Object
 });
 
-// Define the emits
-const emit = defineEmits(["toggleDropdown", "changeTrafficLevel", "closeEditModal"]);
+const emit = defineEmits(["changeTrafficLevel", "closeEditModal"]);
 
-// Reactive references for active dropdown and active index
 const activeDropdown = ref(null);
 
-// Function to toggle the dropdown (inbound or outbound)
 const toggleDropdown = (direction) => {
-  if (activeDropdown.value === direction) {
-    activeDropdown.value = null;  // Close dropdown if clicked again
-  } else {
-    activeDropdown.value = direction;  // Open the respective dropdown
-  }
+  activeDropdown.value = activeDropdown.value === direction ? null : direction;
 };
 
-// Function to change traffic level (inbound or outbound)
-const changeTrafficLevel = (index, direction, level) => {
-  emit('changeTrafficLevel', index, direction, level);  // Emit event to change traffic level
+const changeTrafficLevel = (roadId, direction, color) => {
+  emit('changeTrafficLevel', roadId, direction, color);
+  activeDropdown.value = null;
 };
 
-// Function to close the modal
 const closeEditModal = () => {
-  emit('closeEditModal');  // Emit close modal event
+  emit('closeEditModal');
 };
 </script>
