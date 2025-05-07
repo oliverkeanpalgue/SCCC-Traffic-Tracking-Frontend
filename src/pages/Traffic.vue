@@ -27,9 +27,15 @@
         </div>
       </div>
 
-      <!-- Map Component -->
-      <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="colorMap" :api-key="API_KEY"
-        :active-road-id="activeRoad?.properties?.id" v-if="dataReady" />
+      <!-- Map Component - Notice the String() conversion below -->
+      <MapComponent 
+        ref="mapComponent" 
+        :roads="processedRoads" 
+        :color-map="colorMap" 
+        :api-key="API_KEY"
+        :active-road-id="activeRoad?.properties?.id?.toString()" 
+        v-if="dataReady" 
+      />
 
       <!-- Traffic Level Modal -->
       <TrafficLevelModal :active-road="activeRoad" :color-map="colorMap" @closeEditModal="closeEditModal"
@@ -148,8 +154,12 @@ const closeEditModal = () => {
 // Update traffic status
 const changeTrafficLevel = async (roadId, direction, color) => {
   try {
+    console.log(`Updating traffic level: Road ${roadId}, ${direction} to ${color}`);
     const statusId = colorToStatus[color];
-    await databaseStore.updateTrafficStatus(roadId, direction, statusId);
+    console.log(`Converted to status ID: ${statusId}`);
+    
+    const response = await databaseStore.updateTrafficStatus(roadId, direction, statusId);
+    console.log("API response:", response);
 
     if (activeRoad.value?.properties.id === roadId) {
       const updatedRoad = databaseStore.getRoadById(roadId);
@@ -164,6 +174,7 @@ const changeTrafficLevel = async (roadId, direction, color) => {
     }
   } catch (error) {
     console.error("Update failed:", error);
+    alert("Failed to update traffic status: " + error.message);
   }
 };
 </script>
