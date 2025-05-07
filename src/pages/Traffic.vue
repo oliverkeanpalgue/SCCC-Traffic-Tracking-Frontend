@@ -4,6 +4,11 @@
 
     <!-- Map Component -->
     <div class="w-[80%] relative">
+      <!-- Loading Overlay -->
+      <div v-if="isLoading" class="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
+        <div class="inline-block h-14 w-14 animate-spin rounded-full border-4 border-solid border-white border-r-transparent"></div>
+      </div>
+
       <!-- Map Legend -->
       <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] ml-[10px] p-4 rounded-xl">
         <div class="flex flex-col">
@@ -23,8 +28,8 @@
       </div>
 
       <!-- Map Component -->
-      <MapComponent ref="mapComponent" :roads="roads" :color-map="colorMap" :api-key="API_KEY"
-        :active-road-id="activeRoad?.properties?.id" />
+      <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="colorMap" :api-key="API_KEY"
+        :active-road-id="activeRoad?.properties?.id" v-if="dataReady" />
 
       <!-- Traffic Level Modal -->
       <TrafficLevelModal :active-road="activeRoad" :color-map="colorMap" @closeEditModal="closeEditModal"
@@ -40,19 +45,30 @@ import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 
+// Store and refs
 const databaseStore = useDatabaseStore();
 const mapComponent = ref(null);
+const dataReady = ref(false);
+const isLoading = ref(true);
+const processedRoads = ref([]);
+const activeRoad = ref(null);
+
+// Constants
+const API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 const colorMap = {
   green: "#7CFC00",
   yellow: "#FFD700",
   red: "#FF6347",
 };
-const activeRoad = ref(null);
-const API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
+const statusMap = {
+  1: 'green',
+  2: 'yellow',
+  3: 'red'
+};
+const colorToStatus = { green: 1, yellow: 2, red: 3 };
 
-
-// Enhanced roads computed property
-const roads = computed(() => 
+// Computed properties
+const roads = computed(() =>
   databaseStore.roads.map(road => ({
     ...road,
     geometry: road.geometry || {},
@@ -62,36 +78,57 @@ const roads = computed(() =>
     }
   }))
 );
-const statusMap = {
-  1: 'green',
-  2: 'yellow',
-  3: 'red'
+
+// Utility functions
+const getColorFromStatusId = (statusId) => {
+  return statusMap[statusId] || 'gray';
 };
 
-const getColorFromStatusId = (statusId) => {
-  return statusMap[statusId] || 'gray'; // default to gray if unknown
-};
+// Initialize data
 onMounted(async () => {
+  isLoading.value = true;
   try {
     await databaseStore.fetchData();
-    if (mapComponent.value) {
-      mapComponent.value.updateMapData(roads.value);
-    }
+    
+    // Process all roads at once
+    const allRoads = databaseStore.roads.map(road => ({
+      ...road,
+      geometry: road.geometry || {},
+      properties: {
+        ...road.properties,
+        name: road.road_name || road.properties?.name
+      },
+      inboundColor: getColorFromStatusId(road.inbound.status_id),
+      outboundColor: getColorFromStatusId(road.outbound.status_id)
+    }));
+    
+    processedRoads.value = allRoads;
+    
+    // Background updates
+    const updatePromises = [];
+    databaseStore.roads.forEach(road => {
+      const inboundColor = getColorFromStatusId(road.inbound.status_id);
+      const outboundColor = getColorFromStatusId(road.outbound.status_id);
+      
+      updatePromises.push(
+        databaseStore.updateTrafficStatus(road.id, 'inbound', colorToStatus[inboundColor])
+      );
+      updatePromises.push(
+        databaseStore.updateTrafficStatus(road.id, 'outbound', colorToStatus[outboundColor])
+      );
+    });
+    
+    Promise.all(updatePromises).catch(err => console.error("Background updates failed:", err));
+    
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
-    // Convert status IDs to colors using the databaseStore's mapping
-    databaseStore.roads.forEach(road => {
-      const inboundColor = databaseStore.getColorFromStatusId(road.inbound.status_id);
-      const outboundColor = databaseStore.getColorFromStatusId(road.outbound.status_id);
-      
-      // Update both directions with their actual colors
-      changeTrafficLevel(road.id, 'inbound', inboundColor);
-      changeTrafficLevel(road.id, 'outbound', outboundColor);
-    });
+    isLoading.value = false;
+    dataReady.value = true;
   }
 });
 
+// Modal handlers
 const openEditModal = (road) => {
   activeRoad.value = {
     ...road,
@@ -99,23 +136,21 @@ const openEditModal = (road) => {
       id: road.id,
       name: road.road_name || road.properties?.name
     },
-    inboundColor: databaseStore.getColorFromStatusId(road.inbound.status_id),
-    outboundColor: databaseStore.getColorFromStatusId(road.outbound.status_id)
+    inboundColor: getColorFromStatusId(road.inbound.status_id),
+    outboundColor: getColorFromStatusId(road.outbound.status_id)
   };
 };
 
+const closeEditModal = () => {
+  activeRoad.value = null;
+};
+
+// Update traffic status
 const changeTrafficLevel = async (roadId, direction, color) => {
   try {
-    const colorToStatus = {
-      green: 1,
-      yellow: 2,
-      red: 3
-    };
     const statusId = colorToStatus[color];
-    
     await databaseStore.updateTrafficStatus(roadId, direction, statusId);
-    
-    // Update active road if it's the one being edited
+
     if (activeRoad.value?.properties.id === roadId) {
       const updatedRoad = databaseStore.getRoadById(roadId);
       activeRoad.value = {
