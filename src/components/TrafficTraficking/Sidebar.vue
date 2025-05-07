@@ -1,4 +1,3 @@
-
 <template>
   <div class="w-[20%] rounded-2xl p-1 font-montserrat">
     <!-- Logo and Header -->
@@ -34,26 +33,25 @@
           <FeEdit2 class="mt-1 cursor-pointer" @click="openEditModal(intersection.id)" />
         </div>
 
-        <!-- Traffic Colors - You'll need to adapt this based on your actual data structure -->
+        <!-- Traffic Colors -->
         <div class="flex justify-between">
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.inbound.status_id] || '#7CFC00' }"
+              :style="{ backgroundColor: getStatusColor(intersection.inbound.status_id) }"
               class="w-[15px] h-[15px] rounded-xs"
-            >
-            {{ intersection.inbound.status_id }}
-          </div>
+              :title="getStatusLabel(intersection.inbound.status_id)"
+            ></div>
           </div>
 
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.outbound.status_id] || '#FF6347' }"
+              :style="{ backgroundColor: getStatusColor(intersection.outbound.status_id) }"
               class="w-[15px] h-[15px] rounded-xs"
-            >
-            {{ intersection.outbound.status_id }}
-          </div>
+              :title="getStatusLabel(intersection.outbound.status_id)"
+            ></div>
+           
           </div>
         </div>
         <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
@@ -78,6 +76,31 @@ const isLoading = ref(true);
 const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
+
+// Traffic status mapping
+const trafficStatus = {
+  1: {
+    color: '#7CFC00',
+    label: 'Light'
+  },
+  2: {
+    color: '#FFFF00',
+    label: 'Moderate'
+  },
+  3: {
+    color: '#FF0000',
+    label: 'Heavy'
+  }
+};
+
+// Helper functions to get status color and label
+const getStatusColor = (statusId) => {
+  return trafficStatus[statusId]?.color || '#CCCCCC'; // Default gray if status not found
+};
+
+const getStatusLabel = (statusId) => {
+  return trafficStatus[statusId]?.label || 'Unknown'; // Default 'Unknown' if status not found
+};
 
 // Filter intersections based on search term
 const filteredIntersections = computed(() => {
@@ -113,14 +136,6 @@ const emit = defineEmits(["openEditModal"]);
 
 const openEditModal = (id) => {
   emit("openEditModal", id);
-};
-
-// Define colorMap if not passed as prop
-const colorMap = {
-  green: '#7CFC00',
-  yellow: '#FFFF00',
-  red: '#FF0000',
-  // Add other colors as needed
 };
 </script>
 
