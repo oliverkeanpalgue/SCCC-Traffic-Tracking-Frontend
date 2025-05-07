@@ -1,6 +1,7 @@
 // /src/stores/databaseStore.js
 import { defineStore } from 'pinia'
 import axiosClient from '../axios'
+import coordinates from '../data/coordinates.json'
 
 export const useDatabaseStore = defineStore('database', {
   state: () => ({
@@ -19,19 +20,37 @@ export const useDatabaseStore = defineStore('database', {
           axiosClient.get('/api/users', { headers: { 'x-api-key': API_KEY } }),
           axiosClient.get('/api/traffic-tracking/roads', { headers: { 'x-api-key': API_KEY } }),
         ]);
-  
+
         this.users = resUsers.data;
-        this.roads = resRoads.data.roads;
-        console.log("Data fetched successfully:", this.roads);
+        
+        // Merge API data with GeoJSON coordinates
+        this.roads = resRoads.data.roads.map(road => {
+          const geoFeature = coordinates.features.find(f => 
+            f.properties.id === road.id.toString()
+          );
+          
+          return {
+            ...road,
+            geometry: geoFeature?.geometry || null,
+            properties: {
+              // From GeoJSON
+              ...(geoFeature?.properties || {}),
+              // From API (override GeoJSON properties if needed)
+              name: road.road_name || geoFeature?.properties?.name,
+            }
+          };
+        });
+        
+        console.log("Merged roads data:", this.roads);
       } catch (error) {
         this.error = error;
         console.error("Error fetching data:", error);
-        throw error; // Re-throw to allow components to handle errors
+        throw error;
       } finally {
         this.isLoading = false;
       }
     },
-    
+
     async updateTrafficStatus(roadId, direction, statusId) {
       try {
         const API_KEY = import.meta.env.VITE_API_KEY;
@@ -42,10 +61,11 @@ export const useDatabaseStore = defineStore('database', {
           { headers: { 'x-api-key': API_KEY } }
         );
         
-        // Update local state immediately
-        const road = this.roads.find(r => r.id === roadId);
-        if (road) {
-          road[direction].status_id = statusId;
+        // Update local state with merged data
+        const roadIndex = this.roads.findIndex(r => r.id === roadId);
+        if (roadIndex > -1) {
+          this.roads[roadIndex][direction].status_id = statusId;
+          this.roads[roadIndex][`${direction}Color`] = this.getColorFromStatusId(statusId);
         }
         
         return response.data;
@@ -53,11 +73,22 @@ export const useDatabaseStore = defineStore('database', {
         console.error("Error updating traffic status:", error);
         throw error;
       }
+    },
+
+    getColorFromStatusId(statusId) {
+      const statusMap = { 1: 'green', 2: 'yellow', 3: 'red' };
+      return statusMap[statusId] || 'green';
     }
   },
   getters: {
     getRoadById: (state) => (id) => {
       return state.roads.find(road => road.id === id);
+    },
+    
+    // New getter for coordinates access
+    getRoadCoordinates: (state) => (roadId, direction) => {
+      const road = state.roads.find(r => r.id === roadId);
+      return road?.geometry?.coordinates?.[direction] || [];
     }
   }
-})
+})  

@@ -4,97 +4,22 @@
 </template>
 
 <script setup>
-import { defineProps, onMounted, watch } from "vue";
+import { defineProps, onMounted, watch, ref } from "vue";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 
 const props = defineProps({
-  intersections: Array,
+  roads: Array,
   colorMap: Object,
   apiKey: String,
-  activeIndex: Number
+  activeRoadId: String
 });
 
-let map;
+const map = ref(null);
+const loaded = ref(false);
 
-const drawRoute = (coords, routeName, lineColor, index, direction) => {
-  const routeGeoJson = {
-    type: "FeatureCollection",
-    features: [{
-      type: "Feature",
-      geometry: { type: "LineString", coordinates: coords },
-      properties: { name: routeName, direction }
-    }]
-  };
-
-  const sourceId = `route-source-${index}-${direction}`;
-  const layerId = `route-line-${index}-${direction}`;
-  const labelLayerId = `${layerId}-label`;
-
-  // Cleanup existing layers
-  if (map.getLayer(layerId)) map.removeLayer(layerId);
-  if (map.getLayer(labelLayerId)) map.removeLayer(labelLayerId);
-  if (map.getSource(sourceId)) map.removeSource(sourceId);
-
-  // Add new source
-  map.addSource(sourceId, { type: "geojson", data: routeGeoJson });
-
-  // Calculate line width
-  const zoom = map.getZoom();
-  const lineWidth = Math.max(zoom * 0.2, 1);
-
-  // Add route line
-  map.addLayer({
-    id: layerId,
-    type: "line",
-    source: sourceId,
-    layout: { 
-      "line-join": "round", 
-      "line-cap": "round" 
-    },
-    paint: {
-      "line-color": lineColor,
-      "line-width": lineWidth
-    }
-  });
-
-  // Add direction labels
-  map.addLayer({
-    id: labelLayerId,
-    type: "symbol",
-    source: sourceId,
-    layout: {
-      "symbol-placement": "line",
-      "text-field": [
-        "case",
-        ["==", ["get", "direction"], "inbound"], "INBOUND",
-        ["==", ["get", "direction"], "outbound"], "OUTBOUND",
-        ""
-      ],
-      "text-font": ["Open Sans Bold"],
-      "text-size": 12,
-      "text-rotation-alignment": "map",
-      "text-keep-upright": true
-    },
-    paint: {
-      "text-color": "#FFFFFF",
-      "text-halo-color": "#000000",
-      "text-halo-width": 2
-    }
-  });
-};
-
-const updateMapBounds = () => {
-  const bounds = new mapboxgl.LngLatBounds();
-  props.intersections.forEach(feature => {
-    feature.geometry.coordinates.inbound.forEach(coord => bounds.extend(coord));
-    feature.geometry.coordinates.outbound.forEach(coord => bounds.extend(coord));
-  });
-  if (props.intersections.length > 0) map.fitBounds(bounds, { padding: 60 });
-};
-
-onMounted(() => {
-  map = new mapboxgl.Map({
+const initMap = () => {
+  map.value = new mapboxgl.Map({
     container: "map",
     style: "mapbox://styles/mapbox/dark-v11",
     center: [120.5948, 16.4133],
@@ -102,37 +27,97 @@ onMounted(() => {
     accessToken: props.apiKey,
   });
 
-  map.addControl(new mapboxgl.NavigationControl(), "top-right");
-
-  map.on("load", () => {
-    props.intersections.forEach((feature, index) => {
-      const inboundColor = props.colorMap[feature.inboundColor];
-      const outboundColor = props.colorMap[feature.outboundColor];
-      drawRoute(feature.geometry.coordinates.inbound, feature.properties.name, inboundColor, index, "inbound");
-      drawRoute(feature.geometry.coordinates.outbound, feature.properties.name, outboundColor, index, "outbound");
-    });
-    updateMapBounds();
+  map.value.addControl(new mapboxgl.NavigationControl(), "top-right");
+  
+  map.value.on("load", () => {
+    loaded.value = true;
+    updateMapData(props.roads);
   });
-});
+};
 
-watch(() => props.intersections, (newVal) => {
-  if (map.isStyleLoaded()) {
-    newVal.forEach((feature, index) => {
-      const inboundColor = props.colorMap[feature.inboundColor];
-      const outboundColor = props.colorMap[feature.outboundColor];
-      drawRoute(feature.geometry.coordinates.inbound, feature.properties.name, inboundColor, index, "inbound");
-      drawRoute(feature.geometry.coordinates.outbound, feature.properties.name, outboundColor, index, "outbound");
+const drawRoute = (road, index) => {
+  // Cleanup existing layers
+  ['inbound', 'outbound'].forEach(direction => {
+    const layerId = `route-${index}-${direction}`;
+    if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
+    if (map.value.getSource(layerId)) map.value.removeSource(layerId);
+  });
+
+  // Draw new routes
+  if (road.geometry?.coordinates) {
+    ['inbound', 'outbound'].forEach(direction => {
+      const coords = road.geometry.coordinates[direction];
+      const color = props.colorMap[road[direction + 'Color']];
+      
+      map.value.addSource(`route-${index}-${direction}`, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: {
+            type: 'LineString',
+            coordinates: coords
+          }
+        }
+      });
+
+      map.value.addLayer({
+        id: `route-${index}-${direction}`,
+        type: 'line',
+        source: `route-${index}-${direction}`,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': color,
+          'line-width': 4,
+          'line-opacity': 0.7
+        }
+      });
     });
-    updateMapBounds();
   }
-});
+};
+
+const updateMapBounds = () => {
+  const bounds = new mapboxgl.LngLatBounds();
+  props.roads.forEach(road => {
+    ['inbound', 'outbound'].forEach(direction => {
+      road.geometry?.coordinates?.[direction]?.forEach(coord => bounds.extend(coord));
+    });
+  });
+  if (!bounds.isEmpty()) map.value.fitBounds(bounds, { padding: 60 });
+};
+
+const updateMapData = (roads) => {
+  if (!loaded.value) return;
+  
+  // Clear existing layers
+  const existingLayers = map.value.getStyle().layers || [];
+  existingLayers.forEach(layer => {
+    if (layer.id.startsWith('route-')) {
+      map.value.removeLayer(layer.id);
+      map.value.removeSource(layer.id);
+    }
+  });
+
+  // Draw new routes
+  roads.forEach((road, index) => drawRoute(road, index));
+  updateMapBounds();
+};
+
+watch(() => props.roads, (newVal) => {
+  updateMapData(newVal);
+}, { deep: true });
+
+onMounted(initMap);
 
 defineExpose({
   updateLineColor: (index, direction, color) => {
-    const lineId = `route-line-${index}-${direction}`;
-    if (map.getLayer(lineId)) {
-      map.setPaintProperty(lineId, "line-color", color);
+    const layerId = `route-${index}-${direction}`;
+    if (map.value.getLayer(layerId)) {
+      map.value.setPaintProperty(layerId, 'line-color', color);
     }
-  }
+  },
+  updateMapData
 });
 </script>

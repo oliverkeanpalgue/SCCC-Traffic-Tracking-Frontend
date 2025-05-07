@@ -41,6 +41,7 @@ import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 
 const databaseStore = useDatabaseStore();
+const mapComponent = ref(null);
 const colorMap = {
   green: "#7CFC00",
   yellow: "#FFD700",
@@ -49,42 +50,58 @@ const colorMap = {
 const activeRoad = ref(null);
 const API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 
-// Computed property for roads
-const roads = computed(() => databaseStore.roads);
 
-// Fetch data on mount
+// Enhanced roads computed property
+const roads = computed(() => 
+  databaseStore.roads.map(road => ({
+    ...road,
+    geometry: road.geometry || {},
+    properties: {
+      ...road.properties,
+      name: road.road_name || road.properties?.name
+    }
+  }))
+);
+const statusMap = {
+  1: 'green',
+  2: 'yellow',
+  3: 'red'
+};
+
+const getColorFromStatusId = (statusId) => {
+  return statusMap[statusId] || 'gray'; // default to gray if unknown
+};
 onMounted(async () => {
   try {
     await databaseStore.fetchData();
+    if (mapComponent.value) {
+      mapComponent.value.updateMapData(roads.value);
+    }
   } catch (error) {
     console.error("Failed to load data:", error);
-    // You might want to show an error message to the user here
+  } finally {
+    // Convert status IDs to colors using the databaseStore's mapping
+    databaseStore.roads.forEach(road => {
+      const inboundColor = databaseStore.getColorFromStatusId(road.inbound.status_id);
+      const outboundColor = databaseStore.getColorFromStatusId(road.outbound.status_id);
+      
+      // Update both directions with their actual colors
+      changeTrafficLevel(road.id, 'inbound', inboundColor);
+      changeTrafficLevel(road.id, 'outbound', outboundColor);
+    });
   }
 });
 
 const openEditModal = (road) => {
-  console.log("Opening modal for road:", road);
   activeRoad.value = {
+    ...road,
     properties: {
       id: road.id,
-      name: road.road_name
+      name: road.road_name || road.properties?.name
     },
-    inboundColor: getColorFromStatusId(road.inbound.status_id),
-    outboundColor: getColorFromStatusId(road.outbound.status_id)
+    inboundColor: databaseStore.getColorFromStatusId(road.inbound.status_id),
+    outboundColor: databaseStore.getColorFromStatusId(road.outbound.status_id)
   };
-};
-
-const getColorFromStatusId = (statusId) => {
-  const statusMap = {
-    1: 'green',
-    2: 'yellow',
-    3: 'red'
-  };
-  return statusMap[statusId] || 'green';
-};
-
-const closeEditModal = () => {
-  activeRoad.value = null;
 };
 
 const changeTrafficLevel = async (roadId, direction, color) => {
@@ -95,9 +112,9 @@ const changeTrafficLevel = async (roadId, direction, color) => {
       red: 3
     };
     const statusId = colorToStatus[color];
-
+    
     await databaseStore.updateTrafficStatus(roadId, direction, statusId);
-
+    
     // Update active road if it's the one being edited
     if (activeRoad.value?.properties.id === roadId) {
       const updatedRoad = databaseStore.getRoadById(roadId);
@@ -111,8 +128,7 @@ const changeTrafficLevel = async (roadId, direction, color) => {
       };
     }
   } catch (error) {
-    console.error("Failed to update traffic level:", error);
-    // You might want to show an error message to the user here
+    console.error("Update failed:", error);
   }
 };
 </script>
