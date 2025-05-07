@@ -39,17 +39,21 @@
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.inboundColor] || '#7CFC00' }"
+              :style="{ backgroundColor: colorMap[intersection.inbound.status_id] || '#7CFC00' }"
               class="w-[15px] h-[15px] rounded-xs"
-            ></div>
+            >
+            {{ intersection.inbound.status_id }}
+          </div>
           </div>
 
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
             <div 
-              :style="{ backgroundColor: colorMap[intersection.outboundColor] || '#FF6347' }"
+              :style="{ backgroundColor: colorMap[intersection.outbound.status_id] || '#FF6347' }"
               class="w-[15px] h-[15px] rounded-xs"
-            ></div>
+            >
+            {{ intersection.outbound.status_id }}
+          </div>
           </div>
         </div>
         <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
@@ -96,6 +100,7 @@ const checkScrollbar = () => {
 onMounted(async () => {
   try {
     await databaseStore.fetchData();
+    console.log("Data fetched successfully:", databaseStore.roads);
   } catch (error) {
     console.error('Error fetching data:', error);
   } finally {
