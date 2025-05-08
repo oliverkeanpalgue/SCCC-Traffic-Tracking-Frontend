@@ -1,13 +1,7 @@
 <template>
   <div class="w-[23%] rounded-2xl p-1 font-montserrat">
-    <!-- Logo and Header -->
-    <div class="flex justify-center items-center h-[80px]">
-      <img src="/img/Logo.png" alt="Logo" class="w-[70px] h-full" />
-      <h1 class="text-white font-bold text-lg text-center ml-4">Traffic Monitoring System</h1>
-    </div>
-
     <!-- Search Bar -->
-    <div class="mt-7 mb-7">
+    <div class="mt-4 mb-7">
       <input v-model="searchTerm" placeholder="Search..."
         class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]"
         @input="debouncedSearch" />

@@ -1,5 +1,8 @@
 <template>
-  <div class="flex flex-row p-3 gap-2 h-[735px] bg-[#1b1a1a]" style="font-family: 'Montserrat', sans-serif;">
+  <div class="flex flex-col h-26 bg-[#1b1a1a]">
+    <Navbar /> <!-- Navbar Component -->
+  </div>
+  <div class="flex flex-row p-3 gap-2  h-[calc(100vh-100px)] bg-[#1b1a1a]" style="font-family: 'Montserrat', sans-serif;">
     <Sidebar :intersections="roads" :colorMap="colorMap" @openEditModal="openEditModal" />
 
     <!-- Map Component -->
@@ -44,6 +47,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useDatabaseStore } from '../stores/databaseStore';
 import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
+import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 
