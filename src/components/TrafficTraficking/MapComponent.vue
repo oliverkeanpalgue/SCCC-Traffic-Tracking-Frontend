@@ -97,16 +97,16 @@ const drawRoute = (road, index) => {
             'interpolate',
             ['linear'],
             ['zoom'],
-            12, 2,   
-            15, 4,  
-            18, 12       
+            12, 2,
+            15, 4,
+            18, 12
           ],
-          'symbol-placement': 'line',        
+          'symbol-placement': 'line',
           'text-allow-overlap': true,
           'text-ignore-placement': true,
           'text-keep-upright': true,
           'text-letter-spacing': 0.05,
-          'text-max-angle': 30,                
+          'text-max-angle': 30,
           'text-pitch-alignment': 'viewport'
         },
         paint: {
@@ -166,8 +166,38 @@ watch(() => props.roads, (newVal) => {
 
 onMounted(initMap);
 
+const focusOnRoad = (roadId) => {
+  if (!loaded.value || !map.value) return;
+
+  // Find the road in the props.roads array
+  const selectedRoad = props.roads.find(r => r.properties.id.toString() === roadId.toString());
+  if (!selectedRoad || !selectedRoad.geometry?.coordinates) return;
+
+  // Create a bounds object that includes both inbound and outbound coordinates
+  const bounds = new mapboxgl.LngLatBounds();
+
+  // Add all coordinates to bounds
+  ['inbound', 'outbound'].forEach(direction => {
+    selectedRoad.geometry.coordinates[direction]?.forEach(coord => {
+      bounds.extend(coord);
+    });
+  });
+
+  // Only proceed if we have coordinates
+  if (bounds.isEmpty()) return;
+
+  // Animate the map to zoom to the road
+  map.value.fitBounds(bounds, {
+    padding: 100, // Add padding around the road
+    duration: 1000, // Animation duration in milliseconds
+    maxZoom: 17 // Prevent excessive zooming
+  });
+};
+
+// Update the defineExpose to include the new function
 defineExpose({
   updateRoadColor,
-  updateMapData
+  updateMapData,
+  focusOnRoad
 });
 </script>

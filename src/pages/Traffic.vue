@@ -3,7 +3,7 @@
     <Sidebar :intersections="roads" :colorMap="colorMap" @openEditModal="openEditModal" />
 
     <!-- Map Component -->
-    <div class="w-[80%] relative">
+    <div class="w-[75%] relative">
       <!-- Loading Overlay -->
       <div v-if="isLoading"
         class="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
@@ -142,6 +142,11 @@ const openEditModal = (road) => {
     inboundColor: getColorFromStatusId(road.inbound.status_id),
     outboundColor: getColorFromStatusId(road.outbound.status_id)
   };
+  
+  // Focus the map on the selected road
+  if (mapComponent.value) {
+    mapComponent.value.focusOnRoad(road.id.toString());
+  }
 };
 
 const closeEditModal = () => {

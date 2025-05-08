@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[20%] rounded-2xl p-1 font-montserrat">
+  <div class="w-[25%] rounded-2xl p-1 font-montserrat">
     <!-- Logo and Header -->
     <div class="flex justify-center items-center h-[80px]">
       <img src="/img/Logo.png" alt="Logo" class="w-[70px] h-full" />
@@ -21,13 +21,12 @@
     <div ref="scrollContainer" class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
       :class="{ 'pr-2': showScrollbar }">
       <!-- Loop through filtered roads -->
-      <div v-for="road in filteredRoads" :key="road.id">
+      <div v-for="road in filteredRoads" :key="road.id"
+        class="road-item p-2 rounded-md cursor-pointer transition-all duration-200 hover:bg-[#303030]"
+        @click="openEditModal(road)">
         <div class="flex justify-between mb-3">
           <div class="font-bold">{{ road.road_name }}</div>
-          <FeEdit2 
-            class="mt-1 cursor-pointer" 
-            @click.stop="openEditModal(road)" 
-          />
+          <FeEdit2 class="mt-1" />
         </div>
 
         <!-- Traffic Colors -->
@@ -130,5 +129,31 @@ const openEditModal = (road) => {
   -ms-overflow-style: none;
   scrollbar-width: thin;
   scrollbar-color: #333 transparent;
+}
+
+/* Add these new styles */
+.road-item {
+  position: relative;
+  overflow: hidden;
+}
+
+.road-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
+  background-color: rgba(255, 255, 255, 0.05);
+  transition: height 0.2s ease;
+}
+
+.road-item:hover::before {
+  height: 100%;
+}
+
+.road-item.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #7CFC00;
 }
 </style>
