@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[25%] rounded-2xl p-1 font-montserrat">
+  <div class="w-[23%] rounded-2xl p-1 font-montserrat">
     <!-- Logo and Header -->
     <div class="flex justify-center items-center h-[80px]">
       <img src="/img/Logo.png" alt="Logo" class="w-[70px] h-full" />
@@ -9,7 +9,8 @@
     <!-- Search Bar -->
     <div class="mt-7 mb-7">
       <input v-model="searchTerm" placeholder="Search..."
-        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]" />
+        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]"
+        @input="debouncedSearch" />
     </div>
 
     <!-- Loading state -->
@@ -22,6 +23,7 @@
       :class="{ 'pr-2': showScrollbar }">
       <!-- Loop through filtered roads -->
       <div v-for="road in filteredRoads" :key="road.id"
+        v-memo="[road.id, road.inbound.status_id, road.outbound.status_id]"
         class="road-item p-2 rounded-md cursor-pointer transition-all duration-200 hover:bg-[#303030]"
         @click="openEditModal(road)">
         <div class="flex justify-between mb-3">
@@ -34,14 +36,12 @@
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
             <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs">
-            </div>
+              class="w-[15px] h-[15px] rounded-xs" aria-label="Inbound traffic status"></div>
           </div>
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
             <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs">
-            </div>
+              class="w-[15px] h-[15px] rounded-xs" aria-label="Outbound traffic status"></div>
           </div>
         </div>
         <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
@@ -56,58 +56,115 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
 import { FeEdit2 } from '@kalimahapps/vue-icons';
 
+// Use the same color mapping that parent component uses
+const props = defineProps({
+  intersections: Array,
+  colorMap: Object // Use the parent's color mapping consistently
+});
+
 const databaseStore = useDatabaseStore();
-const roads = computed(() => databaseStore.roads);
+const roads = computed(() => props.intersections || []);
 const isLoading = computed(() => databaseStore.isLoading);
 const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
+const searchTimeout = ref(null);
 
-// Traffic status mapping
-const trafficStatus = {
-  1: { color: '#7CFC00' }, // green
-  2: { color: '#FFFF00' }, // yellow
-  3: { color: '#FF0000' }  // red
-};
+// Force component refresh when database changes
+const forceUpdate = ref(0);
 
+// Get color based on traffic status ID - use the provided colorMap
 const getStatusColor = (statusId) => {
-  return trafficStatus[statusId]?.color || '#CCCCCC';
+  // Map status ID to color name, then get the hex color
+  const colorName = { 1: 'green', 2: 'yellow', 3: 'red' }[statusId];
+  return props.colorMap?.[colorName] || '#CCCCCC';
 };
 
-// Filter roads based on search term
+// Filter roads based on search term with real-time updates from database
 const filteredRoads = computed(() => {
-  if (!roads.value) return [];
-  const term = searchTerm.value.toLowerCase();
+  // Include forceUpdate to trigger reevaluation
+  forceUpdate.value;
+  
+  if (!roads.value?.length) return [];
+
+  const term = searchTerm.value.trim().toLowerCase();
+  if (!term) return roads.value;
+
   return roads.value.filter(road =>
-    road.road_name.toLowerCase().includes(term)
+    (road.road_name || road.properties?.name || '').toLowerCase().includes(term)
   );
 });
 
-const checkScrollbar = () => {
+// Use a more efficient debouncing technique
+const debouncedSearch = () => {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(checkScrollbar, 300);
+};
+
+// Optimize scrollbar check
+const checkScrollbar = async () => {
+  await nextTick();
   if (scrollContainer.value) {
-    showScrollbar.value =
-      scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
+    showScrollbar.value = scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
   }
 };
 
+// Handle window resize events with optimization
+const handleResize = () => {
+  if (window.requestAnimationFrame) {
+    window.requestAnimationFrame(checkScrollbar);
+  } else {
+    checkScrollbar();
+  }
+};
+
+// Watch database store road changes to trigger UI updates
+watch(() => databaseStore.roads, () => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { deep: true });
+
+// Direct reactive watch on the intersections prop for immediate updates
+watch(() => props.intersections, (newVal) => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { deep: true, immediate: true });
+
+// Watch for specific traffic status changes to ensure real-time updates
+watch(() => props.intersections?.map(road => 
+  [road.id, road.inbound?.status_id, road.outbound?.status_id].join('|')
+), () => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { immediate: true });
+
 onMounted(() => {
   checkScrollbar();
+  window.addEventListener('resize', handleResize, { passive: true });
+  
+  // Initial force update to ensure data consistency
+  forceUpdate.value++;
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize);
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
 });
 
 const emit = defineEmits(["openEditModal"]);
 
+// Handle road edit request
 const openEditModal = (road) => {
-  console.log("Opening modal for road:", road);
+  if (!road?.id) return;
   emit("openEditModal", road);
 };
 </script>
 
 <style scoped>
-/* Your existing styles remain the same */
 .scrollbar-custom::-webkit-scrollbar {
   width: 5px;
 }
@@ -131,10 +188,10 @@ const openEditModal = (road) => {
   scrollbar-color: #333 transparent;
 }
 
-/* Add these new styles */
 .road-item {
   position: relative;
   overflow: hidden;
+  transition: background-color 0.2s ease, border-left 0.2s ease;
 }
 
 .road-item::before {

@@ -3,7 +3,7 @@
     <Sidebar :intersections="roads" :colorMap="colorMap" @openEditModal="openEditModal" />
 
     <!-- Map Component -->
-    <div class="w-[75%] relative">
+    <div class="w-[77%] relative">
       <!-- Loading Overlay -->
       <div v-if="isLoading"
         class="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
@@ -30,7 +30,6 @@
         </div>
       </div>
 
-      <!-- Map Component - Notice the String() conversion below -->
       <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="colorMap" :api-key="API_KEY"
         :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady" />
 
@@ -56,73 +55,49 @@ const isLoading = ref(true);
 const processedRoads = ref([]);
 const activeRoad = ref(null);
 
-// Constants
+// Configuration constants for traffic status mapping and colors
 const API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
-const colorMap = {
-  green: "#7CFC00",
-  yellow: "#FFD700",
-  red: "#FF6347",
-};
-const statusMap = {
-  1: 'green',
-  2: 'yellow',
-  3: 'red'
-};
+const colorMap = { green: "#7CFC00", yellow: "#FFD700", red: "#FF6347" };
+const statusMap = { 1: 'green', 2: 'yellow', 3: 'red' };
 const colorToStatus = { green: 1, yellow: 2, red: 3 };
 
-// Computed properties
-const roads = computed(() =>
-  databaseStore.roads.map(road => ({
-    ...road,
-    geometry: road.geometry || {},
-    properties: {
-      ...road.properties,
-      name: road.road_name || road.properties?.name
-    }
-  }))
-);
+// Transform road data for display and interaction
+const roads = computed(() => databaseStore.roads.map(road => ({
+  ...road,
+  geometry: road.geometry || {},
+  properties: {
+    ...road.properties,
+    name: road.road_name || road.properties?.name
+  }
+})));
 
-// Utility functions
-const getColorFromStatusId = (statusId) => {
-  return statusMap[statusId] || 'gray';
-};
+// Helper to get color string from traffic status ID
+const getColorFromStatusId = (statusId) => statusMap[statusId] || 'gray';
 
-// Initialize data
+// Process a road object for internal use
+const processRoad = (road) => ({
+  ...road,
+  geometry: road.geometry || {},
+  properties: {
+    ...road.properties,
+    name: road.road_name || road.properties?.name
+  },
+  inboundColor: getColorFromStatusId(road.inbound.status_id),
+  outboundColor: getColorFromStatusId(road.outbound.status_id)
+});
+
+// Initialize data and fetch from database
 onMounted(async () => {
   isLoading.value = true;
   try {
     await databaseStore.fetchData();
+    processedRoads.value = databaseStore.roads.map(processRoad);
 
-    // Process all roads at once
-    const allRoads = databaseStore.roads.map(road => ({
-      ...road,
-      geometry: road.geometry || {},
-      properties: {
-        ...road.properties,
-        name: road.road_name || road.properties?.name
-      },
-      inboundColor: getColorFromStatusId(road.inbound.status_id),
-      outboundColor: getColorFromStatusId(road.outbound.status_id)
-    }));
-
-    processedRoads.value = allRoads;
-
-    // Background updates
-    const updatePromises = [];
-    databaseStore.roads.forEach(road => {
-      const inboundColor = getColorFromStatusId(road.inbound.status_id);
-      const outboundColor = getColorFromStatusId(road.outbound.status_id);
-
-      updatePromises.push(
-        databaseStore.updateTrafficStatus(road.id, 'inbound', colorToStatus[inboundColor])
-      );
-      updatePromises.push(
-        databaseStore.updateTrafficStatus(road.id, 'outbound', colorToStatus[outboundColor])
-      );
-    });
-
-    Promise.all(updatePromises).catch(err => console.error("Background updates failed:", err));
-
+    // Update traffic statuses in the background for consistency
+    Promise.all(databaseStore.roads.flatMap(road => [
+      databaseStore.updateTrafficStatus(road.id, 'inbound', road.inbound.status_id),
+      databaseStore.updateTrafficStatus(road.id, 'outbound', road.outbound.status_id)
+    ])).catch(err => console.error("Background updates failed:", err));
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
@@ -131,59 +106,50 @@ onMounted(async () => {
   }
 });
 
-// Modal handlers
+// Handle opening the edit modal and focusing the map on selected road
 const openEditModal = (road) => {
-  activeRoad.value = {
-    ...road,
-    properties: {
-      id: road.id,
-      name: road.road_name || road.properties?.name
-    },
-    inboundColor: getColorFromStatusId(road.inbound.status_id),
-    outboundColor: getColorFromStatusId(road.outbound.status_id)
-  };
-  
-  // Focus the map on the selected road
-  if (mapComponent.value) {
-    mapComponent.value.focusOnRoad(road.id.toString());
-  }
+  activeRoad.value = processRoad(road);
+  mapComponent.value?.focusOnRoad(road.id.toString());
 };
 
+// Close the edit modal
 const closeEditModal = () => {
   activeRoad.value = null;
 };
 
-// Update traffic status
+// Update traffic status and synchronize UI
 const changeTrafficLevel = async (roadId, direction, color) => {
   try {
-    console.log(`Updating traffic level: Road ${roadId}, ${direction} to ${color}`);
     const statusId = colorToStatus[color];
-    console.log(`Converted to status ID: ${statusId}`);
-
-    const response = await databaseStore.updateTrafficStatus(roadId, direction, statusId);
-    console.log("API response:", response);
-
-    // Update the map line color directly
-    if (mapComponent.value) {
-      mapComponent.value.updateRoadColor(roadId, direction, color);
-    }
-
-    // Update the processedRoads data to keep it in sync with the visual change
+    await databaseStore.updateTrafficStatus(roadId, direction, statusId);
+    
+    // Update map visualization
+    mapComponent.value?.updateRoadColor(roadId, direction, color);
+    
+    // Update local state to reflect changes
     const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
     if (roadIndex !== -1) {
       processedRoads.value[roadIndex][`${direction}Color`] = color;
     }
-
+    
+    // Update active road if it's the one being modified
     if (activeRoad.value?.properties.id === roadId) {
-      const updatedRoad = databaseStore.getRoadById(roadId);
       activeRoad.value = {
         ...activeRoad.value,
-        properties: {
-          id: updatedRoad.id,
-          name: updatedRoad.road_name || updatedRoad.properties?.name
-        },
-        inboundColor: direction === 'inbound' ? color : activeRoad.value.inboundColor,
-        outboundColor: direction === 'outbound' ? color : activeRoad.value.outboundColor
+        [direction === 'inbound' ? 'inboundColor' : 'outboundColor']: color
+      };
+    }
+    
+    // IMPORTANT: Update the roads in databaseStore to ensure sidebar updates
+    const originalRoadIndex = databaseStore.roads.findIndex(r => r.id.toString() === roadId.toString());
+    if (originalRoadIndex !== -1) {
+      // Create a new object to ensure reactivity
+      databaseStore.roads[originalRoadIndex] = {
+        ...databaseStore.roads[originalRoadIndex],
+        [direction]: {
+          ...databaseStore.roads[originalRoadIndex][direction],
+          status_id: statusId
+        }
       };
     }
   } catch (error) {
