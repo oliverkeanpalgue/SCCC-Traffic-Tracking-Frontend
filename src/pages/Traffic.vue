@@ -2,7 +2,7 @@
   <div class="flex flex-col h-26 bg-[#1b1a1a]">
     <Navbar /> <!-- Navbar Component -->
   </div>
-  <div class="flex flex-row p-3 gap-2  h-[calc(100vh-100px)] bg-[#1b1a1a]" style="font-family: 'Montserrat', sans-serif;">
+  <div class="flex flex-row p-3 gap-2  h-[calc(100vh-100px)] bg-[#1b1a1a]">
     <Sidebar :intersections="roads" :colorMap="colorMap" @openEditModal="openEditModal" />
 
     <!-- Map Component -->
