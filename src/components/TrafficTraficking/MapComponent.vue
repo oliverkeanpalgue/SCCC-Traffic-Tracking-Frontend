@@ -11,20 +11,33 @@ const props = defineProps({
   roads: Array,
   colorMap: Object,
   apiKey: String,
-  activeRoadId: String
+  activeRoadId: String,
+  mapStyle: {
+    type: String,
+    default: "mapbox://styles/mapbox/dark-v11"
+  }
 });
 
 const map = ref(null);
 const loaded = ref(false);
-const boundsInitialized = ref(false);
+const boundsInitialized = ref(false); 
 
 const initMap = () => {
+  mapboxgl.accessToken = props.apiKey;
+  
   map.value = new mapboxgl.Map({
     container: "map",
-    style: "mapbox://styles/mapbox/dark-v11",
+    style: props.mapStyle,
     center: [120.5948, 16.4133],
     zoom: 16,
-    accessToken: props.apiKey,
+    transformRequest: (url, resourceType) => {
+      // Add cache-busting for sprite resources
+      if (resourceType === 'SpriteJSON' || resourceType === 'SpriteImage') {
+        return {
+          url: url + (url.includes('?') ? '&' : '?') + 'cachebust=' + Date.now()
+        };
+      }
+    }
   });
 
   map.value.addControl(new mapboxgl.NavigationControl(), "top-right");
@@ -157,12 +170,44 @@ const updateRoadColor = (roadId, direction, color) => {
   // No need to update the label - it stays the same, only the line color changes
 };
 
-watch(() => props.roads, (newVal) => {
-  if (loaded.value) {
-    // Only update data, don't reset bounds
-    updateMapData(newVal, false);
+watch(() => props.mapStyle, (newStyle) => {
+  if (map.value && loaded.value) {
+    // Store current view state
+    const center = map.value.getCenter();
+    const zoom = map.value.getZoom();
+    const bearing = map.value.getBearing();
+    const pitch = map.value.getPitch();
+    
+    // Instead of modifying the existing map style, we need to create a new Map instance
+    // This is a more reliable approach to handle sprite issues
+    map.value.remove();
+    
+    // Create new map with the new style
+    map.value = new mapboxgl.Map({
+      container: "map",
+      style: newStyle,
+      center: center,
+      zoom: zoom,
+      bearing: bearing,
+      pitch: pitch,
+      transformRequest: (url, resourceType) => {
+        if (resourceType === 'SpriteJSON' || resourceType === 'SpriteImage') {
+          return {
+            url: url + (url.includes('?') ? '&' : '?') + 'cachebust=' + Date.now()
+          };
+        }
+      }
+    });
+
+    map.value.addControl(new mapboxgl.NavigationControl(), "top-right");
+    
+    // Wait for the style to load before adding data layers
+    map.value.on("load", () => {
+      loaded.value = true;
+      updateMapData(props.roads);
+    });
   }
-}, { deep: true });
+});
 
 onMounted(initMap);
 
