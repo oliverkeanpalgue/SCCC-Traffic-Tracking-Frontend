@@ -1,14 +1,14 @@
 // /src/stores/databaseStore.js
-import { defineStore } from 'pinia'
-import axiosClient from '../axios'
-import coordinates from '../data/coordinates.json'
+import { defineStore } from "pinia";
+import axiosClient from "../axios";
+import coordinates from "../data/coordinates.json";
 
-export const useDatabaseStore = defineStore('database', {
+export const useDatabaseStore = defineStore("database", {
   state: () => ({
     users: [],
     roads: [],
     isLoading: false,
-    error: null
+    error: null,
   }),
   actions: {
     async fetchData() {
@@ -17,31 +17,26 @@ export const useDatabaseStore = defineStore('database', {
       const API_KEY = import.meta.env.VITE_API_KEY;
       try {
         const [resUsers, resRoads] = await Promise.all([
-          axiosClient.get('/api/users', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/traffic-tracking/roads', { headers: { 'x-api-key': API_KEY } }),
+          axiosClient.get("/api/users", { headers: { "x-api-key": API_KEY } }),
+          axiosClient.get("/api/traffic-tracking/roads", {
+            headers: { "x-api-key": API_KEY },
+          }),
         ]);
 
         this.users = resUsers.data;
-        
-        // Merge API data with GeoJSON coordinates
-        this.roads = resRoads.data.roads.map(road => {
-          const geoFeature = coordinates.features.find(f => 
-            f.properties.id === road.id.toString()
-          );
-          
+
+        // Use data directly from the API, no need to merge with static JSON
+        this.roads = resRoads.data.roads.map((road) => {
           return {
             ...road,
-            geometry: geoFeature?.geometry || null,
             properties: {
-              // From GeoJSON
-              ...(geoFeature?.properties || {}),
-              // From API (override GeoJSON properties if needed)
-              name: road.road_name || geoFeature?.properties?.name,
-            }
+              id: road.id.toString(),
+              name: road.road_name,
+            },
           };
         });
-        
-        console.log("Merged roads data:", this.roads);
+
+        console.log("Roads data from database:", this.roads);
       } catch (error) {
         this.error = error;
         console.error("Error fetching data:", error);
@@ -54,20 +49,21 @@ export const useDatabaseStore = defineStore('database', {
     async updateTrafficStatus(roadId, direction, statusId) {
       try {
         const API_KEY = import.meta.env.VITE_API_KEY;
-        const endpoint = direction === 'inbound' ? 'inbound' : 'outbound';
+        const endpoint = direction === "inbound" ? "inbound" : "outbound";
         const response = await axiosClient.put(
           `/api/traffic-tracking/${endpoint}/${roadId}`,
           { status_id: statusId },
-          { headers: { 'x-api-key': API_KEY } }
+          { headers: { "x-api-key": API_KEY } }
         );
-        
+
         // Update local state with merged data
-        const roadIndex = this.roads.findIndex(r => r.id === roadId);
+        const roadIndex = this.roads.findIndex((r) => r.id === roadId);
         if (roadIndex > -1) {
           this.roads[roadIndex][direction].status_id = statusId;
-          this.roads[roadIndex][`${direction}Color`] = this.getColorFromStatusId(statusId);
+          this.roads[roadIndex][`${direction}Color`] =
+            this.getColorFromStatusId(statusId);
         }
-        
+
         return response.data;
       } catch (error) {
         console.error("Error updating traffic status:", error);
@@ -76,19 +72,19 @@ export const useDatabaseStore = defineStore('database', {
     },
 
     getColorFromStatusId(statusId) {
-      const statusMap = { 1: 'green', 2: 'yellow', 3: 'red' };
-      return statusMap[statusId] || 'green';
-    }
+      const statusMap = { 1: "green", 2: "yellow", 3: "red" };
+      return statusMap[statusId] || "green";
+    },
   },
   getters: {
     getRoadById: (state) => (id) => {
-      return state.roads.find(road => road.id === id);
+      return state.roads.find((road) => road.id === id);
     },
-    
+
     // New getter for coordinates access
     getRoadCoordinates: (state) => (roadId, direction) => {
-      const road = state.roads.find(r => r.id === roadId);
+      const road = state.roads.find((r) => r.id === roadId);
       return road?.geometry?.coordinates?.[direction] || [];
-    }
-  }
-})  
+    },
+  },
+});
