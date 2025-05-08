@@ -1,9 +1,14 @@
 <template>
-  <div class="flex flex-row p-3 gap-2 h-[735px] bg-[#1b1a1a]" style="font-family: 'Montserrat', sans-serif;">
+  <div class="flex flex-col h-26 bg-[#1b1a1a]">
+    <Navbar /> <!-- Navbar Component -->
+  </div>
+  <div class="flex flex-row gap-2 h-[calc(100vh-100px)] overflow-y-hidden bg-[#1b1a1a]" style="font-family: 'Montserrat', sans-serif;">
+
     <Sidebar :intersections="intersections" :colorMap="colorMap" @openEditModal="openEditModal" />
+
     
     <!-- Map Component -->
-    <div class="w-[80%] relative">
+    <div class="w-[80%] relative ">
       <!-- Map Legend -->
       <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] ml-[10px] p-4 rounded-xl">
         <div class="flex flex-col">
@@ -46,6 +51,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue';
 import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
+import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import routeData from "../data/coordinates.json";
