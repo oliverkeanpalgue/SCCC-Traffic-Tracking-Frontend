@@ -7,23 +7,15 @@
                         aria-controls="logo-sidebar" type="button"
                         class="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600">
                     </button>
-                    <a href="/" class="flex justify-center items-center md:me-24 mt">
-                        <img src="/img/Logo.png" alt="Logo" class="w-[70px] h-full" />
+                    <a href="/" class="flex justify-center items-center gap-2 md:me-24 mt">
+                        <img src="/img/Logo.png" alt="Logo" class="w-[50px] h-full" />
                         <span
-                            class="self-center flex items-center text-xl font-semibold sm:text-2xl whitespace-nowrap dark:text-white">Traffic Monitoring System</span>
+                            class="self-center flex items-center text-xl font-semibold whitespace-nowrap dark:text-white">Traffic Monitoring System</span>
                     </a>
 
                 </div>
 
-                <div class="flex items-center relative gap-4">
-
-                    <div class="hidden md:flex items-center gap-4">
-                        <a href="/"
-                            class="text-sm font-semibold text-gray-900 dark:text-white hover:text-gray-300 px-3 py-2">Home</a>
-                        <a href="/roads"
-                            class="text-sm font-semibold text-gray-900 dark:text-white hover:text-gray-300 px-3 py-2">Roads</a>
-                    </div>
-
+                <div class="flex items-center relative">
                     <div>
                         <button type="button"
                             class="flex cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"

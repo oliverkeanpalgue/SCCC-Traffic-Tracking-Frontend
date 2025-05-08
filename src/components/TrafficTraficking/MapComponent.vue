@@ -40,7 +40,7 @@ const initMap = () => {
     }
   });
 
-  map.value.addControl(new mapboxgl.NavigationControl(), "top-right");
+  map.value.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
   map.value.on("load", () => {
     loaded.value = true;
