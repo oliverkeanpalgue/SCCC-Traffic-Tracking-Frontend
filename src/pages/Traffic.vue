@@ -5,8 +5,11 @@
     <!-- Map Component -->
     <div class="w-[80%] relative">
       <!-- Loading Overlay -->
-      <div v-if="isLoading" class="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
-        <div class="inline-block h-14 w-14 animate-spin rounded-full border-4 border-solid border-white border-r-transparent"></div>
+      <div v-if="isLoading"
+        class="absolute inset-0 bg-black bg-opacity-60 z-20 flex items-center justify-center rounded-xl">
+        <div
+          class="inline-block h-14 w-14 animate-spin rounded-full border-4 border-solid border-white border-r-transparent">
+        </div>
       </div>
 
       <!-- Map Legend -->
@@ -28,14 +31,8 @@
       </div>
 
       <!-- Map Component - Notice the String() conversion below -->
-      <MapComponent 
-        ref="mapComponent" 
-        :roads="processedRoads" 
-        :color-map="colorMap" 
-        :api-key="API_KEY"
-        :active-road-id="activeRoad?.properties?.id?.toString()" 
-        v-if="dataReady" 
-      />
+      <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="colorMap" :api-key="API_KEY"
+        :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady" />
 
       <!-- Traffic Level Modal -->
       <TrafficLevelModal :active-road="activeRoad" :color-map="colorMap" @closeEditModal="closeEditModal"
@@ -95,7 +92,7 @@ onMounted(async () => {
   isLoading.value = true;
   try {
     await databaseStore.fetchData();
-    
+
     // Process all roads at once
     const allRoads = databaseStore.roads.map(road => ({
       ...road,
@@ -107,15 +104,15 @@ onMounted(async () => {
       inboundColor: getColorFromStatusId(road.inbound.status_id),
       outboundColor: getColorFromStatusId(road.outbound.status_id)
     }));
-    
+
     processedRoads.value = allRoads;
-    
+
     // Background updates
     const updatePromises = [];
     databaseStore.roads.forEach(road => {
       const inboundColor = getColorFromStatusId(road.inbound.status_id);
       const outboundColor = getColorFromStatusId(road.outbound.status_id);
-      
+
       updatePromises.push(
         databaseStore.updateTrafficStatus(road.id, 'inbound', colorToStatus[inboundColor])
       );
@@ -123,9 +120,9 @@ onMounted(async () => {
         databaseStore.updateTrafficStatus(road.id, 'outbound', colorToStatus[outboundColor])
       );
     });
-    
+
     Promise.all(updatePromises).catch(err => console.error("Background updates failed:", err));
-    
+
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
@@ -157,19 +154,31 @@ const changeTrafficLevel = async (roadId, direction, color) => {
     console.log(`Updating traffic level: Road ${roadId}, ${direction} to ${color}`);
     const statusId = colorToStatus[color];
     console.log(`Converted to status ID: ${statusId}`);
-    
+
     const response = await databaseStore.updateTrafficStatus(roadId, direction, statusId);
     console.log("API response:", response);
+
+    // Update the map line color directly
+    if (mapComponent.value) {
+      mapComponent.value.updateRoadColor(roadId, direction, color);
+    }
+
+    // Update the processedRoads data to keep it in sync with the visual change
+    const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
+    if (roadIndex !== -1) {
+      processedRoads.value[roadIndex][`${direction}Color`] = color;
+    }
 
     if (activeRoad.value?.properties.id === roadId) {
       const updatedRoad = databaseStore.getRoadById(roadId);
       activeRoad.value = {
+        ...activeRoad.value,
         properties: {
           id: updatedRoad.id,
-          name: updatedRoad.road_name
+          name: updatedRoad.road_name || updatedRoad.properties?.name
         },
-        inboundColor: getColorFromStatusId(updatedRoad.inbound.status_id),
-        outboundColor: getColorFromStatusId(updatedRoad.outbound.status_id)
+        inboundColor: direction === 'inbound' ? color : activeRoad.value.inboundColor,
+        outboundColor: direction === 'outbound' ? color : activeRoad.value.outboundColor
       };
     }
   } catch (error) {

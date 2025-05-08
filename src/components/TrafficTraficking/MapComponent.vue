@@ -1,4 +1,3 @@
-<!-- TrafficMap.vue -->
 <template>
   <div id="map" class="w-full h-full rounded-xl relative" style="min-height: 300px; position: relative;"></div>
 </template>
@@ -17,6 +16,7 @@ const props = defineProps({
 
 const map = ref(null);
 const loaded = ref(false);
+const boundsInitialized = ref(false);
 
 const initMap = () => {
   map.value = new mapboxgl.Map({
@@ -28,10 +28,10 @@ const initMap = () => {
   });
 
   map.value.addControl(new mapboxgl.NavigationControl(), "top-right");
-  
+
   map.value.on("load", () => {
     loaded.value = true;
-    updateMapData(props.roads);
+    updateMapData(props.roads, true); // true = initialize bounds
   });
 };
 
@@ -39,8 +39,11 @@ const drawRoute = (road, index) => {
   // Cleanup existing layers
   ['inbound', 'outbound'].forEach(direction => {
     const layerId = `route-${index}-${direction}`;
+    const labelId = `label-${index}-${direction}`;
+    if (map.value.getLayer(labelId)) map.value.removeLayer(labelId);
     if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
     if (map.value.getSource(layerId)) map.value.removeSource(layerId);
+    if (map.value.getSource(labelId)) map.value.removeSource(labelId);
   });
 
   // Draw new routes
@@ -48,11 +51,18 @@ const drawRoute = (road, index) => {
     ['inbound', 'outbound'].forEach(direction => {
       const coords = road.geometry.coordinates[direction];
       const color = props.colorMap[road[direction + 'Color']];
-      
+
+      // Skip if no coordinates
+      if (!coords || coords.length === 0) return;
+
+      // Add the line source
       map.value.addSource(`route-${index}-${direction}`, {
         type: 'geojson',
         data: {
           type: 'Feature',
+          properties: {
+            name: direction.charAt(0).toUpperCase() + direction.slice(1)
+          },
           geometry: {
             type: 'LineString',
             coordinates: coords
@@ -60,6 +70,7 @@ const drawRoute = (road, index) => {
         }
       });
 
+      // Add the line
       map.value.addLayer({
         id: `route-${index}-${direction}`,
         type: 'line',
@@ -72,6 +83,36 @@ const drawRoute = (road, index) => {
           'line-color': color,
           'line-width': 4,
           'line-opacity': 0.7
+        }
+      });
+
+      // Add the label that follows the line
+      map.value.addLayer({
+        id: `label-${index}-${direction}`,
+        type: 'symbol',
+        source: `route-${index}-${direction}`,
+        layout: {
+          'text-field': ['get', 'name'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            12, 2,   
+            15, 4,  
+            18, 12       
+          ],
+          'symbol-placement': 'line',        
+          'text-allow-overlap': true,
+          'text-ignore-placement': true,
+          'text-keep-upright': true,
+          'text-letter-spacing': 0.05,
+          'text-max-angle': 30,                
+          'text-pitch-alignment': 'viewport'
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': '#000000',
+          'text-halo-width': 1.5
         }
       });
     });
@@ -88,36 +129,45 @@ const updateMapBounds = () => {
   if (!bounds.isEmpty()) map.value.fitBounds(bounds, { padding: 60 });
 };
 
-const updateMapData = (roads) => {
-  if (!loaded.value) return;
-  
-  // Clear existing layers
-  const existingLayers = map.value.getStyle().layers || [];
-  existingLayers.forEach(layer => {
-    if (layer.id.startsWith('route-')) {
-      map.value.removeLayer(layer.id);
-      map.value.removeSource(layer.id);
-    }
-  });
+const updateMapData = (roads, initBounds = false) => {
+  if (!loaded.value || !map.value) return;
 
   // Draw new routes
   roads.forEach((road, index) => drawRoute(road, index));
-  updateMapBounds();
+
+  // Only update bounds on initial load or when explicitly requested
+  if (initBounds && !boundsInitialized.value) {
+    updateMapBounds();
+    boundsInitialized.value = true;
+  }
+};
+
+// Update a specific road's color without redrawing everything
+const updateRoadColor = (roadId, direction, color) => {
+  if (!loaded.value || !map.value) return;
+
+  const roadIndex = props.roads.findIndex(r => r.properties.id.toString() === roadId.toString());
+  if (roadIndex === -1) return;
+
+  const layerId = `route-${roadIndex}-${direction}`;
+  if (map.value.getLayer(layerId)) {
+    map.value.setPaintProperty(layerId, 'line-color', props.colorMap[color]);
+  }
+
+  // No need to update the label - it stays the same, only the line color changes
 };
 
 watch(() => props.roads, (newVal) => {
-  updateMapData(newVal);
+  if (loaded.value) {
+    // Only update data, don't reset bounds
+    updateMapData(newVal, false);
+  }
 }, { deep: true });
 
 onMounted(initMap);
 
 defineExpose({
-  updateLineColor: (index, direction, color) => {
-    const layerId = `route-${index}-${direction}`;
-    if (map.value.getLayer(layerId)) {
-      map.value.setPaintProperty(layerId, 'line-color', color);
-    }
-  },
+  updateRoadColor,
   updateMapData
 });
 </script>
