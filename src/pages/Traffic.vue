@@ -2,7 +2,7 @@
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
     <Navbar /> <!-- Navbar Component -->
   </div>
-  <div class="flex flex-row p-3 gap-2  h-[calc(100vh-100px)] bg-[#1b1a1a]">
+  <div class="flex flex-row p-3 gap-2  h-[649px] bg-[#1b1a1a]">
     <Sidebar :intersections="roads" :colorMap="colorMap" @openEditModal="openEditModal" />
 
     <!-- Map Component -->
@@ -16,7 +16,7 @@
       </div>
 
       <!-- Map Legend -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] ml-[10px] p-4 rounded-xl">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] ml-[1000px] p-4 rounded-xl">
         <div class="flex flex-col">
           <div class="flex gap-4 items-center">
             <div class="w-[15px] h-[15px] bg-[#7CFC00] rounded-xs"></div>
@@ -34,7 +34,7 @@
       </div>
 
       <!-- Map Settings -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[120px] ml-[10px] p-4 rounded-xl">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[120px] ml-[1000px] p-4 rounded-xl">
         <div class="text-sm font-bold mb-2">Map Style</div>
         <div class="relative">
           <!-- Dropdown Trigger -->
