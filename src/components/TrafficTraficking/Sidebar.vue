@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[20%] rounded-2xl p-1 font-montserrat">
+  <div class="w-[23%] rounded-2xl p-1 font-montserrat">
     <!-- Logo and Header -->
     <div class="flex justify-center items-center h-[80px]">
       <img src="/img/Logo.png" alt="Logo" class="w-[70px] h-full" />
@@ -7,163 +7,210 @@
     </div>
 
     <!-- Search Bar -->
-    <div class="mt-7">
-      <input 
-        v-model="searchTerm"
-        @input="handleSearch"
-        placeholder="Search intersections..."
-        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949] focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+    <div class="mt-7 mb-7">
+      <input v-model="searchTerm" placeholder="Search..."
+        class="w-full p-3 rounded-2xl text-white bg-[#282828] placeholder-gray-400 border-[#494949]"
+        @input="debouncedSearch" />
     </div>
 
-    <!-- Intersections List -->
-    <div 
-      ref="scrollContainer"
-      class="text-white p-2 overflow-y-auto max-h-[calc(100vh-220px)] scrollbar-custom"
-      :class="{ 'pr-2': showScrollbar }"
-    >
-      <div 
-        v-for="intersection in filteredIntersections" 
-        :key="intersection.properties.id"
-        class="intersection-item"
-      >
-        <div class="flex justify-between gap-2 mb-3">
-          <div class="font-bold">{{ intersection.properties.name }}</div>
-          <FeEdit2 
-            class="mt-1 cursor-pointer text-gray-400 hover:text-white transition-colors" 
-            @click="openEditModal(intersection.properties.id)" 
-          />
+    <!-- Loading state -->
+    <div v-if="isLoading" class="text-center text-gray-400 py-4">
+      Loading roads...
+    </div>
+
+    <!-- Roads List -->
+    <div ref="scrollContainer" class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
+      :class="{ 'pr-2': showScrollbar }">
+      <!-- Loop through filtered roads -->
+      <div v-for="road in filteredRoads" :key="road.id"
+        v-memo="[road.id, road.inbound.status_id, road.outbound.status_id]"
+        class="road-item p-2 rounded-md cursor-pointer transition-all duration-200 hover:bg-[#303030]"
+        @click="openEditModal(road)">
+        <div class="flex justify-between mb-3">
+          <div class="font-bold">{{ road.road_name }}</div>
+          <FeEdit2 class="mt-1" />
         </div>
-        
+
+        <!-- Traffic Colors -->
         <div class="flex justify-between">
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
-            <div 
-              :style="{ backgroundColor: colorMap[intersection.inboundColor] || '#7CFC00' }"
-              class="w-[15px] h-[15px] rounded-xs"
-            ></div>
+            <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs" aria-label="Inbound traffic status"></div>
           </div>
-
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
-            <div 
-              :style="{ backgroundColor: colorMap[intersection.outboundColor] || '#FF6347' }"
-              class="w-[15px] h-[15px] rounded-xs"
-            ></div>
+            <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs" aria-label="Outbound traffic status"></div>
           </div>
         </div>
-        <hr class="border-t border-gray-600 mt-3 mb-4">
+        <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
       </div>
 
-      <div 
-        v-if="filteredIntersections.length === 0" 
-        class="text-center text-gray-400 py-4"
-      >
-        No intersections found
+      <!-- Empty state -->
+      <div v-if="!isLoading && filteredRoads.length === 0" class="text-center text-gray-400 py-4">
+        No roads found
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
+import { useDatabaseStore } from '../../stores/databaseStore';
 import { FeEdit2 } from '@kalimahapps/vue-icons';
 
+// Use the same color mapping that parent component uses
 const props = defineProps({
-  intersections: {
-    type: Array,
-    default: () => []
-  },
-  colorMap: {
-    type: Object,
-    default: () => ({})
-  }
+  intersections: Array,
+  colorMap: Object // Use the parent's color mapping consistently
 });
 
-const emit = defineEmits(["openEditModal"]);
-
-// Search functionality
+const databaseStore = useDatabaseStore();
+const roads = computed(() => props.intersections || []);
+const isLoading = computed(() => databaseStore.isLoading);
 const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
+const searchTimeout = ref(null);
 
-// Check if scrollbar is needed
-const checkScrollbar = () => {
+// Force component refresh when database changes
+const forceUpdate = ref(0);
+
+// Get color based on traffic status ID - use the provided colorMap
+const getStatusColor = (statusId) => {
+  // Map status ID to color name, then get the hex color
+  const colorName = { 1: 'green', 2: 'yellow', 3: 'red' }[statusId];
+  return props.colorMap?.[colorName] || '#CCCCCC';
+};
+
+// Filter roads based on search term with real-time updates from database
+const filteredRoads = computed(() => {
+  // Include forceUpdate to trigger reevaluation
+  forceUpdate.value;
+  
+  if (!roads.value?.length) return [];
+
+  const term = searchTerm.value.trim().toLowerCase();
+  if (!term) return roads.value;
+
+  return roads.value.filter(road =>
+    (road.road_name || road.properties?.name || '').toLowerCase().includes(term)
+  );
+});
+
+// Use a more efficient debouncing technique
+const debouncedSearch = () => {
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
+  searchTimeout.value = setTimeout(checkScrollbar, 300);
+};
+
+// Optimize scrollbar check
+const checkScrollbar = async () => {
+  await nextTick();
   if (scrollContainer.value) {
     showScrollbar.value = scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
   }
 };
 
-// Handle search with debounce
-let searchTimeout = null;
-const handleSearch = () => {
-  clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => {
+// Handle window resize events with optimization
+const handleResize = () => {
+  if (window.requestAnimationFrame) {
+    window.requestAnimationFrame(checkScrollbar);
+  } else {
     checkScrollbar();
-  }, 300);
+  }
 };
 
-// Filter intersections based on search term
-const filteredIntersections = computed(() => {
-  if (!searchTerm.value.trim()) return props.intersections;
-  
-  const term = searchTerm.value.toLowerCase();
-  return props.intersections.filter(intersection => 
-    intersection.properties.name.toLowerCase().includes(term)
-  );
-});
+// Watch database store road changes to trigger UI updates
+watch(() => databaseStore.roads, () => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { deep: true });
 
-// Open edit modal
-const openEditModal = (id) => {
-  emit("openEditModal", id);
-};
+// Direct reactive watch on the intersections prop for immediate updates
+watch(() => props.intersections, (newVal) => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { deep: true, immediate: true });
 
-// Handle resize and initial load
+// Watch for specific traffic status changes to ensure real-time updates
+watch(() => props.intersections?.map(road => 
+  [road.id, road.inbound?.status_id, road.outbound?.status_id].join('|')
+), () => {
+  forceUpdate.value++;
+  nextTick(checkScrollbar);
+}, { immediate: true });
+
 onMounted(() => {
   checkScrollbar();
-  window.addEventListener('resize', checkScrollbar);
+  window.addEventListener('resize', handleResize, { passive: true });
+  
+  // Initial force update to ensure data consistency
+  forceUpdate.value++;
 });
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkScrollbar);
+  window.removeEventListener('resize', handleResize);
+  if (searchTimeout.value) clearTimeout(searchTimeout.value);
 });
+
+const emit = defineEmits(["openEditModal"]);
+
+// Handle road edit request
+const openEditModal = (road) => {
+  if (!road?.id) return;
+  emit("openEditModal", road);
+};
 </script>
 
 <style scoped>
-.scrollbar-custom {
-  scrollbar-width: thin;
-  scrollbar-color: #4a4a4a transparent;
-}
-
 .scrollbar-custom::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {
   background: transparent;
-  border-radius: 3px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb {
-  background-color: #4a4a4a;
-  border-radius: 3px;
+  background: #333;
+  border-radius: 10px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-thumb:hover {
-  background-color: #5a5a5a;
+  background: #555;
 }
 
-.intersection-item {
-  transition: all 0.2s ease;
-  padding: 8px;
-  border-radius: 8px;
+.scrollbar-custom {
+  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: #333 transparent;
 }
 
-.intersection-item:hover {
+.road-item {
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.2s ease, border-left 0.2s ease;
+}
+
+.road-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 0;
   background-color: rgba(255, 255, 255, 0.05);
+  transition: height 0.2s ease;
 }
 
-input:focus {
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+.road-item:hover::before {
+  height: 100%;
+}
+
+.road-item.active {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-left: 3px solid #7CFC00;
 }
 </style>

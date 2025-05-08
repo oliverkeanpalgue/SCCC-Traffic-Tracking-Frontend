@@ -1,97 +1,94 @@
 // /src/stores/databaseStore.js
 import { defineStore } from 'pinia'
 import axiosClient from '../axios'
+import coordinates from '../data/coordinates.json'
 
 export const useDatabaseStore = defineStore('database', {
   state: () => ({
-    officeEquipments: [],
-    officeSupplies: [],
-    equipmentCopies: [],
-    categoryList: [],
-    transactionItems: [],
-    transactionHistory: [],
     users: [],
-    borrowers: [],
-    officeList: [],
-    inventoryAccesses: [],
-    fetchedDataCount: 0,
-    isLoading: true,
+    roads: [],
+    isLoading: false,
+    error: null
   }),
   actions: {
     async fetchData() {
-      this.isLoading = true
-      this.fetchedDataCount = 0
-      const API_KEY = import.meta.env.VITE_API_KEY
+      this.isLoading = true;
+      this.error = null;
+      const API_KEY = import.meta.env.VITE_API_KEY;
       try {
-        // Execute all requests concurrently
-        const [
-          resEquipments,
-          resSupplies,
-          resEquipmentCopies,
-          resCategories,
-          resTransactionItems,
-          resTransactionHistory,
-          resUsers,
-          resBorrowers,
-          resOfficeList,
-          resInventoryAccesses,
-        ] = await Promise.all([
-          axiosClient.get('/api/office_equipments', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/office_supplies', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/equipment_copies', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/categories', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/borrow_transaction_items', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/borrow_transactions', { headers: { 'x-api-key': API_KEY } }),
+        const [resUsers, resRoads] = await Promise.all([
           axiosClient.get('/api/users', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/borrowers', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/offices', { headers: { 'x-api-key': API_KEY } }),
-          axiosClient.get('/api/inventory_access', { headers: { 'x-api-key': API_KEY } }),
-        ])
+          axiosClient.get('/api/traffic-tracking/roads', { headers: { 'x-api-key': API_KEY } }),
+        ]);
 
-        // Map or assign the fetched data
-        this.officeEquipments = resEquipments.data.map(equipment => ({
-          ...equipment,
-          serial_number: equipment.serial_number || null,
-          quantity: equipment.quantity || null,
-          type: equipment.type || 'Office Equipment',
-        }))
-        this.fetchedDataCount += 1
-
-        this.officeSupplies = resSupplies.data.map(supply => ({
-          ...supply,
-          type: supply.type || 'Office Supply',
-        }))
-
-        this.equipmentCopies = resEquipmentCopies.data
-        this.categoryList = resCategories.data
-        this.transactionItems = resTransactionItems.data
-        this.transactionHistory = resTransactionHistory.data
-        this.users = resUsers.data
-        this.borrowers = resBorrowers.data
-        this.officeList = resOfficeList.data
-        this.inventoryAccesses = resInventoryAccesses.data
+        this.users = resUsers.data;
+        
+        // Merge API data with GeoJSON coordinates
+        this.roads = resRoads.data.roads.map(road => {
+          const geoFeature = coordinates.features.find(f => 
+            f.properties.id === road.id.toString()
+          );
+          
+          return {
+            ...road,
+            geometry: geoFeature?.geometry || null,
+            properties: {
+              // From GeoJSON
+              ...(geoFeature?.properties || {}),
+              // From API (override GeoJSON properties if needed)
+              name: road.road_name || geoFeature?.properties?.name,
+            }
+          };
+        });
+        
+        console.log("Merged roads data:", this.roads);
       } catch (error) {
+        this.error = error;
         console.error("Error fetching data:", error);
+        throw error;
       } finally {
         this.isLoading = false;
       }
     },
 
-    // Example update action – update an item then re-fetch data
-    async updateItem(updatedItem) {
+    async updateTrafficStatus(roadId, direction, statusId) {
       try {
-        const API_KEY = import.meta.env.VITE_API_KEY
-        // Example: assuming the update endpoint is /api/items/:id
-        await axiosClient.put(`/api/items/${updatedItem.id}`, updatedItem, {
-          headers: { 'x-api-key': API_KEY },
-        })
-        // After updating, re-fetch all data
-        await this.fetchData()
+        const API_KEY = import.meta.env.VITE_API_KEY;
+        const endpoint = direction === 'inbound' ? 'inbound' : 'outbound';
+        const response = await axiosClient.put(
+          `/api/traffic-tracking/${endpoint}/${roadId}`,
+          { status_id: statusId },
+          { headers: { 'x-api-key': API_KEY } }
+        );
+        
+        // Update local state with merged data
+        const roadIndex = this.roads.findIndex(r => r.id === roadId);
+        if (roadIndex > -1) {
+          this.roads[roadIndex][direction].status_id = statusId;
+          this.roads[roadIndex][`${direction}Color`] = this.getColorFromStatusId(statusId);
+        }
+        
+        return response.data;
       } catch (error) {
-        console.error('Error updating item:', error)
+        console.error("Error updating traffic status:", error);
+        throw error;
       }
     },
 
-    // You can similarly add addItem, deleteItem actions if needed
+    getColorFromStatusId(statusId) {
+      const statusMap = { 1: 'green', 2: 'yellow', 3: 'red' };
+      return statusMap[statusId] || 'green';
+    }
   },
-})
+  getters: {
+    getRoadById: (state) => (id) => {
+      return state.roads.find(road => road.id === id);
+    },
+    
+    // New getter for coordinates access
+    getRoadCoordinates: (state) => (roadId, direction) => {
+      const road = state.roads.find(r => r.id === roadId);
+      return road?.geometry?.coordinates?.[direction] || [];
+    }
+  }
+})  
