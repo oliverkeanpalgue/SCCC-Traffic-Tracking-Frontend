@@ -32,6 +32,9 @@ export const useDatabaseStore = defineStore("database", {
             properties: {
               id: road.id.toString(),
               name: road.road_name,
+              roadType: road.road_type_id
+                ? this.getRoadTypeName(road.road_type_id)
+                : "Unknown", // Add road type info
             },
           };
         });
@@ -45,7 +48,17 @@ export const useDatabaseStore = defineStore("database", {
         this.isLoading = false;
       }
     },
-
+    // Add this new method to the actions
+    getRoadTypeName(typeId) {
+      const typeMap = {
+        1: "Intersection",
+        2: "Rotunda",
+        3: "Street",
+        4: "Entry Point",
+        5: "Road",
+      };
+      return typeMap[typeId] || "Unknown";
+    },
     async updateTrafficStatus(roadId, direction, statusId) {
       try {
         const API_KEY = import.meta.env.VITE_API_KEY;

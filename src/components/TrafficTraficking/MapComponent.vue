@@ -1,24 +1,14 @@
 <template>
   <div id="map" class="w-full h-full rounded-xl relative min-h-[300px]"></div>
-  
-  <div ref="popupTemplateRef" class="hidden">
-    <div>
-      <h3>{{ popupData.roadName }}</h3>
-      <div>
-        <span>{{ popupData.directionText }}</span>
-        <div>
-          <span>{{ popupData.statusLabel }}</span>
-          <div data-status="{{ popupData.trafficStatus }}"></div>
-        </div>
-      </div>
-    </div>
-  </div>
 </template>
 
+<!-- Rest of script remains the same -->
 <script setup>
 import { defineProps, onMounted, watch, ref } from "vue";
+import { createApp } from "vue"; // Add this import
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
+import RoadPopup from "./MapPopUp.vue";
 
 const props = defineProps({
   roads: Array,
@@ -35,42 +25,47 @@ const map = ref(null);
 const loaded = ref(false);
 const boundsInitialized = ref(false);
 const currentPopup = ref(null);
-const popupTemplateRef = ref(null);
-const popupData = ref({
-  roadName: '',
-  directionText: '',
-  statusLabel: '',
-  trafficStatus: ''
-});
+
 
 // Map status to label text
 const statusLabels = { 'green': 'Light', 'yellow': 'Moderate', 'red': 'Heavy' };
 
 const showRoadPopup = (feature, lngLat) => {
   const props = feature.properties;
-  
-  popupData.value = {
-    roadName: props.roadName,
-    directionText: `${props.direction.charAt(0).toUpperCase() + props.direction.slice(1)} Traffic`,
-    statusLabel: statusLabels[props.trafficStatus] || 'Unknown',
-    trafficStatus: props.trafficStatus
-  };
-  
-  setTimeout(() => {
-    if (currentPopup.value) currentPopup.value.remove();
-    
-    const popupContent = popupTemplateRef.value.cloneNode(true);
-    popupContent.classList.remove('hidden');
-    
-    currentPopup.value = new mapboxgl.Popup({ 
-      closeButton: true,
-      closeOnClick: true,
-      maxWidth: '300px'
-    })
-      .setLngLat(lngLat)
-      .setDOMContent(popupContent)
-      .addTo(map.value);
-  }, 0);
+
+  // Remove any existing popup
+  if (currentPopup.value) currentPopup.value.remove();
+
+  console.log("Popup data:", props); // Add logging to debug
+
+  // Use imported createApp instead of require
+  const popupApp = createApp(RoadPopup, {
+    roadId: props.roadId || "",
+    roadName: props.roadName || "Road",
+    directionText: `${props.direction?.charAt(0).toUpperCase() + props.direction?.slice(1) || ""} Traffic`,
+    trafficStatus: props.trafficStatus || "",
+    roadType: props.roadType || "Street", // Pass the road type
+  });
+
+
+  // Mount component to a new element
+  const container = document.createElement('div');
+  popupApp.mount(container);
+
+  // Create and add the popup
+  currentPopup.value = new mapboxgl.Popup({
+    closeButton: true,
+    closeOnClick: true,
+    maxWidth: '300px',
+    anchor: 'bottom',
+    offset: [0, -10],
+    className: 'custom-popup'
+  })
+    .setLngLat(lngLat)
+    .setDOMContent(container)
+    .addTo(map.value);
+
+  console.log("Popup created:", currentPopup.value);
 };
 
 const createMap = (style, viewState = {}) => {
@@ -80,11 +75,11 @@ const createMap = (style, viewState = {}) => {
     bearing: 0,
     pitch: 0
   };
-  
+
   const options = { ...defaultView, ...viewState };
-  
+
   if (map.value) map.value.remove();
-  
+
   map.value = new mapboxgl.Map({
     container: "map",
     style,
@@ -107,9 +102,42 @@ const createMap = (style, viewState = {}) => {
 const setupLayerEvents = (layerId) => {
   map.value.on('click', layerId, (e) => {
     if (currentPopup.value) currentPopup.value.remove();
-    showRoadPopup(e.features[0], e.lngLat);
+
+    // Store feature and lngLat for later use
+    const clickedFeature = e.features[0];
+    const clickedLocation = e.lngLat;
+
+    // Increase the vertical offset to prevent flickering
+    const verticalOffset = map.value.getContainer().clientHeight * 0.25; // Increased from 0.15
+
+    // Get the point coordinates for center calculation
+    const point = map.value.project(clickedLocation);
+    // Adjust the point upward to make room for the popup
+    point.y -= verticalOffset;
+    // Convert back to geographic coordinates
+    const adjustedCenter = map.value.unproject(point);
+
+    // Fly to the adjusted center position
+    map.value.flyTo({
+      center: adjustedCenter,
+      zoom: Math.max(map.value.getZoom(), 15),
+      duration: 800,
+      essential: true
+    });
+
+    // After animation completes, show the popup with slight delay to ensure stability
+    const onMoveEnd = () => {
+      // Add small timeout to ensure map is fully settled
+      setTimeout(() => {
+        showRoadPopup(clickedFeature, clickedLocation);
+      }, 50);
+      map.value.off('moveend', onMoveEnd);
+    };
+
+    map.value.once('moveend', onMoveEnd);
   });
-  
+
+  // Rest of the event handlers remain the same
   map.value.on('mouseenter', layerId, () => map.value.getCanvas().style.cursor = 'pointer');
   map.value.on('mouseleave', layerId, () => map.value.getCanvas().style.cursor = '');
 };
@@ -119,7 +147,7 @@ const drawRoute = (road, index) => {
   ['inbound', 'outbound'].forEach(direction => {
     const layerId = `route-${index}-${direction}`;
     const labelId = `label-${index}-${direction}`;
-    
+
     [layerId, labelId].forEach(id => {
       if (map.value.getLayer(id)) map.value.removeLayer(id);
       if (map.value.getSource(id)) map.value.removeSource(id);
@@ -130,11 +158,11 @@ const drawRoute = (road, index) => {
   ['inbound', 'outbound'].forEach(direction => {
     const coords = road.geometry?.coordinates?.[direction];
     if (!coords?.length) return;
-    
+
     const color = props.colorMap[road[direction + 'Color']];
     const layerId = `route-${index}-${direction}`;
     const labelId = `label-${index}-${direction}`;
-    
+
     // Add source
     map.value.addSource(layerId, {
       type: 'geojson',
@@ -144,6 +172,7 @@ const drawRoute = (road, index) => {
           name: direction.charAt(0).toUpperCase() + direction.slice(1),
           roadId: road.properties.id,
           roadName: road.properties.name,
+          roadType: road.properties.roadType, // Add the road type here
           trafficStatus: road[direction + 'Color'],
           direction
         },
@@ -162,7 +191,7 @@ const drawRoute = (road, index) => {
       layout: { 'line-join': 'round', 'line-cap': 'round' },
       paint: { 'line-color': color, 'line-width': 4, 'line-opacity': 0.7 }
     });
-    
+
     // Add events
     setupLayerEvents(layerId);
 
@@ -227,7 +256,7 @@ const updateRoadColor = (roadId, direction, color) => {
 
 watch(() => props.mapStyle, (newStyle) => {
   if (!map.value || !loaded.value) return;
-  
+
   // Store current view state before removing map
   const viewState = {
     center: map.value.getCenter(),
@@ -235,12 +264,12 @@ watch(() => props.mapStyle, (newStyle) => {
     bearing: map.value.getBearing(),
     pitch: map.value.getPitch()
   };
-  
+
   if (currentPopup.value) {
     currentPopup.value.remove();
     currentPopup.value = null;
   }
-  
+
   createMap(newStyle, viewState);
 });
 
@@ -271,3 +300,36 @@ onMounted(() => {
 
 defineExpose({ updateRoadColor, updateMapData, focusOnRoad });
 </script>
+
+<style>
+/* MAPBOX SPECIFIC OVERRIDES - Can't be converted to Tailwind */
+/* These target external elements injected by Mapbox */
+
+/* Transparent popup background */
+.mapboxgl-popup-content {
+  background-color: transparent !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Hide the default popup arrow */
+.mapboxgl-popup-tip {
+  display: none !important;
+}
+
+/* Style the close button - targets Mapbox element */
+.mapboxgl-popup-close-button {
+  font-size: 16px;
+  color: white;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+</style>
