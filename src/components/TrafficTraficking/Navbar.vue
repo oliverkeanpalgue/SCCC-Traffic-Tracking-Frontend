@@ -1,6 +1,6 @@
 <template>
-    <nav class="fixed top-0 z-50 w-full bg-[#1b1a1a] border border-b border-gray-900">
-        <div class="py-3 lg:px-5 lg:pl-3 border-b-1 border-gray-500">
+    <nav class="fixed top-0 z-50 w-full bg-[#1b1a1a]">
+        <div class="py-3 lg:px-5 lg:pl-3">
             <div class="flex items-center justify-between">
                 <div class="flex items-center justify-start mt-2">
                     <button data-drawer-target="logo-sidebar" data-drawer-toggle="logo-sidebar"
