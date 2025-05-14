@@ -1,8 +1,7 @@
-// /src/stores/databaseStore.js
 import { defineStore } from "pinia";
 import axiosClient from "../axios";
-import coordinates from "../data/coordinates.json";
 
+// Road traffic management store
 export const useDatabaseStore = defineStore("database", {
   state: () => ({
     users: [],
@@ -10,34 +9,32 @@ export const useDatabaseStore = defineStore("database", {
     isLoading: false,
     error: null,
   }),
+  
   actions: {
     async fetchData() {
       this.isLoading = true;
       this.error = null;
       const API_KEY = import.meta.env.VITE_API_KEY;
+      const headers = { "x-api-key": API_KEY };
+      
       try {
+        // Parallel API requests for performance
         const [resUsers, resRoads] = await Promise.all([
-          axiosClient.get("/api/users", { headers: { "x-api-key": API_KEY } }),
-          axiosClient.get("/api/traffic-tracking/roads", {
-            headers: { "x-api-key": API_KEY },
-          }),
+          axiosClient.get("/api/users", { headers }),
+          axiosClient.get("/api/traffic-tracking/roads", { headers }),
         ]);
 
         this.users = resUsers.data;
-
-        // Use data directly from the API, no need to merge with static JSON
-        this.roads = resRoads.data.roads.map((road) => {
-          return {
-            ...road,
-            properties: {
-              id: road.id.toString(),
-              name: road.road_name,
-              roadType: road.road_type_id
-                ? this.getRoadTypeName(road.road_type_id)
-                : "Unknown", // Add road type info
-            },
-          };
-        });
+        
+        // Transform road data for frontend use
+        this.roads = resRoads.data.roads.map(road => ({
+          ...road,
+          properties: {
+            id: road.id.toString(),
+            name: road.road_name,
+            roadType: road.road_type_id ? this.getRoadTypeName(road.road_type_id) : "Unknown",
+          }
+        }));
 
         console.log("Roads data from database:", this.roads);
       } catch (error) {
@@ -48,33 +45,29 @@ export const useDatabaseStore = defineStore("database", {
         this.isLoading = false;
       }
     },
-    // Add this new method to the actions
+    
+    // Convert road type ID to human-readable name
     getRoadTypeName(typeId) {
-      const typeMap = {
-        1: "Intersection",
-        2: "Rotunda",
-        3: "Street",
-        4: "Entry Point",
-        5: "Road",
-      };
+      const typeMap = { 1: "Intersection", 2: "Rotunda", 3: "Street", 4: "Entry Point", 5: "Road" };
       return typeMap[typeId] || "Unknown";
     },
+    
     async updateTrafficStatus(roadId, direction, statusId) {
       try {
+        // Update backend
         const API_KEY = import.meta.env.VITE_API_KEY;
-        const endpoint = direction === "inbound" ? "inbound" : "outbound";
+        const endpoint = `/api/traffic-tracking/${direction === "inbound" ? "inbound" : "outbound"}/${roadId}`;
         const response = await axiosClient.put(
-          `/api/traffic-tracking/${endpoint}/${roadId}`,
+          endpoint,
           { status_id: statusId },
           { headers: { "x-api-key": API_KEY } }
         );
 
-        // Update local state with merged data
-        const roadIndex = this.roads.findIndex((r) => r.id === roadId);
+        // Update local state
+        const roadIndex = this.roads.findIndex(r => r.id === roadId);
         if (roadIndex > -1) {
           this.roads[roadIndex][direction].status_id = statusId;
-          this.roads[roadIndex][`${direction}Color`] =
-            this.getColorFromStatusId(statusId);
+          this.roads[roadIndex][`${direction}Color`] = this.getColorFromStatusId(statusId);
         }
 
         return response.data;
@@ -84,19 +77,19 @@ export const useDatabaseStore = defineStore("database", {
       }
     },
 
+    // Map traffic status ID to color name
     getColorFromStatusId(statusId) {
-      const statusMap = { 1: "green", 2: "yellow", 3: "red" };
-      return statusMap[statusId] || "green";
+      return { 1: "green", 2: "yellow", 3: "red" }[statusId] || "green";
     },
   },
+  
   getters: {
-    getRoadById: (state) => (id) => {
-      return state.roads.find((road) => road.id === id);
-    },
+    // Find road by ID
+    getRoadById: state => id => state.roads.find(road => road.id === id),
 
-    // New getter for coordinates access
-    getRoadCoordinates: (state) => (roadId, direction) => {
-      const road = state.roads.find((r) => r.id === roadId);
+    // Get coordinates for a specific road direction
+    getRoadCoordinates: state => (roadId, direction) => {
+      const road = state.roads.find(r => r.id === roadId);
       return road?.geometry?.coordinates?.[direction] || [];
     },
   },
