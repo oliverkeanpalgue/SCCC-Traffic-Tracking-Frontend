@@ -162,7 +162,7 @@ const drawRoute = (road, index) => {
           direction
         },
         geometry: {
-          type: 'LineString',
+          type: Array.isArray(coords[0][0]) ? 'MultiLineString' : 'LineString',
           coordinates: coords
         }
       }
