@@ -1,6 +1,8 @@
 <script setup>
 import { ref, watch } from 'vue';
 import defaultRoadImage from '../../assets/1.png';
+import axiosClient from "../../axios.js";
+import { defineProps } from 'vue';
 
 // Component props with simplified defaults
 const props = defineProps({
@@ -8,13 +10,18 @@ const props = defineProps({
     road: {
         type: Object,
         required: true,
-        default: () => ({
-            roadId: null,
-        })
     }
 });
 
 const emit = defineEmits(['close', 'save']);
+
+const data = ref({
+    roadId: props.road.roadId,
+    roadName: props.road.roadName,
+    roadImage: props.road.roadImage || defaultRoadImage,
+    roadType: props.road.roadType || 'Street',
+    is_deleted: true,
+});
 
 // Form field refs
 const roadId = ref('');
@@ -22,19 +29,28 @@ const roadName = ref('');
 
 
 // Reset form when modal opens
-watch(() => props.show, visible => visible && resetForm(), { immediate: true }, console.log(props.road.roadId));
-
-// Populate form with road data
-const resetForm = () => {
-    Object.entries({ roadId, roadName })
-        .forEach(([key, ref]) => ref.value = props.road[key]);
-};
-
-// Save changes and emit updated road
-const handleSave = () => emit('save', {
-    roadId: props.road.roadId,
+watch(() => props.show, (visible) => {
+    if (visible) {
+        console.log('Road ID:', props.road.roadId);
+    }
 });
 
+// Save changes and emit updated road
+const handleDelete = () => {
+    axiosClient.get('/sanctum/csrf-cookie').then(() => {
+        axiosClient.put(`/api/traffic-tracking/delete/${props.road.roadId}` , {
+            headers: {
+                'x-api-key': import.meta.env.VITE_API_KEY
+            }
+            })
+            .then(response => {
+                console.log('Road deleted:', response.data);
+            })
+            .catch(error => {
+                console.error('Error deleting road:', error);
+        });
+    });
+};
 // Modal control functions
 const handleClose = () => emit('close');
 const handleOutsideClick = e => e.target.classList.contains('modal-backdrop') && handleClose();
@@ -60,7 +76,7 @@ const handleOutsideClick = e => e.target.classList.contains('modal-backdrop') &&
 
                 <!-- Form content -->
                 <div class="p-6">
-                    <form @submit.prevent="handleSave">
+                    <form @submit.prevent="handleDelete">
                         <div>
                             <p class="text-sm text-gray-400 mb-4">
                                 Are you sure you want to delete this road?
