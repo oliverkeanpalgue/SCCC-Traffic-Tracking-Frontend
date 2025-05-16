@@ -97,11 +97,16 @@ const MAP_STYLES = {
 const databaseStore = useDatabaseStore();
 const mapComponent = ref(null);
 const dataReady = ref(false);
-const isLoading = ref(true);
 const processedRoads = ref([]);
 const activeRoad = ref(null);
 const showStyleDropdown = ref(false);
 const selectedMapStyle = ref(MAP_STYLES.Dark);
+
+const isLoading = computed(() => {
+  return (
+    databaseStore.roads.length === 0
+  )
+});
 
 // Computed properties
 const currentStyleName = computed(() =>
@@ -165,9 +170,6 @@ const handleRoadUpdate = async (updatedRoad) => {
   if (activeRoad.value) {
     closeEditModal();
   }
-
-  // Refresh data
-  isLoading.value = true;
   
   try {
     // Fetch fresh data with cache busting
@@ -252,19 +254,19 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 };
 
 // Initialize data on component mount
-onMounted(async () => {
-  isLoading.value = true;
-  
+onMounted(async () => {  
   try {
     // Load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
 
     // Sync traffic statuses in background
+    /*
     Promise.all(databaseStore.roads.flatMap(road => [
       databaseStore.updateTrafficStatus(road.id, 'inbound', road.inbound.status_id),
       databaseStore.updateTrafficStatus(road.id, 'outbound', road.outbound.status_id)
-    ])).catch(err => console.error("Background updates failed:", err));
+    ])).catch(err => console.error("Background updates failed:", err));*/
+    
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
