@@ -11,16 +11,15 @@
     <div v-if="isLoading" class="text-center text-gray-400 py-4">Loading roads...</div>
 
     <!-- Roads list -->
-    <div v-else ref="scrollContainer" 
-      class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
+    <div v-else ref="scrollContainer" class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
       :class="{ 'pr-2': showScrollbar }">
-      
+
       <!-- Road items -->
       <div v-for="road in filteredRoads" :key="road.id"
-        v-memo="[road.id, road.inbound.status_id, road.outbound.status_id]"
-        class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]"
+        v-memo="[road.id, road.road_name, road.inbound.status_id, road.outbound.status_id]"
+        class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]" 
         @click="openEditModal(road)">
-        
+
         <div class="flex justify-between mb-3">
           <div class="font-bold">{{ road.road_name }}</div>
           <FeEdit2 class="mt-1" />
@@ -30,18 +29,16 @@
         <div class="flex justify-between">
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Inbound</h1>
-            <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }" 
-              class="w-[15px] h-[15px] rounded-xs"
-              :aria-label="`Inbound traffic status`"></div>
+            <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs" :aria-label="`Inbound traffic status`"></div>
           </div>
           <div class="flex items-center gap-2">
             <h1 class="text-[14px]">Outbound</h1>
-            <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }" 
-              class="w-[15px] h-[15px] rounded-xs"
-              :aria-label="`Outbound traffic status`"></div>
+            <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
+              class="w-[15px] h-[15px] rounded-xs" :aria-label="`Outbound traffic status`"></div>
           </div>
         </div>
-        
+
         <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
       </div>
 
@@ -56,19 +53,25 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
 import { FeEdit2 } from '@kalimahapps/vue-icons';
 
-// Props and store setup
+// Constants
+const DEBOUNCE_DELAY = 300;
+
+// Props and emits definition
 const props = defineProps({
   intersections: Array,
   colorMap: Object
 });
 
-// Helper function to get status color
+const emit = defineEmits(["openEditModal"]);
+
+// Status colors mapping
 const getStatusColor = (statusId) => {
-  const colorName = { 1: 'green', 2: 'yellow', 3: 'red' }[statusId];
+  const STATUS_COLORS = { 1: 'green', 2: 'yellow', 3: 'red' };
+  const colorName = STATUS_COLORS[statusId];
   return props.colorMap?.[colorName] || '#CCCCCC';
 };
 
-// Core state management
+// State management
 const databaseStore = useDatabaseStore();
 const roads = computed(() => props.intersections || []);
 const isLoading = computed(() => databaseStore.isLoading);
@@ -76,39 +79,57 @@ const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
 const searchTimeout = ref(null);
-const forceUpdate = ref(0); // Trigger reactive updates
+const forceUpdate = ref(0);
 
 // Filter roads based on search term
 const filteredRoads = computed(() => {
-  forceUpdate.value; // Include to trigger reevaluation
-  if (!roads.value?.length) return [];
+  forceUpdate.value; // Trigger reevaluation when forceUpdate changes
   
+  if (!roads.value?.length) return [];
+
   const term = searchTerm.value.trim().toLowerCase();
-  return term 
-    ? roads.value.filter(road => (road.road_name || road.properties?.name || '').toLowerCase().includes(term))
-    : roads.value;
+  if (!term) return roads.value;
+  
+  return roads.value.filter(road => {
+    const roadName = (road.road_name || road.properties?.name || '').toLowerCase();
+    return roadName.includes(term);
+  });
 });
 
-// Efficient DOM updates
+// Debounce search input to prevent excessive processing
 const debouncedSearch = () => {
   clearTimeout(searchTimeout.value);
-  searchTimeout.value = setTimeout(checkScrollbar, 300);
+  searchTimeout.value = setTimeout(checkScrollbar, DEBOUNCE_DELAY);
 };
 
-// Update scrollbar visibility
+// Determine if scrollbar should be shown based on content height
 const checkScrollbar = async () => {
   await nextTick();
   if (scrollContainer.value) {
-    showScrollbar.value = scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
+    const hasOverflow = scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
+    showScrollbar.value = hasOverflow;
   }
 };
 
-// Optimize resize handler with requestAnimationFrame
-const handleResize = () => requestAnimationFrame?.(checkScrollbar) || checkScrollbar();
+// Optimize resize handler with requestAnimationFrame for better performance
+const handleResize = () => {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(checkScrollbar);
+  } else {
+    checkScrollbar();
+  }
+};
 
-// Track data changes to trigger UI updates
+// Send selected road to parent component
+const openEditModal = (road) => {
+  if (road?.id) {
+    emit("openEditModal", road);
+  }
+};
+
+// Watch for data changes to update UI
 watch(() => databaseStore.roads, () => {
-  forceUpdate.value++;
+  forceUpdate.value++; // Increment to trigger filteredRoads recomputation
   nextTick(checkScrollbar);
 }, { deep: true });
 
@@ -117,28 +138,37 @@ watch(() => props.intersections, () => {
   nextTick(checkScrollbar);
 }, { deep: true, immediate: true });
 
-// Optimize component lifecycle
+// Lifecycle hooks
 onMounted(() => {
   checkScrollbar();
   window.addEventListener('resize', handleResize, { passive: true });
-  forceUpdate.value++; 
+  forceUpdate.value++;
 });
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize);
   clearTimeout(searchTimeout.value);
 });
-
-// Expose methods to parent
-const emit = defineEmits(["openEditModal"]);
-const openEditModal = (road) => road?.id && emit("openEditModal", road);
 </script>
 
 <style scoped>
-.scrollbar-custom::-webkit-scrollbar { width: 5px; }
-.scrollbar-custom::-webkit-scrollbar-track { background: transparent; }
-.scrollbar-custom::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
-.scrollbar-custom::-webkit-scrollbar-thumb:hover { background: #555; }
+.scrollbar-custom::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
 .scrollbar-custom {
   -ms-overflow-style: none;
   scrollbar-width: thin;
@@ -162,7 +192,10 @@ const openEditModal = (road) => road?.id && emit("openEditModal", road);
   transition: height 0.2s ease;
 }
 
-.road-item:hover::before { height: 100%; }
+.road-item:hover::before {
+  height: 100%;
+}
+
 .road-item.active {
   background-color: rgba(255, 255, 255, 0.1);
   border-left: 3px solid #7CFC00;
