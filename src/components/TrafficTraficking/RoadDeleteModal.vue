@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, computed, onMounted } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
+import axiosClient from '../../axios.js';
 
 // Core state management
 const databaseStore = useDatabaseStore();
@@ -37,55 +38,6 @@ function resetForm() {
   const road = props.road;
 }
 
-
-// Save road data with coordinate updates
-async function handleSave() {
-  try {
-    isSaving.value = true;
-    saveError.value = '';
-    validationError.value = '';
-
-    const roadId = props.road.roadId || props.road.id;
-    // Update basic road information
-    const updateResult = await databaseStore.updateRoadInfo(roadId, roadData);
-
-    // Check if update was successful
-    if (updateResult.success || 
-        (updateResult.message && updateResult.message.includes("Successfully Updated"))) {
-      
-      saveSuccess.value = true;
-
-      // Prepare data for emit
-      const savedData = {
-        roadId: roadId,
-        roadName: roadName.value,
-        roadTypeId: roadTypeId.value || null,
-      };
-
-      emit('save', savedData);
-      handleClose();
-
-      // Refresh page to ensure state consistency
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else {
-      saveError.value = updateResult.error || updateResult.message || "Update failed - unknown error";
-    }
-  } catch (error) {
-    // Error handling with detailed messages
-    if (error.response) {
-      saveError.value = `Server error: ${error.response.status} - ${error.response.data.error || error.response.data.message || 'Unknown error'}`;
-    } else if (error.request) {
-      saveError.value = "Network error: No response from server";
-    } else {
-      saveError.value = `Error: ${error.message || 'Failed to save changes'}`;
-    }
-  } finally {
-    isSaving.value = false;
-  }
-}
-
 // Delete road data
 async function handleDelete() {
   try {
@@ -93,17 +45,20 @@ async function handleDelete() {
     deleteError.value = '';
 
     const roadId = props.road.roadId || props.road.id;
-    const deleteResult = await databaseStore.deleteRoad(roadId);
 
-    if (deleteResult.success) {
-      emit('close');
-      // Refresh page to ensure state consistency
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else {
-      deleteError.value = deleteResult.error || "Delete failed - unknown error";
-    }
+    axiosClient.delete(`/api/traffic-tracking/soft-delete/${roadId}`, {
+        headers: {
+            'x-api-key': import.meta.env.VITE_API_KEY,
+        }
+    })
+      .then(response => {
+          console.log('road deleted')
+      })
+      .catch(error => {
+        saveError.value = error.message || 'Failed to delete road';
+      });
+
+   
   } catch (error) {
     deleteError.value = error.message || 'Failed to delete road';
   } finally {
