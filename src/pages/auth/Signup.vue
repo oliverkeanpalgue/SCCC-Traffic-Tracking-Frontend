@@ -42,6 +42,7 @@ const data = ref({
   password_confirmation: '',
   for_911: false,
   for_inventory: true,
+  for_traffic: false,
   role: false,
 })
 
@@ -225,40 +226,43 @@ function submit() {
   }
 
   axiosClient.get('/sanctum/csrf-cookie')
-  .then(() => {
-    axiosClient.post("/register", data.value)
-      .then(async (response) => {
-        try {
-          // Get the user ID from the response
-          const userId = response.data.user.id;
-          
-          // Add access for the new user
-          await addAccess(userId);
-          
-          emitter.emit("show-toast", { message: "Signed up successfully!", type: "success" });
-          router.push({ name: 'Login' });
-        } catch (error) {
-          console.error('Registration process error:', error);
-          emitter.emit("show-toast", { message: "Error during registration", type: "error" });
-        }
-      })
-      .catch(error => {
-        console.error('Registration error:', error);
-        if (error.response?.data?.errors) {
-          errors.value = error.response.data.errors;
-        }
-        emitter.emit("show-toast", { message: "Registration failed", type: "error" });
-      })
-      .finally(() => {
-        isLoading.value = false;
-      });
-  });
+    .then(() => {
+      axiosClient.post("/register", data.value)
+        .then(async (response) => {
+          try {
+            // Get the user ID from the response
+            const userId = response.data.user.id;
+            
+            // Add access for the new user
+            await addAccess(userId);
+            
+            emitter.emit("show-toast", { 
+              message: "Signed up successfully! Please check your email for verification.", 
+              type: "success" 
+            });
+            router.push({ name: 'Login' });
+          } catch (error) {
+            console.error('Registration process error:', error);
+            emitter.emit("show-toast", { message: "Error during registration", type: "error" });
+          }
+        })
+        .catch(error => {
+          console.error('Registration error:', error);
+          if (error.response?.data?.errors) {
+            errors.value = error.response.data.errors;
+          }
+          emitter.emit("show-toast", { message: "Registration failed", type: "error" });
+        })
+        .finally(() => {
+          isLoading.value = false;
+        });
+    });
 }
 
 </script>
 
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gradient-to-b from-black to-blue-900 relative">
+  <div class="min-h-screen flex items-center justify-center bg-dark">
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
@@ -267,71 +271,71 @@ function submit() {
       <!-- City Logo and Title -->
       <div class="text-center flex w-md items-center mb-2 md:flex-col">
         <img :src="logo" alt="City of Baguio Logo" class="w-40 mx-auto md:w-65" />
-        <div class="w-3xs mx-auto md:w-xs">
-          <p class="text-white text-2xl font-bold leading-tight md:text-3xl">
-            Smart City Command and Control Center Inventory System
-          </p>
-        </div>
       </div>
 
       <!-- Login Form -->
       <div class="bg-white p-6 rounded-xl shadow-lg max-w-lg">
-        <h2 class="text-gray-800 text-2xl text-center font-bold mb-4">Account Registration</h2>
+        <p class="text-dark text-2xl font-bold">Traffic Management System</p>
+        <p class="mb-4 text-gray-600">Create your Account</p>
 
         <form @submit.prevent="submit" class="flex grid grid-cols-3 gap-4">
           <div>
-            <label for="firstName" class="block text-md font-medium text-gray-700">First Name *</label>
+            <label for="firstName" class="block text-sm font-medium text-gray-800">First Name *</label>
             <input type="text" name="firstName" id="firstName" v-model="data.firstName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.firstName ? errors.firstName[0] : '' }}</p>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+            <p class="text-red-700 font-medium text-sm mt-1">{{ errors.firstName ? errors.firstName[0] : '' }}</p>
           </div>
           <div>
-            <label for="middleName" class="block text-md font-medium text-gray-700">Middle Name</label>
+            <label for="middleName" class="block text-sm font-medium text-gray-800">Middle Name</label>
             <input type="text" v-model="data.middleName" id="middleName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
           </div>
           <div>
-            <label for="lastName" class="block text-md font-medium text-gray-700">Last Name *</label>
+            <label for="lastName" class="block text-sm font-medium text-gray-800">Last Name *</label>
             <input type="text" v-model="data.lastName" id="lastName"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-            <p class="text-red-700 ml-2 font-semibold italic">{{ errors.lastName ? errors.lastName[0] : '' }}</p>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+            <p class="text-red-700 font-medium text-sm mt-1">{{ errors.lastName ? errors.lastName[0] : '' }}</p>
 
           </div>
           <div class="col-span-3">
             <div class="flex flex-row">
-              <label for="email" class="block text-md font-medium text-gray-700">Email *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.email ? errors.email[0] : '' }}</p>
+              <label for="email" class="block text-sm font-medium text-gray-800">Email *</label>
             </div>
             <input type="email" name="email" id="email" autocomplete="email" v-model="data.email"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          </div>
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.email ? errors.email[0] : '' }}</p>
+
+            </div>
 
           <div class="col-span-3">
             <div class="flex flex-row">
-              <label for="password" class="block text-md font-medium text-gray-700">Password *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password ? errors.password[0] : '' }}</p>
+              <label for="password" class="block text-sm font-medium text-gray-800">Password *</label>
             </div>
             <input type="password" name="password" id="password" v-model="data.password"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.password ? errors.password[0] : '' }}</p>
+
           </div>
 
           <div class="col-span-3">
             <div class="flex flex-row">
-              <label for="confirmPassword" class="block text-md font-medium text-gray-700">Confirm Password *</label>
-              <p class="text-red-700 ml-2 font-semibold italic">{{ errors.password_confirmation ?
-                errors.password_confirmation[0] : '' }}</p>
+              <label for="confirmPassword" class="block text-sm font-medium text-gray-800">Confirm Password *</label>
+          
             </div>
             <input type="password" name="password" id="passwordConfirmation" v-model="data.password_confirmation"
-              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              class="mt-1 w-full px-3 py-2 border text-gray-800 rounded-md focus:outline-none focus:ring-2 focus:ring-primary" />
+              <p class="text-red-700 font-medium text-sm mt-1">{{ errors.password_confirmation ?
+                errors.password_confirmation[0] : '' }}</p>
           </div>
 
           <button type="submit"
-            class="col-span-3 w-full bg-blue-600 text-white py-2 mt-1 font-semibold rounded-md hover:bg-blue-700">Sign
+            class="col-span-3 w-full bg-primary text-white py-2 mt-1 font-semibold rounded-md hover:bg-primary-100 cursor-pointer">Sign
             Up</button>
         </form>
 
-        <div class="text-sm text-center mt-4">
-          <router-link :to="{ name: 'Login' }" class="text-md text-blue-600 hover:underline">Already have an account?
+        <div class="text-sm text-center mt-4 text-dark">
+          <span class="text-gray-600">Already have an account?</span> 
+          <router-link :to="{ name: 'Login' }" class="text-md text-primary hover:underline">
             Sign
             in</router-link>
         </div>

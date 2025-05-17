@@ -11,8 +11,9 @@ import { useDatabaseStore } from '../../stores/databaseStore'
 import Loading from '../../components/Loading.vue';
 import baguioLogo from '../../assets/baguio-logo.png';
 import { AnFilledPrinter } from '@kalimahapps/vue-icons';
-import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
+// import ViewTransactionHistoryModal from '../../components/ViewTransactionHistoryModal.vue';
 import AccessCheckbox from './AccessCheckbox.vue';
+import { useRouter } from 'vue-router';
 
 const API_KEY = import.meta.env.VITE_API_KEY;
 
@@ -294,12 +295,20 @@ const unreturnedCount = (userId) =>
         t.lender_id === userId && t.return_date === null
     ).length;
 
-const isOpenViewTransactionHistoryModal = ref(false);
+const isOpenViewTransactionHistoryPage = ref(false);
 const selectedUser = ref(null);
 
-const OpenViewTransactionHistoryModal = (user) => {
+const router = useRouter();
+
+const OpenViewTransactionHistoryPage = (user) => {
     selectedUser.value = user;
-    isOpenViewTransactionHistoryModal.value = true;
+
+    router.push({
+        name: 'Transactions',
+        query: {
+            user_id: selectedUser.value.id
+        }
+    });
 }
 
 const toggleCheckbox = (user, accessId, type) => {
@@ -333,14 +342,14 @@ const toggleCheckbox = (user, accessId, type) => {
             },
         }
     )
-    .then(() => {
-        
-    })
-    .catch((error) => {
-        console.error('Error updating inventory access:', error);
-        console.error('Error details:', error.response?.data);
-        emitter.emit("show-toast", { message: "Error updating access. Please try again.", type: "error" });
-    });
+        .then(() => {
+
+        })
+        .catch((error) => {
+            console.error('Error updating inventory access:', error);
+            console.error('Error details:', error.response?.data);
+            emitter.emit("show-toast", { message: "Error updating access. Please try again.", type: "error" });
+        });
 };
 
 const permissionTypes = [
@@ -438,7 +447,7 @@ const permissionTypes = [
                             </td>
 
                             <td class="px-4 py-3">
-                                <button @click.stop="OpenViewTransactionHistoryModal(user)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
+                                <button @click.stop="OpenViewTransactionHistoryPage(user)" class="items-center justify-center gap-2 mx-auto px-8 py-1.5 rounded-lg 
                border border-gray-300 hover:border-gray-400 
                dark:border-gray-600 dark:hover:border-gray-400 
                text-gray-700 dark:text-gray-200 transition duration-150 ease-in-out">
@@ -526,7 +535,7 @@ const permissionTypes = [
                     </span>
                     of
                     <span class="font-semibold text-gray-900 dark:text-white">{{ filteredUsers.length
-                        }}</span>
+                    }}</span>
                 </span>
 
                 <ul class="inline-flex items-stretch -space-x-px">
@@ -571,7 +580,7 @@ const permissionTypes = [
             </nav>
         </div>
 
-        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryModal"
-            v-model="isOpenViewTransactionHistoryModal" :selectedUser="selectedUser" @click.stop />
+        <ViewTransactionHistoryModal v-if="isOpenViewTransactionHistoryPage" v-model="isOpenViewTransactionHistoryPage"
+            :selectedUser="selectedUser" @click.stop />
     </div>
 </template>
