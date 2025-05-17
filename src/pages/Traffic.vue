@@ -272,8 +272,6 @@ onMounted(async () => {
         }
 
         mapComponent.value?.updateRoadColor(event.road_id, event.direction, color.value);
-        Sidebar.value?.getStatusColor(event.status_id);
-        databaseStore.fetchData()
       }
     });
     // Sync traffic statuses in background
