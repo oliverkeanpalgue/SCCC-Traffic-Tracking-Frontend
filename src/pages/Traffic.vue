@@ -25,7 +25,7 @@
       </div>
 
       <!-- Map style selector -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[120px] ml-[1000px] p-4 rounded-xl">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] ml-[1000px] p-4 rounded-xl">
         <div class="text-sm font-bold mb-2">Map Style</div>
         <div class="relative map-style-dropdown">
           <div @click="toggleStyleDropdown"
@@ -38,7 +38,7 @@
             </svg>
           </div>
 
-          <div v-if="showStyleDropdown" class="absolute left-0 right-0 mt-1 bg-[#1b1a1a] rounded shadow-lg z-20 p-2">
+          <div v-if="showStyleDropdown" class="absolute left-0 right-0 mt-1 bg-[#1b1a1a] rounded shadow-lg z-30 p-2">
             <div v-for="(url, name) in MAP_STYLES" :key="name" @click="selectMapStyle(url)"
               class="flex items-center cursor-pointer hover:bg-gray-700 p-2 rounded">
               <span>{{ name }}</span>
@@ -47,20 +47,28 @@
         </div>
       </div>
 
-      <MapComponent ref="mapComponent" 
-        :roads="processedRoads" 
-        :color-map="COLOR_MAP" 
-        :api-key="MAPBOX_API_KEY"
-        :map-style="selectedMapStyle" 
-        :active-road-id="activeRoad?.properties?.id?.toString()" 
-        v-if="dataReady"
+      <!-- Add Road button -->
+      <div
+        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] ml-[1000px] p-1 rounded-xl">
+        <button @click="openAddRoadModal" class="w-full flex items-center justify-between p-2 rounded">
+          <span class="font-medium">Add Road</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+      <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="COLOR_MAP" :api-key="MAPBOX_API_KEY"
+        :map-style="selectedMapStyle" :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady"
         @update="handleRoadUpdate" />
 
-      <TrafficLevelModal 
-        :active-road="activeRoad" 
-        :color-map="COLOR_MAP" 
-        @closeEditModal="closeEditModal"
+      <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
         @changeTrafficLevel="changeTrafficLevel" />
+
+      <!-- Add Road Modal Component -->
+      <AddRoadModal :show="showAddRoadModal" @close="closeAddRoadModal" @roadAdded="handleRoadAdded" />
     </div>
   </div>
 </template>
@@ -72,6 +80,7 @@ import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
 import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
+import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
 
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
@@ -126,15 +135,25 @@ const normalizedRoads = computed(() => databaseStore.roads.map(road => ({
 // Process road object with traffic status colors
 const processRoad = (road) => {
   const normalizedRoadName = road.road_name || road.properties?.name || "";
+  const roadTypeId = road.road_type_id || road.properties?.road_type_id;
+  const roadTypeName =
+    road.road_type_name ||
+    road.properties?.roadType ||
+    databaseStore.getRoadTypeName(roadTypeId) ||
+    "Unknown";
 
   return {
     ...road,
     road_name: normalizedRoadName,
+    road_type_id: roadTypeId,
+    road_type_name: roadTypeName,
     geometry: road.geometry || {},
     properties: {
       ...road.properties,
       name: normalizedRoadName,
-      roadName: normalizedRoadName
+      roadName: normalizedRoadName,
+      roadType: roadTypeName,
+      road_type_id: roadTypeId
     },
     inboundColor: STATUS_MAP[road.inbound?.status_id] || 'green',
     outboundColor: STATUS_MAP[road.outbound?.status_id] || 'green'
@@ -157,6 +176,64 @@ const openEditModal = (road) => {
 
 const closeEditModal = () => activeRoad.value = null;
 
+// Add Road Modal handlers
+const openAddRoadModal = () => {
+  showAddRoadModal.value = true;
+};
+
+const closeAddRoadModal = () => {
+  showAddRoadModal.value = false;
+};
+
+const handleRoadAdded = async (newRoad) => {
+  if (!newRoad) return;
+
+  // Show success message immediately
+  alert("Road added successfully!");
+
+  // Mark as loading
+  isLoading.value = true;
+
+  try {
+    // Close the modal first to prevent component unmounting issues
+    showAddRoadModal.value = false;
+
+    // Wait a moment before refreshing data
+    await new Promise(resolve => setTimeout(resolve, 300));
+
+    // Fetch fresh data with cache busting
+    await databaseStore.fetchData(`?_=${Date.now()}`);
+
+    // Set data ready flag if not already set
+    if (!dataReady.value) {
+      dataReady.value = true;
+    }
+
+    // Process the fresh data
+    processedRoads.value = databaseStore.roads.map(road => processRoad(road));
+
+    // Update UI after data is processed
+    await nextTick();
+
+    // Check if map component is available before updating
+    if (mapComponent.value) {
+      try {
+        mapComponent.value.updateMapData(processedRoads.value);
+      } catch (mapError) {
+        console.warn("Map update failed, will reload page instead:", mapError);
+        window.location.reload();
+      }
+    }
+  } catch (error) {
+    console.error("Failed to refresh data after adding road:", error);
+
+    // Reload the page to ensure a clean state
+    window.location.reload();
+  } finally {
+    isLoading.value = false;
+  }
+};
+
 // Handle road updates from map component
 const handleRoadUpdate = async (updatedRoad) => {
   // Close popups if requested
@@ -170,25 +247,28 @@ const handleRoadUpdate = async (updatedRoad) => {
   if (activeRoad.value) {
     closeEditModal();
   }
+
+  // Refresh data
+  isLoading.value = true;
   
   try {
     // Fetch fresh data with cache busting
     const timestamp = Date.now();
     await databaseStore.fetchData(`?_=${timestamp}`);
-    
+
     // Process the fresh data
     processedRoads.value = databaseStore.roads.map(road => processRoad(road));
-    
+
     // Update UI after data is processed
     await nextTick();
-    
+
     // Refresh the map data
     if (mapComponent.value) {
       await mapComponent.value.updateMapData(processedRoads.value);
-      
+
       // Refresh popup and focus on updated road
       setTimeout(() => mapComponent.value.refreshCurrentPopup(), 100);
-      
+
       if (updatedRoad.roadId) {
         setTimeout(() => {
           mapComponent.value.focusOnRoad(updatedRoad.roadId.toString());
@@ -252,7 +332,9 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 };
 
 // Initialize data on component mount
-onMounted(async () => {  
+onMounted(async () => {
+  isLoading.value = true;
+  
   try {
     // Load initial data
     await databaseStore.fetchData();

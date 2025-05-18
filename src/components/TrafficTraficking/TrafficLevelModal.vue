@@ -14,10 +14,10 @@
         <template v-for="direction in DIRECTIONS" :key="direction">
           <div class="w-1/2">
             <div class="flex gap-4 items-center">
-              <h1>{{ capitalizeFirstLetter(direction) }}</h1>
+              <h1>{{ formatDirectionName(direction) }}</h1>
               <div class="flex items-center cursor-pointer relative" @click.stop="toggleDropdown(direction)">
                 <!-- Color indicator -->
-                <div :style="{ backgroundColor: colorMap[activeRoad[direction + 'Color']] }"
+                <div :style="{ backgroundColor: getTrafficStatusColor(direction) }"
                   class="w-[20px] h-[20px] rounded-xs"></div>
 
                 <!-- Traffic level dropdown -->
@@ -43,35 +43,45 @@
 import { CdChromeClose } from '@kalimahapps/vue-icons';
 import { ref } from 'vue';
 
-// Component constants
+// Configuration
 const DIRECTIONS = ['inbound', 'outbound'];
 const TRAFFIC_LABELS = { 'green': 'Light', 'yellow': 'Moderate', 'red': 'Heavy' };
 
-// Component interface definition
-defineProps({ 
+// Data retrieval
+// Component props definition
+const props = defineProps({ 
   activeRoad: Object, 
   colorMap: Object 
 });
 
+// Get traffic status color
+const getTrafficStatusColor = (direction) => {
+  if (!props.activeRoad || !props.colorMap) return '';
+  return props.colorMap[props.activeRoad[direction + 'Color']] || '';
+};
+
+// Data modification
 const emit = defineEmits(["changeTrafficLevel", "closeEditModal"]);
 
 // State management
 const activeDropdown = ref(null);
 
-// Helper methods
-const capitalizeFirstLetter = (string) => string.charAt(0).toUpperCase() + string.slice(1);
+// Helper functions
+// Format direction name
+const formatDirectionName = (string) => string.charAt(0).toUpperCase() + string.slice(1);
 
-// Toggle dropdown visibility with auto-close behavior
+// Event handlers
+// Toggle dropdown visibility
 const toggleDropdown = (direction) => {
   activeDropdown.value = activeDropdown.value === direction ? null : direction;
 };
 
-// Update traffic level and close dropdown
+// Update traffic level
 const updateTrafficLevel = (roadId, direction, color) => {
   emit('changeTrafficLevel', roadId, direction, color);
   activeDropdown.value = null;
 };
 
-// Close modal by emitting event to parent
+// Close modal
 const closeEditModal = () => emit('closeEditModal');
 </script>
