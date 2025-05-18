@@ -9,6 +9,41 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import RoadPopup from "./MapPopUp.vue";
 
+// Configuration
+const DEFAULT_MAP_CENTER = [120.5948, 16.4133];
+const DEFAULT_MAP_ZOOM = 16;
+const DEFAULT_MAP_BEARING = 0;
+const DEFAULT_MAP_PITCH = 0;
+const DIRECTION_TYPES = ['inbound', 'outbound'];
+const POPUP_VERTICAL_OFFSET = 0.25;
+const POPUP_DELAY = 50;
+const MAP_FIT_PADDING = 60;
+const ROAD_FOCUS_PADDING = 100;
+const ROAD_FOCUS_DURATION = 1000;
+const ROAD_FOCUS_MAX_ZOOM = 17;
+const POPUP_RESTORE_DELAY = 100;
+const MAP_CLEANUP_DELAY = 100;
+const LAYER_PAINT_CONFIG = {
+  'line-width': 4,
+  'line-opacity': 0.7
+};
+const LABEL_LAYOUT_CONFIG = {
+  'text-size': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 4, 18, 12],
+  'symbol-placement': 'line',
+  'text-allow-overlap': true,
+  'text-ignore-placement': true,
+  'text-keep-upright': true,
+  'text-letter-spacing': 0.05,
+  'text-max-angle': 30,
+  'text-pitch-alignment': 'viewport'
+};
+const LABEL_PAINT_CONFIG = {
+  'text-color': '#ffffff',
+  'text-halo-color': '#000000',
+  'text-halo-width': 1.5
+};
+
+// Props definition
 const props = defineProps({
   roads: Array,
   colorMap: Object,
@@ -20,94 +55,76 @@ const props = defineProps({
   }
 });
 
-// Core state refs
+// Core state
 const map = ref(null);
 const loaded = ref(false);
 const boundsInitialized = ref(false);
 const currentPopup = ref(null);
 
-// Create popup with road information
-const showRoadPopup = (feature, lngLat) => {
-  // Get the most current road data using the roadId from feature properties
-  const roadId = feature.properties.roadId || "";
-  let currentRoadData = props.roads.find(road =>
-    String(road.properties?.id) === String(roadId)
-  );
-
-  // Update feature properties with fresh data if road is found
-  if (currentRoadData) {
-    // Normalize road name using priority order
-    const normalizedRoadName = currentRoadData.road_name ||
-      currentRoadData.properties?.name ||
-      feature.properties.roadName ||
-      feature.road_name ||
-      feature.properties.name ||
-      "Unknown Road";
-
-    // Update all name fields for consistency
-    feature.properties.roadName = normalizedRoadName;
-    feature.properties.name = normalizedRoadName;
-    feature.road_name = normalizedRoadName;
-    feature.properties.roadType = currentRoadData.properties?.roadType || feature.properties.roadType;
-  }
-
-  // Get final name for popup display
-  const roadNameToUse = feature.properties.roadName ||
-    feature.road_name ||
-    feature.properties.name ||
-    "Road";
-
-  // Create Vue component for popup content
-  const popupApp = createApp(RoadPopup, {
-    roadId,
-    roadName: roadNameToUse,
-    directionText: `${feature.properties.direction?.charAt(0).toUpperCase() + feature.properties.direction?.slice(1) || ""} Traffic`,
-    trafficStatus: feature.properties.trafficStatus || "",
-    roadType: currentRoadData?.properties?.roadType || feature.properties.roadType || "Street",
-  });
-
-  // Mount component to DOM container
-  const container = document.createElement('div');
-  container.dataset.roadId = roadId;
-  container.dataset.createdAt = new Date().toISOString();
-  container.dataset.roadName = roadNameToUse;
-  popupApp.mount(container);
-
-  // Create and display popup
-  currentPopup.value = new mapboxgl.Popup({
-    closeButton: true,
-    closeOnClick: true,
-    maxWidth: '300px',
-    anchor: 'bottom',
-    offset: [0, -10],
-    className: 'custom-popup'
-  })
-    .setLngLat(lngLat)
-    .setDOMContent(container)
-    .addTo(map.value);
-
-  // Store metadata on popup for later reference
-  currentPopup.value._roadId = roadId;
-  currentPopup.value._createdAt = new Date().toISOString();
-  currentPopup.value._roadName = roadNameToUse;
+// Data retrieval functions
+const getRoadById = (roadId) => {
+  return props.roads.find(road => String(road.properties?.id) === String(roadId));
 };
 
-// Initialize or reinitialize map with specified style
-const createMap = (style, viewState = {}) => {
-  // Default map settings
-  const defaultOptions = {
-    center: [120.5948, 16.4133],
-    zoom: 16,
-    bearing: 0,
-    pitch: 0
-  };
+const getMapBounds = (roads) => {
+  const bounds = new mapboxgl.LngLatBounds();
+  roads.forEach(road => {
+    DIRECTION_TYPES.forEach(direction => {
+      road.geometry?.coordinates?.[direction]?.forEach(coord => bounds.extend(coord));
+    });
+  });
+  return bounds;
+};
+
+const getCurrentViewState = () => {
+  if (!map.value) return null;
   
+  return {
+    center: map.value.getCenter(),
+    zoom: map.value.getZoom(),
+    bearing: map.value.getBearing(),
+    pitch: map.value.getPitch()
+  };
+};
+
+const findFeatureForRoad = (roadId) => {
+  for (let i = 0; i < props.roads.length; i++) {
+    for (const direction of DIRECTION_TYPES) {
+      const layerId = `route-${i}-${direction}`;
+      if (map.value.getLayer(layerId)) {
+        const source = map.value.getSource(layerId);
+        if (source && String(source._data?.properties?.roadId) === String(roadId)) {
+          return JSON.parse(JSON.stringify(source._data));
+        }
+      }
+    }
+  }
+  return null;
+};
+
+const capturePopupState = () => {
+  if (!currentPopup.value) return null;
+  
+  return {
+    roadId: currentPopup.value._roadId,
+    lngLat: currentPopup.value.getLngLat(),
+    roadName: currentPopup.value._roadName
+  };
+};
+
+// Data modification functions
+const createMap = (style, viewState = {}) => {
+  const defaultOptions = {
+    center: DEFAULT_MAP_CENTER,
+    zoom: DEFAULT_MAP_ZOOM,
+    bearing: DEFAULT_MAP_BEARING,
+    pitch: DEFAULT_MAP_PITCH
+  };
+
   const options = { ...defaultOptions, ...viewState };
 
-  // Clean up existing map instance
   if (map.value) map.value.remove();
 
-  // Create new map
   map.value = new mapboxgl.Map({
     container: "map",
     style,
@@ -118,69 +135,25 @@ const createMap = (style, viewState = {}) => {
         : undefined
   });
 
-  // Add navigation controls
   map.value.addControl(new mapboxgl.NavigationControl(), "bottom-right");
 
-  // Initialize data when map is ready
   map.value.on("load", () => {
     loaded.value = true;
     updateMapData(props.roads, true);
   });
 };
 
-// Setup interaction events for map layers
-const setupLayerEvents = (layerId) => {
-  // Handle click events
-  map.value.on('click', layerId, (e) => {
-    if (currentPopup.value) currentPopup.value.remove();
-
-    const clickedFeature = e.features[0];
-    const clickedLocation = e.lngLat;
-
-    // Calculate adjusted center position for popup
-    const verticalOffset = map.value.getContainer().clientHeight * 0.25;
-    const point = map.value.project(clickedLocation);
-    point.y -= verticalOffset;
-    const adjustedCenter = map.value.unproject(point);
-
-    // Animate to new center position
-    map.value.flyTo({
-      center: adjustedCenter,
-      zoom: Math.max(map.value.getZoom(), 15),
-      duration: 800,
-      essential: true
-    });
-
-    // Show popup after animation completes
-    map.value.once('moveend', () => {
-      setTimeout(() => showRoadPopup(clickedFeature, clickedLocation), 50);
-    });
-  });
-
-  // Handle hover effects
-  map.value.on('mouseenter', layerId, () => map.value.getCanvas().style.cursor = 'pointer');
-  map.value.on('mouseleave', layerId, () => map.value.getCanvas().style.cursor = '');
-};
-
-// Draw a road on the map with inbound/outbound directions
 const drawRoute = (road, index) => {
-  const directions = ['inbound', 'outbound'];
-  
-  // Remove existing layers and sources for this road
-  directions.forEach(direction => {
+  DIRECTION_TYPES.forEach(direction => {
     const layerId = `route-${index}-${direction}`;
     const labelId = `label-${index}-${direction}`;
 
-    // Remove layers first
     if (map.value.getLayer(labelId)) map.value.removeLayer(labelId);
     if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
-
-    // Then remove sources
     if (map.value.getSource(layerId)) map.value.removeSource(layerId);
   });
 
-  // Draw both directions for this road
-  directions.forEach(direction => {
+  DIRECTION_TYPES.forEach(direction => {
     const coords = road.geometry?.coordinates?.[direction];
     if (!coords?.length) return;
 
@@ -188,7 +161,6 @@ const drawRoute = (road, index) => {
     const layerId = `route-${index}-${direction}`;
     const labelId = `label-${index}-${direction}`;
 
-    // Create data source
     map.value.addSource(layerId, {
       type: 'geojson',
       data: {
@@ -209,139 +181,29 @@ const drawRoute = (road, index) => {
       }
     });
 
-    // Add line layer with color based on traffic status
     map.value.addLayer({
       id: layerId,
       type: 'line',
       source: layerId,
       layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': color, 'line-width': 4, 'line-opacity': 0.7 }
+      paint: { 'line-color': color, ...LAYER_PAINT_CONFIG }
     });
 
-    // Set up interactivity
     setupLayerEvents(layerId);
 
-    // Add direction label layer
     map.value.addLayer({
       id: labelId,
       type: 'symbol',
       source: layerId,
       layout: {
         'text-field': ['get', 'name'],
-        'text-size': ['interpolate', ['linear'], ['zoom'], 12, 2, 15, 4, 18, 12],
-        'symbol-placement': 'line',
-        'text-allow-overlap': true,
-        'text-ignore-placement': true,
-        'text-keep-upright': true,
-        'text-letter-spacing': 0.05,
-        'text-max-angle': 30,
-        'text-pitch-alignment': 'viewport'
+        ...LABEL_LAYOUT_CONFIG
       },
-      paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': '#000000',
-        'text-halo-width': 1.5
-      }
+      paint: LABEL_PAINT_CONFIG
     });
   });
 };
 
-// Calculate map bounds to fit all roads
-const getBounds = (roads) => {
-  const bounds = new mapboxgl.LngLatBounds();
-  roads.forEach(road => {
-    ['inbound', 'outbound'].forEach(direction => {
-      road.geometry?.coordinates?.[direction]?.forEach(coord => bounds.extend(coord));
-    });
-  });
-  return bounds;
-};
-
-// Update all road data on the map
-const updateMapData = (roads, initBounds = false) => {
-  if (!loaded.value || !map.value) return;
-
-  // Store current popup data before updating map
-  let popupData = null;
-  if (currentPopup.value) {
-    popupData = {
-      roadId: currentPopup.value._roadId,
-      lngLat: currentPopup.value.getLngLat(),
-      roadName: currentPopup.value._roadName
-    };
-    currentPopup.value.remove();
-    currentPopup.value = null;
-  }
-
-  try {
-    // Two-phase cleanup to avoid dependency errors
-    
-    // Step 1: First remove all layers
-    roads.forEach((road, index) => {
-      ['inbound', 'outbound'].forEach(direction => {
-        const layerId = `route-${index}-${direction}`;
-        const labelId = `label-${index}-${direction}`;
-
-        if (map.value.getLayer(labelId)) map.value.removeLayer(labelId);
-        if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
-      });
-    });
-
-    // Step 2: Then remove all sources
-    roads.forEach((road, index) => {
-      ['inbound', 'outbound'].forEach(direction => {
-        const layerId = `route-${index}-${direction}`;
-        if (map.value.getSource(layerId)) map.value.removeSource(layerId);
-      });
-    });
-  } catch (err) {
-    // Non-critical error, continue with adding new data
-  }
-
-  // Draw all roads with fresh data
-  roads.forEach((road, index) => drawRoute(road, index));
-
-  // Initial fit to show all roads
-  if (initBounds && !boundsInitialized.value) {
-    const bounds = getBounds(roads);
-    if (!bounds.isEmpty()) map.value.fitBounds(bounds, { padding: 60 });
-    boundsInitialized.value = true;
-  }
-
-  // Restore popup if we had one
-  if (popupData) {
-    setTimeout(() => {
-      // Find the road data in the new roads array
-      const road = roads.find(r =>
-        String(r.properties?.id) === String(popupData.roadId)
-      );
-
-      if (!road) return;
-
-      // Find a feature with this road ID
-      let feature = null;
-      for (let i = 0; i < roads.length; i++) {
-        ['inbound', 'outbound'].forEach(direction => {
-          const layerId = `route-${i}-${direction}`;
-          if (map.value.getLayer(layerId)) {
-            const source = map.value.getSource(layerId);
-            if (source && String(source._data?.properties?.roadId) === String(popupData.roadId)) {
-              feature = source._data;
-            }
-          }
-        });
-      }
-
-      if (feature) {
-        // Update the feature with the latest road name before showing popup
-        feature.properties.roadName = road.road_name || road.properties?.name || feature.properties.roadName;
-        showRoadPopup(feature, popupData.lngLat);
-      }
-    }, 100);
-  }
-};
-
-// Update color for a specific road direction
 const updateRoadColor = (roadId, direction, color) => {
   if (!loaded.value || !map.value) return;
 
@@ -354,7 +216,28 @@ const updateRoadColor = (roadId, direction, color) => {
   }
 };
 
-// Focus map view on a specific road
+const updateMapData = (roads, initBounds = false) => {
+  if (!loaded.value || !map.value) return;
+
+  const popupData = capturePopupState();
+
+  try {
+    cleanupMapLayers(roads);
+  } catch (err) {
+    // Continue with adding new data
+  }
+
+  roads.forEach((road, index) => drawRoute(road, index));
+
+  if (initBounds && !boundsInitialized.value) {
+    const bounds = getMapBounds(roads);
+    if (!bounds.isEmpty()) map.value.fitBounds(bounds, { padding: MAP_FIT_PADDING });
+    boundsInitialized.value = true;
+  }
+
+  restorePopup(popupData, roads);
+};
+
 const focusOnRoad = (roadId) => {
   if (!loaded.value || !map.value) return;
 
@@ -362,70 +245,104 @@ const focusOnRoad = (roadId) => {
   if (!selectedRoad?.geometry?.coordinates) return;
 
   const bounds = new mapboxgl.LngLatBounds();
-  ['inbound', 'outbound'].forEach(direction => {
+  DIRECTION_TYPES.forEach(direction => {
     selectedRoad.geometry.coordinates[direction]?.forEach(coord => bounds.extend(coord));
   });
 
   if (!bounds.isEmpty()) {
-    map.value.fitBounds(bounds, { padding: 100, duration: 1000, maxZoom: 17 });
+    map.value.fitBounds(bounds, { 
+      padding: ROAD_FOCUS_PADDING, 
+      duration: ROAD_FOCUS_DURATION, 
+      maxZoom: ROAD_FOCUS_MAX_ZOOM 
+    });
   }
 };
 
-// Refresh the current popup with latest data
+const reloadMapData = async (roads) => {
+  if (!loaded.value || !map.value) return;
+
+  closeAllPopups();
+
+  const loadingElement = createLoadingOverlay();
+  map.value.getContainer().appendChild(loadingElement);
+
+  try {
+    const viewState = getCurrentViewState();
+
+    try {
+      cleanupMapLayers(roads);
+    } catch (err) {
+      // Continue with adding new data
+    }
+
+    await new Promise(resolve => setTimeout(resolve, MAP_CLEANUP_DELAY));
+
+    roads.forEach((road, index) => drawRoute(road, index));
+
+    map.value.jumpTo(viewState);
+  } finally {
+    const overlay = map.value.getContainer().querySelector('.map-loading-overlay');
+    if (overlay) overlay.remove();
+  }
+};
+
 const refreshCurrentPopup = () => {
   if (!currentPopup.value || !map.value) return;
 
   const roadId = currentPopup.value._roadId;
   const lngLat = currentPopup.value.getLngLat();
 
-  // Find the updated road data
-  const updatedRoad = props.roads.find(r =>
-    String(r.properties?.id) === String(roadId)
-  );
-
+  const updatedRoad = getRoadById(roadId);
   if (!updatedRoad) return;
 
-  // Find a matching feature for this road
-  let feature = null;
-  for (let i = 0; i < props.roads.length; i++) {
-    ['inbound', 'outbound'].forEach(direction => {
-      const layerId = `route-${i}-${direction}`;
-      if (map.value.getLayer(layerId)) {
-        const source = map.value.getSource(layerId);
-        if (source && String(source._data?.properties?.roadId) === String(roadId)) {
-          // Deep clone to avoid reference issues
-          feature = JSON.parse(JSON.stringify(source._data));
-        }
-      }
-    });
-  }
+  const feature = findFeatureForRoad(roadId);
+  if (!feature) return;
 
-  if (feature) {
-    // First remove existing popup
-    currentPopup.value.remove();
-    currentPopup.value = null;
+  currentPopup.value.remove();
+  currentPopup.value = null;
 
-    // Update feature with fresh data before recreating popup
-    const normalizedRoadName = updatedRoad.road_name || updatedRoad.properties?.name;
-    feature.properties.roadName = normalizedRoadName;
-    feature.properties.name = normalizedRoadName;
-    feature.road_name = normalizedRoadName;
-    feature.properties.roadType = updatedRoad.properties?.roadType;
+  updateFeatureWithRoadData(feature, updatedRoad);
 
-    // Show new popup with fresh data
-    setTimeout(() => showRoadPopup(feature, lngLat), 0);
-  }
+  setTimeout(() => showRoadPopup(feature, lngLat), 0);
 };
 
-// Close all popups on the map
+const updateFeatureWithRoadData = (feature, roadData) => {
+  if (!roadData) return;
+
+  const normalizedRoadName = normalizeRoadName(roadData, feature);
+
+  feature.properties.roadName = normalizedRoadName;
+  feature.properties.name = normalizedRoadName;
+  feature.road_name = normalizedRoadName;
+
+  feature.properties.roadType = roadData.properties?.roadType ||
+    feature.properties.roadType;
+
+  feature.properties.road_type_id = roadData.road_type_id ||
+    roadData.properties?.road_type_id;
+};
+
+const restorePopup = (popupData, roads) => {
+  if (!popupData) return;
+  
+  setTimeout(() => {
+    const road = roads.find(r => String(r.properties?.id) === String(popupData.roadId));
+    if (!road) return;
+
+    const feature = findFeatureForRoad(popupData.roadId);
+    if (!feature) return;
+
+    feature.properties.roadName = road.road_name || road.properties?.name || feature.properties.roadName;
+    showRoadPopup(feature, popupData.lngLat);
+  }, POPUP_RESTORE_DELAY);
+};
+
+// Data removal functions
 const closeAllPopups = () => {
   if (currentPopup.value) {
-    // Remove the popup from the map
     currentPopup.value.remove();
-    // Clear the reference
     currentPopup.value = null;
 
-    // Clean up any DOM elements left behind
     const popupElements = document.querySelectorAll('.mapboxgl-popup');
     popupElements.forEach(elem => {
       elem.parentNode?.removeChild(elem);
@@ -433,17 +350,138 @@ const closeAllPopups = () => {
   }
 };
 
-// Handle map style changes
+const cleanupMapLayers = (roads) => {
+  roads.forEach((road, index) => {
+    DIRECTION_TYPES.forEach(direction => {
+      const layerId = `route-${index}-${direction}`;
+      const labelId = `label-${index}-${direction}`;
+
+      if (map.value.getLayer(labelId)) map.value.removeLayer(labelId);
+      if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
+    });
+  });
+
+  roads.forEach((road, index) => {
+    DIRECTION_TYPES.forEach(direction => {
+      const layerId = `route-${index}-${direction}`;
+      if (map.value.getSource(layerId)) map.value.removeSource(layerId);
+    });
+  });
+};
+
+// Helper functions
+const normalizeRoadName = (currentRoadData, feature) => {
+  return currentRoadData.road_name ||
+    currentRoadData.properties?.name ||
+    feature.properties.roadName ||
+    feature.road_name ||
+    feature.properties.name ||
+    "Unknown Road";
+};
+
+const getRoadNameForDisplay = (feature) => {
+  return feature.properties.roadName ||
+    feature.road_name ||
+    feature.properties.name ||
+    "Road";
+};
+
+const createPopupContainer = (roadId, roadName) => {
+  const container = document.createElement('div');
+  container.dataset.roadId = roadId;
+  container.dataset.createdAt = new Date().toISOString();
+  container.dataset.roadName = roadName;
+  return container;
+};
+
+const createMapboxPopup = (lngLat) => {
+  return new mapboxgl.Popup({
+    closeButton: true,
+    closeOnClick: true,
+    maxWidth: '300px',
+    anchor: 'bottom',
+    offset: [0, -10],
+    className: 'custom-popup'
+  }).setLngLat(lngLat);
+};
+
+const createLoadingOverlay = () => {
+  const loadingElement = document.createElement('div');
+  loadingElement.className = 'map-loading-overlay';
+  loadingElement.innerHTML = `
+    <div class="spinner"></div>
+    <div class="loading-text">Refreshing map data...</div>
+  `;
+  return loadingElement;
+};
+
+// Event handlers and UI interactions
+const showRoadPopup = (feature, lngLat) => {
+  const roadId = feature.properties.roadId || "";
+  let currentRoadData = getRoadById(roadId);
+
+  updateFeatureWithRoadData(feature, currentRoadData);
+  
+  const roadNameToUse = getRoadNameForDisplay(feature);
+
+  const popupApp = createApp(RoadPopup, {
+    roadId,
+    roadName: roadNameToUse,
+    directionText: `${feature.properties.direction?.charAt(0).toUpperCase() + feature.properties.direction?.slice(1) || ""} Traffic`,
+    trafficStatus: feature.properties.trafficStatus || "",
+    roadType: currentRoadData?.properties?.roadType || feature.properties.roadType || "Street",
+  });
+
+  const container = createPopupContainer(roadId, roadNameToUse);
+  popupApp.mount(container);
+
+  currentPopup.value = createMapboxPopup(lngLat)
+    .setDOMContent(container)
+    .addTo(map.value);
+
+  currentPopup.value._roadId = roadId;
+  currentPopup.value._createdAt = new Date().toISOString();
+  currentPopup.value._roadName = roadNameToUse;
+};
+
+const setupLayerEvents = (layerId) => {
+  map.value.on('click', layerId, (e) => {
+    if (currentPopup.value) currentPopup.value.remove();
+
+    const clickedFeature = e.features[0];
+    const clickedLocation = e.lngLat;
+
+    const verticalOffset = map.value.getContainer().clientHeight * POPUP_VERTICAL_OFFSET;
+    const point = map.value.project(clickedLocation);
+    point.y -= verticalOffset;
+    const adjustedCenter = map.value.unproject(point);
+
+    map.value.flyTo({
+      center: adjustedCenter,
+      zoom: Math.max(map.value.getZoom(), 15),
+      duration: 800,
+      essential: true
+    });
+
+    map.value.once('moveend', () => {
+      setTimeout(() => showRoadPopup(clickedFeature, clickedLocation), POPUP_DELAY);
+    });
+  });
+
+  map.value.on('mouseenter', layerId, () => map.value.getCanvas().style.cursor = 'pointer');
+  map.value.on('mouseleave', layerId, () => map.value.getCanvas().style.cursor = '');
+};
+
+// Lifecycle and watchers
+onMounted(() => {
+  mapboxgl.accessToken = props.apiKey;
+  createMap(props.mapStyle);
+});
+
 watch(() => props.mapStyle, (newStyle) => {
   if (!map.value || !loaded.value) return;
 
-  // Preserve current view state when changing styles
-  const viewState = {
-    center: map.value.getCenter(),
-    zoom: map.value.getZoom(),
-    bearing: map.value.getBearing(),
-    pitch: map.value.getPitch()
-  };
+  const viewState = getCurrentViewState();
 
   if (currentPopup.value) {
     currentPopup.value.remove();
@@ -453,88 +491,14 @@ watch(() => props.mapStyle, (newStyle) => {
   createMap(newStyle, viewState);
 });
 
-// Update map when road data changes
 watch(() => props.roads, (newRoads) => {
   if (map.value && loaded.value) {
-    // If there's an open popup, try refreshing it with updated data
     if (currentPopup.value) {
       refreshCurrentPopup();
     }
-
-    // Reload all road data
     updateMapData(newRoads);
   }
 }, { deep: true });
-
-// Initialize map on component mount
-onMounted(() => {
-  mapboxgl.accessToken = props.apiKey;
-  createMap(props.mapStyle);
-});
-
-// Full map refresh with loading indication
-const reloadMapData = async (roads) => {
-  if (!loaded.value || !map.value) return;
-
-  // Close any open popups
-  closeAllPopups();
-
-  // Add a loading overlay to the map
-  const loadingElement = document.createElement('div');
-  loadingElement.className = 'map-loading-overlay';
-  loadingElement.innerHTML = `
-    <div class="spinner"></div>
-    <div class="loading-text">Refreshing map data...</div>
-  `;
-  map.value.getContainer().appendChild(loadingElement);
-
-  try {
-    // Store current view state for restoration
-    const viewState = {
-      center: map.value.getCenter(),
-      zoom: map.value.getZoom(),
-      bearing: map.value.getBearing(),
-      pitch: map.value.getPitch()
-    };
-
-    // Two-phase cleanup (layers first, then sources)
-    try {
-      // Phase 1: Remove all layers
-      roads.forEach((road, index) => {
-        ['inbound', 'outbound'].forEach(direction => {
-          const layerId = `route-${index}-${direction}`;
-          const labelId = `label-${index}-${direction}`;
-
-          if (map.value.getLayer(labelId)) map.value.removeLayer(labelId);
-          if (map.value.getLayer(layerId)) map.value.removeLayer(layerId);
-        });
-      });
-
-      // Phase 2: Now it's safe to remove sources
-      roads.forEach((road, index) => {
-        ['inbound', 'outbound'].forEach(direction => {
-          const layerId = `route-${index}-${direction}`;
-          if (map.value.getSource(layerId)) map.value.removeSource(layerId);
-        });
-      });
-    } catch (err) {
-      // Non-critical error, continue with adding new data
-    }
-
-    // Brief pause to ensure all removals are processed
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Add all roads with fresh data
-    roads.forEach((road, index) => drawRoute(road, index));
-
-    // Restore the original view
-    map.value.jumpTo(viewState);
-  } finally {
-    // Remove loading overlay
-    const overlay = map.value.getContainer().querySelector('.map-loading-overlay');
-    if (overlay) overlay.remove();
-  }
-};
 
 // Expose methods to parent components
 defineExpose({

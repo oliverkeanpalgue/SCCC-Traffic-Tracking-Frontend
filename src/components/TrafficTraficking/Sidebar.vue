@@ -1,5 +1,5 @@
 <template>
-  <div class="w-[23%] rounded-2xl p-1 font-montserrat">
+  <div class="w-[23%] rounded-2xl p-1 font-montserrat relative">
     <!-- Search input -->
     <div class="mt-4 mb-7">
       <input v-model="searchTerm" placeholder="Search..."
@@ -17,8 +17,7 @@
       <!-- Road items -->
       <div v-for="road in filteredRoads" :key="road.id"
         v-memo="[road.id, road.road_name, road.inbound.status_id, road.outbound.status_id]"
-        class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]" 
-        @click="openEditModal(road)">
+        class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]" @click="handleRoadClick(road)">
 
         <div class="flex justify-between mb-3">
           <div class="font-bold">{{ road.road_name }}</div>
@@ -53,10 +52,11 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
 import { FeEdit2 } from '@kalimahapps/vue-icons';
 
-// Constants
+// Configuration
 const DEBOUNCE_DELAY = 300;
+const STATUS_COLORS = { 1: 'green', 2: 'yellow', 3: 'red' };
 
-// Props and emits definition
+// Data retrieval
 const props = defineProps({
   intersections: Array,
   colorMap: Object
@@ -64,46 +64,35 @@ const props = defineProps({
 
 const emit = defineEmits(["openEditModal"]);
 
-// Status colors mapping
-const getStatusColor = (statusId) => {
-  const STATUS_COLORS = { 1: 'green', 2: 'yellow', 3: 'red' };
-  const colorName = STATUS_COLORS[statusId];
-  return props.colorMap?.[colorName] || '#CCCCCC';
-};
-
-// State management
 const databaseStore = useDatabaseStore();
 const roads = computed(() => props.intersections || []);
 const isLoading = computed(() => databaseStore.isLoading);
-const searchTerm = ref('');
-const showScrollbar = ref(false);
-const scrollContainer = ref(null);
-const searchTimeout = ref(null);
-const forceUpdate = ref(0);
 
-// Filter roads based on search term
+// Filter roads based on search
 const filteredRoads = computed(() => {
   forceUpdate.value; // Trigger reevaluation when forceUpdate changes
-  
+
   if (!roads.value?.length) return [];
 
   const term = searchTerm.value.trim().toLowerCase();
   if (!term) return roads.value;
-  
+
   return roads.value.filter(road => {
     const roadName = (road.road_name || road.properties?.name || '').toLowerCase();
     return roadName.includes(term);
   });
 });
 
-// Debounce search input to prevent excessive processing
-const debouncedSearch = () => {
-  clearTimeout(searchTimeout.value);
-  searchTimeout.value = setTimeout(checkScrollbar, DEBOUNCE_DELAY);
-};
+// State management
+const searchTerm = ref('');
+const showScrollbar = ref(false);
+const scrollContainer = ref(null);
+const searchTimeout = ref(null);
+const forceUpdate = ref(0);
 
-// Determine if scrollbar should be shown based on content height
-const checkScrollbar = async () => {
+// Data modification
+// Update scrollbar state based on content
+const updateScrollbarVisibility = async () => {
   await nextTick();
   if (scrollContainer.value) {
     const hasOverflow = scrollContainer.value.scrollHeight > scrollContainer.value.clientHeight;
@@ -111,43 +100,70 @@ const checkScrollbar = async () => {
   }
 };
 
-// Optimize resize handler with requestAnimationFrame for better performance
-const handleResize = () => {
-  if (typeof requestAnimationFrame === 'function') {
-    requestAnimationFrame(checkScrollbar);
-  } else {
-    checkScrollbar();
+// Data removal
+// Clean up event listeners and timers
+const cleanupResources = () => {
+  window.removeEventListener('resize', handleResize);
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+    searchTimeout.value = null;
   }
 };
 
-// Send selected road to parent component
-const openEditModal = (road) => {
+// Helper functions
+// Get color for traffic status
+const getStatusColor = (statusId) => {
+  const colorName = STATUS_COLORS[statusId];
+  return props.colorMap?.[colorName] || '#CCCCCC';
+};
+
+// Optimize resize handling
+const handleResize = () => {
+  if (typeof requestAnimationFrame === 'function') {
+    requestAnimationFrame(updateScrollbarVisibility);
+  } else {
+    updateScrollbarVisibility();
+  }
+};
+
+// Event handlers
+// Handle search input with debounce
+const debouncedSearch = () => {
+  if (searchTimeout.value) {
+    clearTimeout(searchTimeout.value);
+  }
+  searchTimeout.value = setTimeout(updateScrollbarVisibility, DEBOUNCE_DELAY);
+};
+
+// Send selected road to parent
+const handleRoadClick = (road) => {
   if (road?.id) {
     emit("openEditModal", road);
   }
 };
 
-// Watch for data changes to update UI
+// Lifecycle
+// Watch for data changes
 watch(() => databaseStore.roads, () => {
-  forceUpdate.value++; // Increment to trigger filteredRoads recomputation
-  nextTick(checkScrollbar);
+  forceUpdate.value++; // Trigger filteredRoads recomputation
+  nextTick(updateScrollbarVisibility);
 }, { deep: true });
 
 watch(() => props.intersections, () => {
   forceUpdate.value++;
-  nextTick(checkScrollbar);
+  nextTick(updateScrollbarVisibility);
 }, { deep: true, immediate: true });
 
-// Lifecycle hooks
+// Component initialization
 onMounted(() => {
-  checkScrollbar();
+  updateScrollbarVisibility();
   window.addEventListener('resize', handleResize, { passive: true });
   forceUpdate.value++;
 });
 
+// Component cleanup
 onUnmounted(() => {
-  window.removeEventListener('resize', handleResize);
-  clearTimeout(searchTimeout.value);
+  cleanupResources();
 });
 </script>
 
