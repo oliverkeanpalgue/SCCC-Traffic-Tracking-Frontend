@@ -2,11 +2,7 @@
 import { ref, watch, computed, onMounted } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
 
-// Core state management
-const databaseStore = useDatabaseStore();
-const emit = defineEmits(['close', 'save']);
-
-// Road type configuration
+// Configuration
 const ROAD_TYPES = [
   { id: 1, name: 'Intersection' },
   { id: 2, name: 'Rotunda' },
@@ -14,16 +10,11 @@ const ROAD_TYPES = [
   { id: 4, name: 'Entry Point' },
   { id: 5, name: 'Road' }
 ];
+const REFRESH_DELAY = 100;
 
-// Mapping to convert road type names to their corresponding IDs
-const ROAD_TYPE_NAME_TO_ID = {
-  'Intersection': '1',
-  'Rotunda': '2',
-  'Street': '3',
-  'Entry Point': '4',
-  'Road': '5'
-};
-
+// Data retrieval
+const databaseStore = useDatabaseStore();
+const emit = defineEmits(['close', 'save']);
 const props = defineProps({
   show: Boolean,
   road: {
@@ -50,8 +41,197 @@ const isLoadingCoordinates = ref(false);
 const saveSuccess = ref(false);
 const saveError = ref('');
 const validationError = ref('');
+const showConfirmation = ref(false);
 
-// Validate if the coordinates are in the correct format
+// Get road ID consistently
+function getRoadId() {
+  return props.road.roadId || props.road.id;
+}
+
+// Fetch road coordinates
+async function loadCoordinates() {
+  if (!props.show) return;
+
+  const roadId = getRoadId();
+  if (!roadId) return;
+
+  isLoadingCoordinates.value = true;
+  validationError.value = '';
+
+  try {
+    // Try cache first, then API
+    let coords = databaseStore.getRoadCoordinates(roadId, selectedDirection.value);
+
+    if (!coords?.length) {
+      coords = await databaseStore.fetchRoadCoordinates(roadId, selectedDirection.value);
+    }
+
+    coordinatesText.value = coords?.length ? JSON.stringify(coords, null, 2) : '';
+  } catch (error) {
+    saveError.value = `Error loading coordinates: ${error.message}`;
+    coordinatesText.value = '';
+  } finally {
+    isLoadingCoordinates.value = false;
+  }
+}
+
+// Form submission
+function handleFormSubmit() {
+  // First validate
+  if (!roadName.value.trim()) {
+    saveError.value = 'Road name cannot be empty';
+    return;
+  }
+
+  if (!coordinatesValid.value && coordinatesText.value.trim()) {
+    saveError.value = `Cannot save invalid coordinates: ${validationError.value}`;
+    return;
+  }
+
+  // Show confirmation dialog
+  showConfirmation.value = true;
+}
+
+// Data modification
+async function handleSave() {
+  try {
+    showConfirmation.value = false;
+    isSaving.value = true;
+    saveError.value = '';
+    validationError.value = '';
+
+    const roadId = getRoadId();
+
+    const roadData = {
+      road_name: roadName.value.trim(),
+      ...(roadTypeId.value && { road_type_id: parseInt(roadTypeId.value) })
+    };
+
+    // Update road info
+    const updateResult = await databaseStore.updateRoadInfo(roadId, roadData);
+
+    // Update coordinates if provided
+    const coordinatesUpdated = await updateCoordinatesIfNeeded(roadId);
+    if (saveError.value) return;
+
+    // Verify success
+    const isSuccessful = updateResult.success ||
+      (updateResult.message?.includes("Successfully Updated"));
+
+    if (isSuccessful) {
+      handleSuccessfulSave(roadId, coordinatesUpdated);
+    } else {
+      saveError.value = updateResult.error || updateResult.message || "Update failed - unknown error";
+    }
+  } catch (error) {
+    handleSaveError(error);
+  } finally {
+    isSaving.value = false;
+  }
+}
+
+// Update coordinates if needed
+async function updateCoordinatesIfNeeded(roadId) {
+  if (!coordinatesText.value.trim()) return false;
+
+  if (!coordinatesValid.value) {
+    saveError.value = `Cannot save invalid coordinates: ${validationError.value}`;
+    return false;
+  }
+
+  try {
+    const coordinatesData = JSON.parse(coordinatesText.value);
+    await databaseStore.updateRoadCoordinates(
+      roadId,
+      selectedDirection.value,
+      coordinatesData
+    );
+    return true;
+  } catch (error) {
+    saveError.value = `Coordinates update failed: ${error.message}`;
+    return false;
+  }
+}
+
+// Handle successful save
+function handleSuccessfulSave(roadId, coordinatesUpdated) {
+  saveSuccess.value = true;
+
+  const savedData = {
+    roadId,
+    roadName: roadName.value,
+    roadTypeId: roadTypeId.value || null,
+    coordinatesUpdated,
+    __refresh: true,
+    __closeAllPopups: true,
+    __timestamp: Date.now()
+  };
+
+  emit('save', savedData);
+  handleClose();
+
+  // Refresh page to ensure state consistency
+  setTimeout(() => window.location.reload(), REFRESH_DELAY);
+}
+
+// Process save errors
+function handleSaveError(error) {
+  if (error.response) {
+    saveError.value = `Server error: ${error.response.status} - ${error.response.data.error ||
+      error.response.data.message || 'Unknown error'}`;
+  } else if (error.request) {
+    saveError.value = "Network error: No response from server";
+  } else {
+    saveError.value = `Error: ${error.message || 'Failed to save changes'}`;
+  }
+}
+
+// Helper functions
+function resetForm() {
+  const road = props.road;
+  roadName.value = road.roadName || road.road_name || '';
+  roadTypeId.value = extractRoadTypeId(road);
+  selectedDirection.value = 'inbound';
+  saveSuccess.value = false;
+  saveError.value = '';
+  showConfirmation.value = false;
+
+  if (props.show) {
+    loadCoordinates();
+  }
+}
+
+// Extract road type ID
+function extractRoadTypeId(road) {
+  // Direct ID access - first priority
+  if (road.road_type_id) return String(road.road_type_id);
+  if (road.roadTypeId) return String(road.roadTypeId);
+  if (road.properties?.road_type_id) return String(road.properties.road_type_id);
+
+  // Try to match by name if ID isn't available
+  const roadTypeName = road.roadType || road.road_type_name || road.properties?.roadType;
+  if (roadTypeName && roadTypeName !== 'Unknown') {
+    const matchedType = ROAD_TYPES.find(type => type.name === roadTypeName);
+    return matchedType ? String(matchedType.id) : '';
+  }
+
+  // Default to empty if nothing found
+  return '';
+}
+
+// Event handlers
+function handleClose() {
+  showConfirmation.value = false;
+  emit('close');
+}
+
+function handleOutsideClick(e) {
+  if (e.target.classList.contains('modal-backdrop') && !showConfirmation.value) {
+    handleClose();
+  }
+}
+
+// Validate coordinates
 const coordinatesValid = computed(() => {
   if (!coordinatesText.value.trim()) return true;
 
@@ -63,220 +243,64 @@ const coordinatesValid = computed(() => {
       return false;
     }
 
-    // Simple coordinate pairs validation
-    if (parsed.length > 0 && Array.isArray(parsed[0]) && parsed[0].length === 2 &&
-      typeof parsed[0][0] === 'number' && typeof parsed[0][1] === 'number') {
-      
-      for (const coord of parsed) {
-        if (!Array.isArray(coord) || coord.length !== 2 ||
-          typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
-          validationError.value = 'Each coordinate must be a pair of numbers [lng, lat]';
-          return false;
-        }
-      }
-      return true;
-    }
-
-    // Nested coordinate arrays validation
-    if (parsed.length > 0 && Array.isArray(parsed[0]) && Array.isArray(parsed[0][0])) {
-      for (const subArray of parsed) {
-        if (!Array.isArray(subArray)) {
-          validationError.value = 'Each element must be an array of coordinates';
-          return false;
-        }
-
-        for (const coord of subArray) {
-          if (!Array.isArray(coord) || coord.length !== 2 ||
-            typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
-            validationError.value = 'Each coordinate must be a pair of numbers [lng, lat]';
-            return false;
-          }
-        }
-      }
-      return true;
-    }
-
-    validationError.value = 'Coordinates must be either a simple array of [lng, lat] pairs or a nested array of coordinate arrays';
-    return false;
+    return validateSimpleCoordinates(parsed) ||
+      validateNestedCoordinates(parsed) ||
+      setFormatError();
   } catch (e) {
     validationError.value = 'Invalid JSON format';
     return false;
   }
 });
 
-// Reset form when modal opens and reload coordinates when direction changes
+// Validate simple coordinate array
+function validateSimpleCoordinates(parsed) {
+  if (parsed.length > 0 && Array.isArray(parsed[0]) && parsed[0].length === 2 &&
+    typeof parsed[0][0] === 'number' && typeof parsed[0][1] === 'number') {
+
+    for (const coord of parsed) {
+      if (!Array.isArray(coord) || coord.length !== 2 ||
+        typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
+        validationError.value = 'Each coordinate must be a pair of numbers [lng, lat]';
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+// Validate nested coordinate array
+function validateNestedCoordinates(parsed) {
+  if (parsed.length > 0 && Array.isArray(parsed[0]) && Array.isArray(parsed[0][0])) {
+    for (const subArray of parsed) {
+      if (!Array.isArray(subArray)) {
+        validationError.value = 'Each element must be an array of coordinates';
+        return false;
+      }
+
+      for (const coord of subArray) {
+        if (!Array.isArray(coord) || coord.length !== 2 ||
+          typeof coord[0] !== 'number' || typeof coord[1] !== 'number') {
+          validationError.value = 'Each coordinate must be a pair of numbers [lng, lat]';
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  return false;
+}
+
+// Set format error message
+function setFormatError() {
+  validationError.value = 'Coordinates must be either a simple array of [lng, lat] pairs or a nested array of coordinate arrays';
+  return false;
+}
+
+// Lifecycle setup
 watch(() => props.show, visible => visible && resetForm(), { immediate: true });
 watch(selectedDirection, loadCoordinates);
 
-// Reset form with road data
-function resetForm() {
-  const road = props.road;
-  roadName.value = road.roadName || road.road_name || '';
-  roadTypeId.value = extractRoadTypeId(road);
-  selectedDirection.value = 'inbound';
-  saveSuccess.value = false;
-  saveError.value = '';
-
-  if (props.show) {
-    loadCoordinates();
-  }
-}
-
-// Extract road type ID from various possible sources
-function extractRoadTypeId(road) {
-  // Direct ID properties
-  if (road.road_type_id) {
-    return String(road.road_type_id);
-  }
-  
-  if (road.roadTypeId) {
-    return String(road.roadTypeId);
-  }
-  
-  // String name properties
-  if (road.roadType && typeof road.roadType === 'string') {
-    return ROAD_TYPE_NAME_TO_ID[road.roadType] || '';
-  }
-  
-  // Nested properties
-  if (road.properties?.roadType) {
-    return ROAD_TYPE_NAME_TO_ID[road.properties.roadType] || '';
-  }
-  
-  return '';
-}
-
-// Load coordinates for selected direction
-async function loadCoordinates() {
-  if (!props.show) return;
-
-  const roadId = props.road.roadId || props.road.id;
-  if (!roadId) return;
-
-  isLoadingCoordinates.value = true;
-  validationError.value = '';
-  
-  try {
-    // Try cache first, then API
-    let coords = databaseStore.getRoadCoordinates(roadId, selectedDirection.value);
-
-    if (!coords || coords.length === 0) {
-      coords = await databaseStore.fetchRoadCoordinates(roadId, selectedDirection.value);
-    }
-
-    coordinatesText.value = coords && coords.length
-      ? JSON.stringify(coords, null, 2)
-      : '';
-  } catch (error) {
-    saveError.value = `Error loading coordinates: ${error.message}`;
-    coordinatesText.value = '';
-  } finally {
-    isLoadingCoordinates.value = false;
-  }
-}
-
-// Save road data with coordinate updates
-async function handleSave() {
-  try {
-    isSaving.value = true;
-    saveError.value = '';
-    validationError.value = '';
-
-    const roadId = props.road.roadId || props.road.id;
-
-    // Input validation
-    if (!roadName.value.trim()) {
-      saveError.value = 'Road name cannot be empty';
-      return;
-    }
-
-    // Prepare road data update
-    const roadData = {
-      road_name: roadName.value.trim()
-    };
-
-    if (roadTypeId.value) {
-      roadData.road_type_id = parseInt(roadTypeId.value);
-    }
-
-    // Update basic road information
-    const updateResult = await databaseStore.updateRoadInfo(roadId, roadData);
-
-    // Handle coordinate updates if needed
-    let coordinatesUpdated = false;
-    if (coordinatesText.value.trim()) {
-      if (!coordinatesValid.value) {
-        saveError.value = `Cannot save invalid coordinates: ${validationError.value}`;
-        return;
-      }
-
-      try {
-        const coordinatesData = JSON.parse(coordinatesText.value);
-        await databaseStore.updateRoadCoordinates(
-          roadId,
-          selectedDirection.value,
-          coordinatesData
-        );
-        coordinatesUpdated = true;
-      } catch (error) {
-        saveError.value = `Coordinates update failed: ${error.message}`;
-        return;
-      }
-    }
-
-    // Check if update was successful
-    if (updateResult.success || 
-        (updateResult.message && updateResult.message.includes("Successfully Updated"))) {
-      
-      saveSuccess.value = true;
-
-      // Prepare data for emit
-      const savedData = {
-        roadId: roadId,
-        roadName: roadName.value,
-        roadTypeId: roadTypeId.value || null,
-        coordinatesUpdated,
-        __refresh: true,
-        __closeAllPopups: true,
-        __timestamp: Date.now()
-      };
-
-      emit('save', savedData);
-      handleClose();
-
-      // Refresh page to ensure state consistency
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
-    } else {
-      saveError.value = updateResult.error || updateResult.message || "Update failed - unknown error";
-    }
-  } catch (error) {
-    // Error handling with detailed messages
-    if (error.response) {
-      saveError.value = `Server error: ${error.response.status} - ${error.response.data.error || error.response.data.message || 'Unknown error'}`;
-    } else if (error.request) {
-      saveError.value = "Network error: No response from server";
-    } else {
-      saveError.value = `Error: ${error.message || 'Failed to save changes'}`;
-    }
-  } finally {
-    isSaving.value = false;
-  }
-}
-
-// Modal control functions
-function handleClose() {
-  emit('close');
-}
-
-function handleOutsideClick(e) {
-  if (e.target.classList.contains('modal-backdrop')) {
-    handleClose();
-  }
-}
-
-// Initialize on mount
 onMounted(() => {
   if (props.show) {
     loadCoordinates();
@@ -303,7 +327,7 @@ onMounted(() => {
 
         <!-- Form content -->
         <div class="p-6">
-          <form @submit.prevent="handleSave">
+          <form @submit.prevent="handleFormSubmit">
             <!-- Two-column layout -->
             <div class="grid grid-cols-2 gap-6">
               <!-- Left column: Road details -->
@@ -326,12 +350,11 @@ onMounted(() => {
                     </option>
                   </select>
                 </div>
-                
+
                 <!-- Preview Image -->
                 <div class="mb-4">
                   <p class="text-sm font-medium mb-1">Preview</p>
-                  <div
-                    class="w-full h-[148px] bg-gray-800 rounded overflow-hidden flex items-center justify-center">
+                  <div class="w-full h-[148px] bg-gray-800 rounded overflow-hidden flex items-center justify-center">
                     <img v-if="roadImage" :src="roadImage" alt="Road Preview" class="w-full h-full object-cover" />
                     <span v-else class="text-gray-500 text-sm">No image available</span>
                   </div>
@@ -358,12 +381,10 @@ onMounted(() => {
                     </div>
 
                     <!-- Clickable areas -->
-                    <button type="button"
-                      class="absolute left-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
+                    <button type="button" class="absolute left-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
                       @click="selectedDirection = 'outbound'">
                     </button>
-                    <button type="button"
-                      class="absolute right-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
+                    <button type="button" class="absolute right-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
                       @click="selectedDirection = 'inbound'">
                     </button>
 
@@ -376,8 +397,7 @@ onMounted(() => {
                         </span>
                       </div>
                       <div class="w-1/2 flex items-center justify-center">
-                        <span class="text-sm"
-                          :class="selectedDirection === 'inbound' ? 'text-white' : 'text-gray-400'">
+                        <span class="text-sm" :class="selectedDirection === 'inbound' ? 'text-white' : 'text-gray-400'">
                           Inbound
                         </span>
                       </div>
@@ -388,7 +408,8 @@ onMounted(() => {
                 <!-- Coordinates editor -->
                 <div class="flex-1">
                   <label class="block text-sm font-medium mb-1 flex justify-between items-center">
-                    <span>{{ selectedDirection.charAt(0).toUpperCase() + selectedDirection.slice(1) }} Coordinates</span>
+                    <span>{{ selectedDirection.charAt(0).toUpperCase() + selectedDirection.slice(1) }}
+                      Coordinates</span>
                     <span v-if="isLoadingCoordinates" class="text-xs text-gray-400">Loading...</span>
                     <span v-else-if="!coordinatesValid" class="text-xs text-red-400">Invalid format</span>
                   </label>
@@ -430,19 +451,40 @@ onMounted(() => {
                 class="px-4 py-2 rounded-md border border-gray-600 hover:bg-gray-700 transition-colors">
                 Cancel
               </button>
-              <button type="submit" :disabled="isSaving || (!coordinatesValid && coordinatesText.trim() !== '')" 
-                :class="[
-                  'px-4 py-2 rounded-md transition-colors flex items-center',
-                  (isSaving || (!coordinatesValid && coordinatesText.trim() !== ''))
-                    ? 'bg-gray-500 cursor-not-allowed'
-                    : 'bg-green-600 hover:bg-green-700'
-                ]">
+              <button type="submit" :disabled="isSaving || (!coordinatesValid && coordinatesText.trim() !== '')" :class="[
+                'px-4 py-2 rounded-md transition-colors flex items-center',
+                (isSaving || (!coordinatesValid && coordinatesText.trim() !== ''))
+                  ? 'bg-gray-500 cursor-not-allowed'
+                  : 'bg-green-600 hover:bg-green-700'
+              ]">
                 <span v-if="isSaving"
                   class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
                 {{ isSaving ? 'Saving...' : 'Save Changes' }}
               </button>
             </div>
           </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div v-if="showConfirmation" class="modal-backdrop fixed inset-0 flex items-center justify-center z-[60]"
+      style="background-color: rgba(0, 0, 0, 0.8);">
+      <div class="bg-[#1b1a1a] text-white rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+        <h3 class="text-lg font-semibold mb-4">Confirm Road Update</h3>
+        <p class="mb-6">Are you sure you want to update this road?</p>
+
+        <div class="flex justify-end space-x-3">
+          <button @click="showConfirmation = false"
+            class="px-4 py-2 rounded-md border border-gray-600 hover:bg-gray-700 transition-colors">
+            Cancel
+          </button>
+          <button @click="handleSave" :disabled="isSaving" :class="[
+            'px-4 py-2 rounded-md transition-colors',
+            isSaving ? 'bg-gray-500 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'
+          ]">
+            Confirm
+          </button>
         </div>
       </div>
     </div>
