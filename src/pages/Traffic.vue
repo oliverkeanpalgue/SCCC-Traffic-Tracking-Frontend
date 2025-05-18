@@ -356,13 +356,17 @@ onMounted(async () => {
         mapComponent.value?.updateRoadColor(event.road_id, event.direction, color.value);
       }
     });
-    // Sync traffic statuses in background
-    /*
-    Promise.all(databaseStore.roads.flatMap(road => [
-      databaseStore.updateTrafficStatus(road.id, 'inbound', road.inbound.status_id),
-      databaseStore.updateTrafficStatus(road.id, 'outbound', road.outbound.status_id)
-    ])).catch(err => console.error("Background updates failed:", err));
-    */
+
+    window.Echo.channel('delete-road')
+      .listen('.road.deleted', async (event) => {
+        if (event) {
+           await databaseStore.fetchData();
+           processedRoads.value = databaseStore.roads.map(processRoad);
+           await mapComponent.value?.reloadMapData(processedRoads.value);
+        }
+
+        closeEditModal();
+      });
 
   } catch (error) {
     console.error("Failed to load data:", error);
