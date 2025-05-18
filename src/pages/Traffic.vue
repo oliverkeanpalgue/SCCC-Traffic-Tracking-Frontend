@@ -92,6 +92,8 @@ const LEGEND_ITEMS = {
   moderate: { hex: COLOR_MAP.yellow, label: "Moderate" },
   heavy: { hex: COLOR_MAP.red, label: "Heavy" }
 };
+const showAddRoadModal = ref(false);
+
 
 // Map style options
 const MAP_STYLES = {
