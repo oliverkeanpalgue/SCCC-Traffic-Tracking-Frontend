@@ -3,7 +3,7 @@
     <Navbar />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[649px] bg-[#1b1a1a]">
-    <Sidebar :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
+    <Sidebar ref=""  :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
       <!-- Loading overlay -->
@@ -106,12 +106,16 @@ const MAP_STYLES = {
 const databaseStore = useDatabaseStore();
 const mapComponent = ref(null);
 const dataReady = ref(false);
-const isLoading = ref(true);
 const processedRoads = ref([]);
 const activeRoad = ref(null);
 const showStyleDropdown = ref(false);
 const selectedMapStyle = ref(MAP_STYLES.Dark);
-const showAddRoadModal = ref(false);
+
+const isLoading = computed(() => {
+  return (
+    databaseStore.roads.length === 0
+  )
+});
 
 // Computed properties
 const currentStyleName = computed(() =>
@@ -246,7 +250,7 @@ const handleRoadUpdate = async (updatedRoad) => {
 
   // Refresh data
   isLoading.value = true;
-
+  
   try {
     // Fetch fresh data with cache busting
     const timestamp = Date.now();
@@ -289,11 +293,9 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
       mapComponent.value.closeAllPopups();
     }
 
-    // Update map display
-    mapComponent.value?.updateRoadColor(roadId, direction, color);
-
     // Update local state
     updateLocalState(roadId, direction, color, statusId);
+  
   } catch (error) {
     console.error("Update failed:", error);
     alert("Failed to update traffic status: " + error.message);
@@ -332,17 +334,36 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 // Initialize data on component mount
 onMounted(async () => {
   isLoading.value = true;
-
+  
   try {
     // Load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
 
+    window.Echo.channel('traffic-update').listen('.direction.status.updated', (event) => {
+      const color = ref('');
+      
+      if(event) {
+        
+        if(event.status_id === 1){
+          color.value = 'green';
+        } else if(event.status_id === 2){
+          color.value = 'yellow';
+        } else if(event.status_id === 3){
+          color.value = 'red';
+        }
+
+        mapComponent.value?.updateRoadColor(event.road_id, event.direction, color.value);
+      }
+    });
     // Sync traffic statuses in background
+    /*
     Promise.all(databaseStore.roads.flatMap(road => [
       databaseStore.updateTrafficStatus(road.id, 'inbound', road.inbound.status_id),
       databaseStore.updateTrafficStatus(road.id, 'outbound', road.outbound.status_id)
     ])).catch(err => console.error("Background updates failed:", err));
+    */
+
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
