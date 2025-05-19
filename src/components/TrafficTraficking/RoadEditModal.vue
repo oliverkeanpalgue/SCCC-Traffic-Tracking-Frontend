@@ -133,7 +133,8 @@ async function handleSave() {
 
     const roadData = {
       road_name: roadName.value.trim(),
-      ...(roadTypeId.value && { road_type_id: parseInt(roadTypeId.value) })
+      ...(roadTypeId.value && { road_type_id: parseInt(roadTypeId.value) }),
+      ...(roadImage.value && { image_path: roadImage.value }) // Add image data
     };
 
     // Update road info
