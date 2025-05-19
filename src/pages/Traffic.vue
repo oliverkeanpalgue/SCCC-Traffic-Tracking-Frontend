@@ -359,8 +359,8 @@ onMounted(async () => {
       }
     });
 
-    window.Echo.channel('delete-road')
-      .listen('.road.deleted', async (event) => {
+    window.Echo.channel('update-road')
+      .listen('.road.updated', async (event) => {
         if (event) {
            await databaseStore.fetchData();
            processedRoads.value = databaseStore.roads.map(processRoad);
