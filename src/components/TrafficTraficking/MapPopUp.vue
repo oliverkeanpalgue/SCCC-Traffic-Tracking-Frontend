@@ -35,7 +35,7 @@ const props = defineProps({
   },
   roadImage: {
     type: String,
-    default: defaultRoadImage  // Fallback image if none provided
+    default: defaultRoadImage
   },
   roadType: {
     type: String,
@@ -51,6 +51,8 @@ const showEditModal = ref(false);
 
 // Fetch road types on component mount if needed
 onMounted(async () => {
+  console.log(props.roadImage);
+
   if (databaseStore.roadTypes.length === 0) {
     try {
       await databaseStore.fetchRoadTypes();
@@ -100,7 +102,7 @@ const handleSaveRoad = (updatedRoad) => {
   <div class="bg-[#1b1a1a] text-white rounded-2xl overflow-hidden shadow-lg w-full max-w-[320px]">
     <!-- Road image display area -->
     <div class="w-full h-[200px] overflow-hidden">
-      <img :src="roadImage" :alt="roadName" class="w-full h-full object-cover" />
+      <img :src="`${VITE_API_BASE_URL}/storage/public/road_images/${roadImage}`" :alt="roadName" class="w-full h-full object-cover" />
     </div>
 
     <!-- Road details section -->
