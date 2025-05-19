@@ -6,6 +6,7 @@ import { useDatabaseStore } from '../../stores/databaseStore';
 
 // Get store instance
 const databaseStore = useDatabaseStore();
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
 // Access road types from store instead of hardcoding
 const roadTypes = computed(() =>
@@ -102,7 +103,7 @@ const handleSaveRoad = (updatedRoad) => {
   <div class="bg-[#1b1a1a] text-white rounded-2xl overflow-hidden shadow-lg w-full max-w-[320px]">
     <!-- Road image display area -->
     <div class="w-full h-[200px] overflow-hidden">
-      <img :src="`${VITE_API_BASE_URL}/storage/public/road_images/${roadImage}`" :alt="roadName" class="w-full h-full object-cover" />
+      <img :src="`${VITE_API_BASE_URL}/storage/road_images/${roadImage}`" class="w-full h-full object-cover" />
     </div>
 
     <!-- Road details section -->
