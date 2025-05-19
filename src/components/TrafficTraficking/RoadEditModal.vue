@@ -191,6 +191,7 @@ function handleSuccessfulSave(roadId, coordinatesUpdated) {
     roadId,
     roadName: roadName.value,
     roadTypeId: roadTypeId.value || null,
+    roadImage: roadImage.value,
     coordinatesUpdated,
     __refresh: true,
     __closeAllPopups: true,
@@ -201,7 +202,7 @@ function handleSuccessfulSave(roadId, coordinatesUpdated) {
   handleClose();
 
   // Refresh page to ensure state consistency
-  setTimeout(() => window.location.reload(), REFRESH_DELAY);
+  //setTimeout(() => window.location.reload(), REFRESH_DELAY);
 }
 
 // Process save errors
