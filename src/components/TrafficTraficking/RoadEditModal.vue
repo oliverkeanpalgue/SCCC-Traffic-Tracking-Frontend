@@ -220,7 +220,7 @@ function resetForm() {
   const road = props.road;
   roadName.value = road.roadName || road.road_name || '';
   roadTypeId.value = extractRoadTypeId(road);
-  roadImage.value = road.roadImage || ''; // Add this line
+  roadImage.value = road.roadImage || ''; 
   selectedDirection.value = 'inbound';
   saveSuccess.value = false;
   saveError.value = '';
