@@ -58,7 +58,6 @@
                       <!-- image preview -->
                       <div v-else class="w-full h-full bg-gray-200 rounded-lg">
                         <img :src="imagePreview" alt="Road Image Preview" class="object-cover w-full h-full rounded-lg" />
-                        <p>{{ roadImage.name }}</p>
                       </div>
                     </label>
                     <input id="roadImage" @change="handleImageChange" type="file" class="hidden" />
@@ -191,14 +190,17 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDatabaseStore } from '../../stores/databaseStore'
 
-function handleImageChange(img) {
-  const file = img.target.files[0]
+async function handleImageChange(img) {
+  const file = img.target.files[0];
   if (file) {
-    imagePreview.value = URL.createObjectURL(file)
-    roadImage.value = file
-  }
+    imagePreview.value = URL.createObjectURL(file);
 
-  
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      roadImage.value = e.target.result; // This will be a base64 string
+    };
+    reader.readAsDataURL(file);
+  }
 }
 
 // Configuration
@@ -232,20 +234,23 @@ const emit = defineEmits(['close', 'roadAdded'])
 // Data modification
 async function createRoad() {
   try {
-    showConfirmation.value = false
-    isSaving.value = true
-    saveError.value = ''
+    showConfirmation.value = false;
+    isSaving.value = true;
+    saveError.value = '';
 
-    const validationError = validateForm()
+    const validationError = validateForm();
     if (validationError) {
-      saveError.value = validationError
-      return
+      saveError.value = validationError;
+      return;
     }
 
     const roadData = {
       road_name: roadName.value.trim(),
-      road_type_id: parseInt(roadTypeId.value)
-    }
+      road_type_id: parseInt(roadTypeId.value),
+      image_path: roadImage.value
+    };
+
+    console.log('Road Data:', roadData)
 
     const inboundCoords = inboundCoordinatesText.value.trim()
       ? JSON.parse(inboundCoordinatesText.value)
@@ -309,6 +314,8 @@ async function saveCoordinates(roadId, inboundCoords, outboundCoords) {
 function resetForm() {
   roadName.value = ''
   roadTypeId.value = ''
+  roadImage.value = null
+  imagePreview.value = ''
   inboundCoordinatesText.value = ''
   outboundCoordinatesText.value = ''
   inboundValidationError.value = ''
@@ -447,7 +454,7 @@ const selectedDirection = ref(DIRECTION_INBOUND)
 const isSaving = ref(false)
 const saveError = ref('')
 const showConfirmation = ref(false)
-const roadImage = ref('')
+const roadImage = ref(null)
 const imagePreview = ref('')
 
 // Computed properties
