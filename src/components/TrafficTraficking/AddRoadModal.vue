@@ -197,7 +197,7 @@ async function handleImageChange(img) {
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      roadImage.value = e.target.result; // This will be a base64 string
+      roadImage.value = e.target.result;
     };
     reader.readAsDataURL(file);
   }
