@@ -52,8 +52,6 @@ const showEditModal = ref(false);
 
 // Fetch road types on component mount if needed
 onMounted(async () => {
-  console.log(props.roadImage);
-
   if (databaseStore.roadTypes.length === 0) {
     try {
       await databaseStore.fetchRoadTypes();
@@ -140,7 +138,7 @@ const handleSaveRoad = (updatedRoad) => {
 
     <!-- Conditionally rendered modal component with props binding -->
     <RoadEditModal :show="showEditModal" :road="{ roadId, roadName, directionText, trafficStatus, roadType, roadImage }"
-      @close="handleCloseModal" @save="handleSaveRoad" />
+        :roadTypes="roadTypes" @close="handleCloseModal" @update="handleSaveRoad" />
 
         <RoadDeleteModal
             :show="showDeleteModal"
