@@ -3,7 +3,7 @@
     <Navbar />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[649px] bg-[#1b1a1a]">
-    <Sidebar ref=""  :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
+    <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
       <!-- Loading overlay -->
@@ -229,8 +229,6 @@ const handleRoadAdded = async (newRoad) => {
   } catch (error) {
     console.error("Failed to refresh data after adding road:", error);
 
-    // Reload the page to ensure a clean state
-    window.location.reload();
   } finally {
     isLoading.value = false;
   }
@@ -252,7 +250,7 @@ const handleRoadUpdate = async (updatedRoad) => {
 
   // Refresh data
   isLoading.value = true;
-  
+
   try {
     // Fetch fresh data with cache busting
     const timestamp = Date.now();
@@ -268,13 +266,8 @@ const handleRoadUpdate = async (updatedRoad) => {
     if (mapComponent.value) {
       await mapComponent.value.updateMapData(processedRoads.value);
 
-      // Refresh popup and focus on updated road
-      setTimeout(() => mapComponent.value.refreshCurrentPopup(), 100);
-
       if (updatedRoad.roadId) {
-        setTimeout(() => {
-          mapComponent.value.focusOnRoad(updatedRoad.roadId.toString());
-        }, 200);
+        mapComponent.value.focusOnRoad(updatedRoad.roadId.toString());
       }
     }
   } catch (error) {
@@ -288,19 +281,27 @@ const handleRoadUpdate = async (updatedRoad) => {
 const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
   try {
     const statusId = COLOR_TO_STATUS[color];
-    await databaseStore.updateTrafficStatus(roadId, direction, statusId);
-
-    // Close popups if requested
-    if (options.closeAllPopups && mapComponent.value) {
-      mapComponent.value.closeAllPopups();
+    
+    // Update local state immediately
+    updateLocalState(roadId, direction, color, statusId);
+    
+    // Update map color synchronously
+    if (mapComponent.value) {
+      mapComponent.value.updateRoadColor(roadId, direction, color);
     }
 
-    // Update local state
-    updateLocalState(roadId, direction, color, statusId);
-  
+    // Make API call without affecting UI
+    await databaseStore.updateTrafficStatus(roadId, direction, statusId);
   } catch (error) {
     console.error("Update failed:", error);
-    alert("Failed to update traffic status: " + error.message);
+    // Revert changes on error
+    const originalStatus = databaseStore.roads.find(r => r.id.toString() === roadId.toString())?.[direction]?.status_id;
+    if (originalStatus) {
+      const originalColor = STATUS_MAP[originalStatus];
+      updateLocalState(roadId, direction, originalColor, originalStatus);
+      mapComponent.value?.updateRoadColor(roadId, direction, originalColor);
+    }
+    alert("Failed to update traffic status");
   }
 };
 
@@ -309,7 +310,10 @@ const updateLocalState = (roadId, direction, color, statusId) => {
   // Update processed roads list
   const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
   if (roadIndex !== -1) {
-    processedRoads.value[roadIndex][`${direction}Color`] = color;
+    processedRoads.value[roadIndex] = {
+      ...processedRoads.value[roadIndex],
+      [`${direction}Color`]: color
+    };
   }
 
   // Update active road if being modified
@@ -320,7 +324,7 @@ const updateLocalState = (roadId, direction, color, statusId) => {
     };
   }
 
-  // Update store to ensure sidebar updates
+  // Update store without triggering unnecessary reactivity
   const storeRoadIndex = databaseStore.roads.findIndex(r => r.id.toString() === roadId.toString());
   if (storeRoadIndex !== -1) {
     databaseStore.roads[storeRoadIndex] = {
@@ -336,35 +340,59 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 // Initialize data on component mount
 onMounted(async () => {
   isLoading.value = true;
-  
+
   try {
     // Load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
 
     window.Echo.channel('traffic-update').listen('.direction.status.updated', (event) => {
-      const color = ref('');
-      
-      if(event) {
-        
-        if(event.status_id === 1){
-          color.value = 'green';
-        } else if(event.status_id === 2){
-          color.value = 'yellow';
-        } else if(event.status_id === 3){
-          color.value = 'red';
-        }
+      if (!event) return;
 
-        mapComponent.value?.updateRoadColor(event.road_id, event.direction, color.value);
+      const color = event.status_id === 1 ? 'green' : 
+                    event.status_id === 2 ? 'yellow' : 
+                    event.status_id === 3 ? 'red' : '';
+      
+      if (!color) return;
+    
+      // Update map immediately
+      mapComponent.value?.updateRoadColor(event.road_id, event.direction, color);
+      
+      // Update local state without triggering rerenders
+      const roadIndex = databaseStore.roads.findIndex(r => 
+        r.id.toString() === event.road_id.toString()
+      );
+    
+      if (roadIndex !== -1) {
+        // Update store data
+        databaseStore.roads[roadIndex] = {
+          ...databaseStore.roads[roadIndex],
+          [event.direction]: {
+            ...databaseStore.roads[roadIndex][event.direction],
+            status_id: event.status_id
+          }
+        };
+    
+        // Update processed roads
+        const processedRoad = processRoad(databaseStore.roads[roadIndex]);
+        processedRoads.value[roadIndex] = processedRoad;
+    
+        // Update active road if needed
+        if (activeRoad.value?.properties?.id.toString() === event.road_id.toString()) {
+          activeRoad.value = {
+            ...activeRoad.value,
+            [`${event.direction}Color`]: color
+          };
+        }
       }
     });
 
     window.Echo.channel('update-road')
       .listen('.road.updated', async (event) => {
         if (event) {
-           await databaseStore.fetchData();
-           processedRoads.value = databaseStore.roads.map(processRoad);
-           await mapComponent.value?.reloadMapData(processedRoads.value);
+          await databaseStore.fetchData();
+          processedRoads.value = databaseStore.roads.map(processRoad);
+          await mapComponent.value?.reloadMapData(processedRoads.value);
         }
 
         closeEditModal();
