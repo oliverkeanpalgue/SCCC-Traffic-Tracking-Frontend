@@ -41,6 +41,29 @@
                     <option v-for="type in ROAD_TYPES" :key="type.id" :value="String(type.id)">{{ type.name }}</option>
                   </select>
                 </div>
+
+                <!-- ditoy image uploadingss  -->
+                <div class="mb-4">
+                  <label for="roadImage" class="block text-sm font-medium mb-2">Upload Image</label>
+
+                  <div class="flex items-center justify-center w-full">
+                    <label for="roadImage"
+                      class="flex flex-col items-center justify-center w-full h-38 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                      <div v-if="!imagePreview" class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                          <span class="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                      </div>
+
+                      <!-- image preview -->
+                      <div v-else class="w-full h-full bg-gray-200 rounded-lg">
+                        <img :src="imagePreview" alt="Road Image Preview" class="object-cover w-full h-full rounded-lg" />
+                      </div>
+                    </label>
+                    <input id="roadImage" @change="handleImageChange" type="file" class="hidden" />
+                  </div>
+
+                </div>
               </div>
 
               <!-- Right column: Coordinates with toggle -->
@@ -164,8 +187,21 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useDatabaseStore } from '../../stores/databaseStore'
+
+async function handleImageChange(img) {
+  const file = img.target.files[0];
+  if (file) {
+    imagePreview.value = URL.createObjectURL(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      roadImage.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
 
 // Configuration
 const ROAD_TYPES = [
@@ -198,20 +234,23 @@ const emit = defineEmits(['close', 'roadAdded'])
 // Data modification
 async function createRoad() {
   try {
-    showConfirmation.value = false
-    isSaving.value = true
-    saveError.value = ''
+    showConfirmation.value = false;
+    isSaving.value = true;
+    saveError.value = '';
 
-    const validationError = validateForm()
+    const validationError = validateForm();
     if (validationError) {
-      saveError.value = validationError
-      return
+      saveError.value = validationError;
+      return;
     }
 
     const roadData = {
       road_name: roadName.value.trim(),
-      road_type_id: parseInt(roadTypeId.value)
-    }
+      road_type_id: parseInt(roadTypeId.value),
+      image_path: roadImage.value
+    };
+
+    console.log('Road Data:', roadData)
 
     const inboundCoords = inboundCoordinatesText.value.trim()
       ? JSON.parse(inboundCoordinatesText.value)
@@ -275,6 +314,8 @@ async function saveCoordinates(roadId, inboundCoords, outboundCoords) {
 function resetForm() {
   roadName.value = ''
   roadTypeId.value = ''
+  roadImage.value = null
+  imagePreview.value = ''
   inboundCoordinatesText.value = ''
   outboundCoordinatesText.value = ''
   inboundValidationError.value = ''
@@ -413,6 +454,8 @@ const selectedDirection = ref(DIRECTION_INBOUND)
 const isSaving = ref(false)
 const saveError = ref('')
 const showConfirmation = ref(false)
+const roadImage = ref(null)
+const imagePreview = ref('')
 
 // Computed properties
 const getCurrentCoordinatesText = computed({

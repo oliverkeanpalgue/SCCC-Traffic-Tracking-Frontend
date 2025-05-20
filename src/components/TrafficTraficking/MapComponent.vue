@@ -430,6 +430,8 @@ const showRoadPopup = (feature, lngLat) => {
     directionText: `${feature.properties.direction?.charAt(0).toUpperCase() + feature.properties.direction?.slice(1) || ""} Traffic`,
     trafficStatus: feature.properties.trafficStatus || "",
     roadType: currentRoadData?.properties?.roadType || feature.properties.roadType || "Street",
+    roadImage: currentRoadData?.image_path || feature.image_path,
+
   });
 
   const container = createPopupContainer(roadId, roadNameToUse);

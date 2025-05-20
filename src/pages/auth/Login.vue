@@ -42,16 +42,7 @@ function submit() {
   if (!data.value.password) {
     errors.value.password = ["Password is required"];
     hasErrors = true;
-  } else {
-    if (!passwordRegex.test(data.value.password)) {
-      errors.value.password = ["Password must contain special characters, letters and numbers"];
-      hasErrors = true;
-    }
-    if (data.value.password.length < 8) {
-      errors.value.password = ["Password must be at least 8 characters long"];
-      hasErrors = true;
-    }
-  }
+  } 
 
   if (hasErrors) {
     return;

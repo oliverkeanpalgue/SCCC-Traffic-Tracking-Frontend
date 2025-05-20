@@ -50,7 +50,7 @@
       <!-- Add Road button -->
       <div
         class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] ml-[1000px] p-1 rounded-xl">
-        <button @click="openAddRoadModal" class="w-full flex items-center justify-between p-2 rounded">
+        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
           <span class="font-medium">Add Road</span>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd"
@@ -359,8 +359,8 @@ onMounted(async () => {
       }
     });
 
-    window.Echo.channel('delete-road')
-      .listen('.road.deleted', async (event) => {
+    window.Echo.channel('update-road')
+      .listen('.road.updated', async (event) => {
         if (event) {
            await databaseStore.fetchData();
            processedRoads.value = databaseStore.roads.map(processRoad);

@@ -12,6 +12,8 @@ const ROAD_TYPES = [
 ];
 const REFRESH_DELAY = 100;
 
+const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
 // Data retrieval
 const databaseStore = useDatabaseStore();
 const emit = defineEmits(['close', 'save']);
@@ -23,7 +25,8 @@ const props = defineProps({
     default: () => ({
       roadId: null,
       roadName: '',
-      road_type_id: null
+      road_type_id: null,
+      roadImage: ''
     })
   }
 });
@@ -34,6 +37,18 @@ const roadTypeId = ref('');
 const selectedDirection = ref('inbound');
 const coordinatesText = ref('');
 const roadImage = ref('');
+const imagePreview = computed(() => {
+  if (roadImage.value) {
+    if (roadImage.value.startsWith('data:')) {
+      // For newly uploaded images
+      return roadImage.value;
+    } else {
+      // For existing images from database
+      return `${VITE_API_BASE_URL}/storage/road_images/${roadImage.value}`;
+    }
+  }
+  return null;
+});
 
 // UI state
 const isSaving = ref(false);
@@ -47,6 +62,20 @@ const showConfirmation = ref(false);
 function getRoadId() {
   return props.road.roadId || props.road.id;
 }
+
+async function handleImageChange(img) {
+  const file = img.target.files[0];
+  if (file) {
+    imagePreview.value = URL.createObjectURL(file);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      roadImage.value = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
 
 // Fetch road coordinates
 async function loadCoordinates() {
@@ -104,7 +133,8 @@ async function handleSave() {
 
     const roadData = {
       road_name: roadName.value.trim(),
-      ...(roadTypeId.value && { road_type_id: parseInt(roadTypeId.value) })
+      ...(roadTypeId.value && { road_type_id: parseInt(roadTypeId.value) }),
+      ...(roadImage.value && { image_path: roadImage.value }) // Add image data
     };
 
     // Update road info
@@ -161,6 +191,7 @@ function handleSuccessfulSave(roadId, coordinatesUpdated) {
     roadId,
     roadName: roadName.value,
     roadTypeId: roadTypeId.value || null,
+    roadImage: roadImage.value,
     coordinatesUpdated,
     __refresh: true,
     __closeAllPopups: true,
@@ -171,7 +202,7 @@ function handleSuccessfulSave(roadId, coordinatesUpdated) {
   handleClose();
 
   // Refresh page to ensure state consistency
-  setTimeout(() => window.location.reload(), REFRESH_DELAY);
+  //setTimeout(() => window.location.reload(), REFRESH_DELAY);
 }
 
 // Process save errors
@@ -191,6 +222,7 @@ function resetForm() {
   const road = props.road;
   roadName.value = road.roadName || road.road_name || '';
   roadTypeId.value = extractRoadTypeId(road);
+  roadImage.value = road.roadImage || ''; 
   selectedDirection.value = 'inbound';
   saveSuccess.value = false;
   saveError.value = '';
@@ -305,6 +337,8 @@ onMounted(() => {
   if (props.show) {
     loadCoordinates();
   }
+
+  console.log(roadImage.value);
 });
 </script>
 
@@ -353,11 +387,27 @@ onMounted(() => {
 
                 <!-- Preview Image -->
                 <div class="mb-4">
-                  <p class="text-sm font-medium mb-1">Preview</p>
-                  <div class="w-full h-[148px] bg-gray-800 rounded overflow-hidden flex items-center justify-center">
-                    <img v-if="roadImage" :src="roadImage" alt="Road Preview" class="w-full h-full object-cover" />
-                    <span v-else class="text-gray-500 text-sm">No image available</span>
+                  <label for="roadImage" class="block text-sm font-medium mb-2">Road Image</label>
+
+                  <div class="flex items-center justify-center w-full">
+                    <label for="roadImage"
+                      class="flex flex-col items-center justify-center w-full h-38 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600">
+                      <div v-if="!imagePreview" class="flex flex-col items-center justify-center pt-5 pb-6">
+                        <p class="mb-2 text-sm text-gray-500 dark:text-gray-400">
+                          <span class="font-semibold">Click to upload</span> or drag and drop
+                        </p>
+                        
+                      </div>
+
+                      <!-- image preview -->
+                      <div v-else class="w-full h-full">
+                        <img :src="imagePreview" class="w-full h-full object-cover rounded-lg" 
+                             alt="Road image preview" />
+                      </div>
+                    </label>
+                    <input id="roadImage" @change="handleImageChange" type="file" class="hidden" />
                   </div>
+
                 </div>
               </div>
 
