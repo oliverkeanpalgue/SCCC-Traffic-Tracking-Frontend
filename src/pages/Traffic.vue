@@ -2,7 +2,7 @@
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
     <Navbar />
   </div>
-  <div class="flex flex-row p-3 gap-2 h-full bg-[#1b1a1a]">
+  <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
     <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
@@ -15,7 +15,7 @@
       </div>
 
       <!-- Map legend -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] ml-[1000px] p-4 rounded-xl">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] right-4 p-4 rounded-xl">
         <div class="flex flex-col">
           <div v-for="(color, status) in LEGEND_ITEMS" :key="status" class="flex gap-4 items-center">
             <div class="w-[15px] h-[15px] rounded-xs" :style="{ backgroundColor: color.hex }"></div>
@@ -24,8 +24,22 @@
         </div>
       </div>
 
+      <!-- Add Road button -->
+      <div
+        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
+        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
+          <span class="font-medium">Add Road</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+
+
       <!-- Map style selector -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] ml-[1000px] p-4 rounded-xl">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] right-4 p-4 rounded-xl">
         <div class="text-sm font-bold mb-2">Map Style</div>
         <div class="relative map-style-dropdown">
           <div @click="toggleStyleDropdown"
@@ -45,19 +59,6 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Add Road button -->
-      <div
-        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] ml-[1000px] p-1 rounded-xl">
-        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
-          <span class="font-medium">Add Road</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
       </div>
 
       <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="COLOR_MAP" :api-key="MAPBOX_API_KEY"
