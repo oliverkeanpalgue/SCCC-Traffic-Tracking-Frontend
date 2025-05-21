@@ -2,7 +2,7 @@
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
     <Navbar />
   </div>
-  <div class="flex flex-row p-3 gap-2 h-[649px] bg-[#1b1a1a]">
+  <div class="flex flex-row p-3 gap-2 h-full bg-[#1b1a1a]">
     <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
