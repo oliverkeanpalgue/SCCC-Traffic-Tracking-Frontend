@@ -5,20 +5,19 @@ const axiosClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
   withXSRFToken: true
-})
+});
 
-// axiosClient.interceptors.request.use(config => {
-//   config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
-// })
-
-axiosClient.interceptors.response.use((response) => {
+axiosClient.interceptors.response.use(response => {
   return response;
 }, error => {
   if (error.response && error.response.status === 401) {
-    router.push({name: 'Login'});
+    const currentRoute = router.currentRoute.value;
+    // Only redirect to login for protected routes
+    if (currentRoute.meta.requiresAuth && !currentRoute.meta.allowGuest) {
+      router.push('/login');
+    }
   }
-
   throw error;
-})
+});
 
-export default axiosClient
+export default axiosClient;
