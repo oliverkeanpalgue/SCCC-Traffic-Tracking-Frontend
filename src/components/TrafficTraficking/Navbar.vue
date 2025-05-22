@@ -29,7 +29,7 @@
                         id="dropdown-user">
                         <div class="px-4 py-3" role="none">
                             <p class="text-sm text-gray-900 dark:text-white" role="none">
-                                Neil Sims
+                                {{ currentUserName }}
                             </p>
                         </div>
                         <ul class="py-1" role="none">
@@ -47,19 +47,35 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import axiosClient from "../../axios.js"; // Adjust the import path as necessary
+import { ref, computed, onMounted } from "vue";
+import { useDatabaseStore } from "../../stores/databaseStore";
+import axiosClient from "../../axios.js";
 
 const isDropdownOpen = ref(false);
+const databaseStore = useDatabaseStore();
 
+const currentUserName = computed(() => {
+  const currentUser = databaseStore.getCurrentUser;
+  if (!currentUser) return 'User';
+  
+  return [
+    currentUser.firstName,
+    currentUser.middleName,
+    currentUser.lastName
+  ].filter(Boolean).join(' ');
+});
 
 function toggleDropdown() {
-    isDropdownOpen.value = !isDropdownOpen.value;
+  isDropdownOpen.value = !isDropdownOpen.value;
 }
 
 function logout() {
-    axiosClient.post('/logout').then(() => {
-        window.location.reload();
-    });
+  axiosClient.post('/logout').then(() => {
+    window.location.reload();
+  });
 }
+
+onMounted(async () => {
+  await databaseStore.fetchCurrentUser();
+});
 </script>

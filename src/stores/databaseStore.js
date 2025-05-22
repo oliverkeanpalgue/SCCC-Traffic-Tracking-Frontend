@@ -22,6 +22,7 @@ export const useDatabaseStore = defineStore("database", {
     roadTypes: [],
     isLoading: false,
     error: null,
+    currentUser: null,
   }),
 
   actions: {
@@ -204,6 +205,19 @@ export const useDatabaseStore = defineStore("database", {
     async refreshRoadData(roadId) {
       await this.fetchData();
       return this.getRoadById(roadId);
+    },
+
+    // Fetch current user
+    async fetchCurrentUser() {
+      try {
+        const headers = this.getAuthHeaders();
+        const response = await axiosClient.get('/api/user', { headers });
+        this.currentUser = response.data;
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching current user:', error);
+        throw error;
+      }
     },
 
     // Helper functions
@@ -403,5 +417,8 @@ export const useDatabaseStore = defineStore("database", {
 
       return [];
     },
+
+    // Get current user
+    getCurrentUser: (state) => state.currentUser,
   },
 });
