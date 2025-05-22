@@ -1,7 +1,8 @@
 import { defineStore } from "pinia";
 import axiosClient from "../axios.js";
+const API_KEY = import.meta.env.VITE_API_KEY;
 
-export const useUserStore = defineStore("user", {
+const useUserStore = defineStore("user", {
   state: () => ({
     user: null,
     loading: false,
@@ -13,7 +14,7 @@ export const useUserStore = defineStore("user", {
   },
 
   actions: {
-    async fetchUser(ignoreError = false) {
+    async fetchUser() {
       try {
         this.loading = true;
         const { data } = await axiosClient.get("/api/user");
@@ -21,15 +22,11 @@ export const useUserStore = defineStore("user", {
         if (data) {
           this.user = data;
           this.isGuest = false;
-          return true;
         }
-        return false;
       } catch (error) {
-        if (!ignoreError) {
-          console.warn("Guest user or failed to fetch:", error);
-        }
-        this.setGuestMode();
-        return false;
+        console.warn("Guest user or failed to fetch:", error);
+        this.user = null;
+        this.isGuest = true;
       } finally {
         this.loading = false;
       }
@@ -41,3 +38,5 @@ export const useUserStore = defineStore("user", {
     }
   },
 });
+
+export default useUserStore;
