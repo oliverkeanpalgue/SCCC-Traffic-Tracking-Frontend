@@ -35,7 +35,7 @@
                         <ul class="py-1" role="none">
                             <li>
                                 <button @click="logout"
-                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    class="block w-full cursor-pointer text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
                                     role="menuitem">Sign out</button>
                             </li>
                         </ul>
@@ -58,7 +58,6 @@ function toggleDropdown() {
 }
 
 function logout() {
-    console.log("Logging out...");
     axiosClient.post('/logout').then(() => {
         window.location.reload();
     });
