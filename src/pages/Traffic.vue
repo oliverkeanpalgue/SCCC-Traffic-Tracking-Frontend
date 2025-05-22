@@ -113,6 +113,7 @@ const processedRoads = ref([]);
 const activeRoad = ref(null);
 const showStyleDropdown = ref(false);
 const selectedMapStyle = ref(MAP_STYLES.Dark);
+const lastLocalUpdate = ref(null);
 
 const isLoading = computed(() => {
   return (
@@ -283,6 +284,15 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
   try {
     const statusId = COLOR_TO_STATUS[color];
     
+    // Add a timestamp to track local changes
+    const updateTimestamp = Date.now();
+    // Store the update info in component
+    lastLocalUpdate.value = {
+      roadId: roadId.toString(),
+      direction,
+      timestamp: updateTimestamp
+    };
+    
     // Update local state immediately
     updateLocalState(roadId, direction, color, statusId);
     
@@ -349,6 +359,17 @@ onMounted(async () => {
 
     window.Echo.channel('traffic-update').listen('.direction.status.updated', (event) => {
       if (!event) return;
+
+      // Check if this is a response to our own recent update
+      const isLocalUpdate = lastLocalUpdate.value && 
+        lastLocalUpdate.value.roadId === event.road_id.toString() &&
+        lastLocalUpdate.value.direction === event.direction &&
+        Date.now() - lastLocalUpdate.value.timestamp < 5000; // 5 second window
+
+      // Skip the update if it's our own change
+      if (isLocalUpdate) {
+        return;
+      }
 
       const color = event.status_id === 1 ? 'green' : 
                     event.status_id === 2 ? 'yellow' : 
