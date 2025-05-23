@@ -1,5 +1,5 @@
 <template>
-  <div v-if="activeRoad"
+  <div v-if="activeRoad && isLoggedIn"
     class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-[102px] left-[930px] -translate-x-1/2 p-5 rounded-xl"
     @click.stop>
     <div class="flex flex-col gap-4">
@@ -42,6 +42,8 @@
 <script setup>
 import { CdChromeClose } from '@kalimahapps/vue-icons';
 import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
+import useUserStore from '../../stores/user';
 
 // Configuration
 const DIRECTIONS = ['inbound', 'outbound'];
@@ -84,4 +86,8 @@ const updateTrafficLevel = (roadId, direction, color) => {
 
 // Close modal
 const closeEditModal = () => emit('closeEditModal');
+
+// Add user store integration
+const userStore = useUserStore();
+const { isLoggedIn } = storeToRefs(userStore);
 </script>
