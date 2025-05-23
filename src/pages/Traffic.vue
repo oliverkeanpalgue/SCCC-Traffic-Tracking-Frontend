@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
-    <Navbar />
+    <Navbar :isLoggedIn="isLoggedIn"/>
   </div>
   <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
     <Sidebar 
