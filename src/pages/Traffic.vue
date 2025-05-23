@@ -3,7 +3,13 @@
     <Navbar />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
-    <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
+    <Sidebar 
+      ref="sideBar" 
+      :intersections="normalizedRoads" 
+      :colorMap="COLOR_MAP" 
+      :isLoggedIn="isLoggedIn"
+      @openEditModal="openEditModal" 
+    />
 
     <div class="w-[77%] relative">
       <!-- Loading overlay -->
@@ -25,21 +31,28 @@
       </div>
 
       <!-- Add Road button -->
-      <div
-        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
-        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
-          <span class="font-medium">Add Road</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
-      </div>
+      <template v-if="isLoggedIn !== null">
+        <div
+          v-if="isLoggedIn"
+          class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
+          <button 
+            @click="openAddRoadModal" 
+            class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
+            <span class="font-medium">Add Road</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      </template>
 
 
       <!-- Map style selector -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] right-4 p-4 rounded-xl">
+      <div 
+        class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 right-4 p-4 rounded-xl"
+        :class="isLoggedIn ? 'mt-[175px]' : 'mt-[120px]'">
         <div class="text-sm font-bold mb-2">Map Style</div>
         <div class="relative map-style-dropdown">
           <div @click="toggleStyleDropdown"
@@ -120,6 +133,7 @@ const activeRoad = ref(null);
 const showStyleDropdown = ref(false);
 const selectedMapStyle = ref(MAP_STYLES.Dark);
 const lastLocalUpdate = ref(null);
+const isLoggedIn = ref(false); // Move this here
 
 const isLoading = computed(() => {
   return (
@@ -446,15 +460,13 @@ onMounted(async () => {
   });
 });
 
-// Add authentication state
-const isLoggedIn = ref(false);
-
 // Check authentication status
 const checkAuthStatus = async () => {
   try {
-    const { data } = await axiosClient.get("/api/user");
-    isLoggedIn.value = !!data;
+    const response = await axiosClient.get("/api/user");
+    isLoggedIn.value = response.data ? true : false;
   } catch (error) {
+    console.error("Auth check failed:", error);
     isLoggedIn.value = false;
   }
 };
