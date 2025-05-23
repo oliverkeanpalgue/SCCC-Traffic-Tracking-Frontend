@@ -42,31 +42,34 @@
 <script setup>
 import { CdChromeClose } from '@kalimahapps/vue-icons';
 import { ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import useUserStore from '../../stores/user';
 
-// Configuration
+// Constants
 const DIRECTIONS = ['inbound', 'outbound'];
-const TRAFFIC_LABELS = { 'green': 'Light', 'yellow': 'Moderate', 'red': 'Heavy' };
+const TRAFFIC_LABELS = {
+  green: 'Light',
+  yellow: 'Moderate',
+  red: 'Heavy'
+};
 
-// Data retrieval
-// Component props definition
+// Props
 const props = defineProps({ 
   activeRoad: Object, 
-  colorMap: Object 
+  colorMap: Object,
+  isLoggedIn: Boolean
 });
+
+// State
+const activeDropdown = ref(null);
 
 // Get traffic status color
 const getTrafficStatusColor = (direction) => {
   if (!props.activeRoad || !props.colorMap) return '';
-  return props.colorMap[props.activeRoad[direction + 'Color']] || '';
+  const colorName = props.activeRoad[`${direction}Color`];
+  return props.colorMap[colorName] || '';
 };
 
 // Data modification
 const emit = defineEmits(["changeTrafficLevel", "closeEditModal"]);
-
-// State management
-const activeDropdown = ref(null);
 
 // Helper functions
 // Format direction name
@@ -86,8 +89,4 @@ const updateTrafficLevel = (roadId, direction, color) => {
 
 // Close modal
 const closeEditModal = () => emit('closeEditModal');
-
-// Add user store integration
-const userStore = useUserStore();
-const { isLoggedIn } = storeToRefs(userStore);
 </script>

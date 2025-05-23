@@ -65,8 +65,13 @@
         :map-style="selectedMapStyle" :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady"
         @update="handleRoadUpdate" />
 
-      <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
-        @changeTrafficLevel="changeTrafficLevel" />
+      <TrafficLevelModal 
+        :active-road="activeRoad" 
+        :color-map="COLOR_MAP" 
+        :is-logged-in="isLoggedIn"
+        @closeEditModal="closeEditModal"
+        @changeTrafficLevel="changeTrafficLevel" 
+      />
 
       <!-- Add Road Modal Component -->
       <AddRoadModal :show="showAddRoadModal" @close="closeAddRoadModal" @roadAdded="handleRoadAdded" />
@@ -82,6 +87,7 @@ import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
+import axiosClient from "../axios.js";
 
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
@@ -154,6 +160,7 @@ const processRoad = (road) => {
     geometry: road.geometry || {},
     properties: {
       ...road.properties,
+      id: road.id, // Make sure ID is included in properties
       name: normalizedRoadName,
       roadName: normalizedRoadName,
       roadType: roadTypeName,
@@ -353,6 +360,9 @@ onMounted(async () => {
   isLoading.value = true;
 
   try {
+    // Check authentication status first
+    await checkAuthStatus();
+    
     // Load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
@@ -435,4 +445,17 @@ onMounted(async () => {
     }
   });
 });
+
+// Add authentication state
+const isLoggedIn = ref(false);
+
+// Check authentication status
+const checkAuthStatus = async () => {
+  try {
+    const { data } = await axiosClient.get("/api/user");
+    isLoggedIn.value = !!data;
+  } catch (error) {
+    isLoggedIn.value = false;
+  }
+};
 </script>
