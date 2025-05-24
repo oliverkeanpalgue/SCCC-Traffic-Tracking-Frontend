@@ -266,6 +266,7 @@ function submit() {
     <div v-if="isLoading" class="h-[72vh] flex flex-col items-center justify-center">
       <Loading />
     </div>
+    
     <!-- Main Container -->
     <div v-else class="flex flex-col md:flex-row items-center gap-1 z-10">
       <!-- City Logo and Title -->
