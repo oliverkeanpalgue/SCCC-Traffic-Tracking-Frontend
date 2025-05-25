@@ -19,15 +19,6 @@ const routes = [
       { path: '/', name: 'Dashboard', component: Traffic},
       { path: '/users', name: 'Users', component: Users},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
-      {
-        path: '/password-reset',
-        name: 'PasswordReset',
-        component: ForgotPassword,
-        props: route => ({
-          token: route.query.token,
-          email: route.query.email
-        })
-      },
     ],
     beforeEnter: async (to, from, next) => {
       try {
