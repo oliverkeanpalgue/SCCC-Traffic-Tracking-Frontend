@@ -41,28 +41,25 @@ const resendEmail = () => {
 </script>
 
 <template>
-    <div class="flex flex-col items-center justify-center min-h-screen w-full bg-dark">
-        <div class="absolute inset-0 bg-dark/50 z-0"></div>
+    <div class="bg-dark flex flex-col items-center justify-center min-h-screen w-full relative">
+        <div class="absolute inset-0 bg-black opacity-60 z-0"></div>
 
-        <div class="animate-rotate-border rounded-3xl p-1.5 transition-all duration-500 ease-out bg-conic/[from_var(--border-angle)] from-dark/30 via-dark/50 to-dark/30">
-            <div
-                class="bg-dark/80 backdrop-blur-lg rounded-3xl p-12 flex flex-col items-center justify-center text-white">
-                <img src="/img/Logo.png" alt="City of Baguio Logo" class="w-40 mb-6" />
-                <h1 class="text-3xl font-bold mb-4">EMAIL NOT VERIFIED</h1>
-                <p class="text-md">
-                    Please verify your email address before accessing this page.
-                </p>
-                <div class="flex flex-row w-full items-center justify-center gap-2 mt-8">
-                    <button @click="goLogout"
-                        class="h-10 py-2 px-4 text-center cursor-pointer underline text-white hover:text-gray-300 font-medium transition-all duration-300">
-                        Back to Login
-                    </button>
-                    <button @click="resendEmail"
-                        class="h-10 py-2 px-4 text-center cursor-pointer rounded-lg bg-primary text-white hover:bg-primary-100 font-medium shadow-md transition-all duration-300 ml-2">
-                        Send Verification Email
-                    </button>
-                </div>
-            </div>
+        <div class="relative z-10 rounded-3xl p-10 bg-black/80 backdrop-blur-md shadow-lg max-w-sm flex items-center justify-center flex-col">
+            <img src="/img/Logo.png" alt="Logo" class="w-24 h-24 mb-6" />
+            <h1 class="text-3xl font-semibold text-white mb-2">Email Not Verified</h1>
+            <p class="text-white text-center mb-6">Oops! Your email is not verified yet. Please verify your email to continue.</p>
+            <div class="flex flex-col space-y-2">
+                <button @click="resendEmail" class="mt-3 cursor-pointer w-full px-6 py-2 bg-primary hover:bg-primary-100 text-white rounded-md shadow transition transform hover:scale-105">
+
+                    Send Verification Email
+                </button>
+                <button @click="goLogout" class="mt-3 w-full cursor-pointer underline text-white rounded-md shadow transition transform hover:scale-105">
+                    Back to Login
+                </button>
+                
+            </div> 
         </div>
     </div>
 </template>
+
+
