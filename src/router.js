@@ -46,6 +46,15 @@ const routes = [
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
+  {
+        path: '/password-reset',
+        name: 'PasswordReset',
+        component: ForgotPassword,
+        props: (route) => ({
+          token: route.query.token,
+          email: route.query.email
+        })
+      },
   { path: '/email_verified', name: 'EmailVerified', component: EmailVerified },
   { path: '/email_not_verified', name: 'EmailNotVerified', component: EmailNotVerified },
   { path: '/no_access', name: 'NoAccess', component: NoAccess },
