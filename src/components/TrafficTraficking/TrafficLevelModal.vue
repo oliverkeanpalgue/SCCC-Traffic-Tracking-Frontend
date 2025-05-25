@@ -1,5 +1,5 @@
 <template>
-  <div v-if="activeRoad && isLoggedIn"
+  <div v-if="activeRoad"
     class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-[102px] left-[930px] -translate-x-1/2 p-5 rounded-xl"
     @click.stop>
     <div class="flex flex-col gap-4">
@@ -43,33 +43,28 @@
 import { CdChromeClose } from '@kalimahapps/vue-icons';
 import { ref } from 'vue';
 
-// Constants
+// Configuration
 const DIRECTIONS = ['inbound', 'outbound'];
-const TRAFFIC_LABELS = {
-  green: 'Light',
-  yellow: 'Moderate',
-  red: 'Heavy'
-};
+const TRAFFIC_LABELS = { 'green': 'Light', 'yellow': 'Moderate', 'red': 'Heavy' };
 
-// Props
+// Data retrieval
+// Component props definition
 const props = defineProps({ 
   activeRoad: Object, 
-  colorMap: Object,
-  isLoggedIn: Boolean
+  colorMap: Object 
 });
-
-// State
-const activeDropdown = ref(null);
 
 // Get traffic status color
 const getTrafficStatusColor = (direction) => {
   if (!props.activeRoad || !props.colorMap) return '';
-  const colorName = props.activeRoad[`${direction}Color`];
-  return props.colorMap[colorName] || '';
+  return props.colorMap[props.activeRoad[direction + 'Color']] || '';
 };
 
 // Data modification
 const emit = defineEmits(["changeTrafficLevel", "closeEditModal"]);
+
+// State management
+const activeDropdown = ref(null);
 
 // Helper functions
 // Format direction name

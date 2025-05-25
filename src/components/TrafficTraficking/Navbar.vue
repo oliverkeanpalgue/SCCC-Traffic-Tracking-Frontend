@@ -16,22 +16,20 @@
                 </div>
 
                 <div class="flex items-center relative">
-                    <template v-if="props.isLoggedIn">
-                        <!-- Existing logged-in user dropdown -->
-                        <div>
-                            <button type="button"
-                                class="flex cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-                                @click="toggleDropdown" aria-expanded="false">
-                                <img class="w-8 h-8 rounded-full" src="/img/Logo.png" alt="user photo" />
-                            </button>
-                        </div>
+                    <div>
+                        <button type="button"
+                            class="flex cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                            @click="toggleDropdown" aria-expanded="false">
+                            <img class="w-8 h-8 rounded-full" src="/img/Logo.png" alt="user photo" />
+                        </button>
+                    </div>
 
                     <div v-show="isDropdownOpen"
                         class="absolute z-50 my-4 border border-1 border-gray-800 text-base list-none bg-[#1b1a1a] divide-y divide-gray-100 right-10 top-10 w-58 rounded-sm shadow-sm"
                         id="dropdown-user">
                         <div class="px-4 py-3" role="none">
                             <p class="text-sm text-gray-900 dark:text-white" role="none">
-                                Neil Sims
+                                {{ currentUserName }}
                             </p>
                         </div>
                         <ul class="py-1" role="none">
@@ -49,19 +47,35 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
-import axiosClient from "../../axios.js"; // Adjust the import path as necessary
+import { ref, computed, onMounted } from "vue";
+import { useDatabaseStore } from "../../stores/databaseStore";
+import axiosClient from "../../axios.js";
 
 const isDropdownOpen = ref(false);
+const databaseStore = useDatabaseStore();
 
+const currentUserName = computed(() => {
+  const currentUser = databaseStore.getCurrentUser;
+  if (!currentUser) return 'User';
+  
+  return [
+    currentUser.firstName,
+    currentUser.middleName,
+    currentUser.lastName
+  ].filter(Boolean).join(' ');
+});
 
 function toggleDropdown() {
-    isDropdownOpen.value = !isDropdownOpen.value;
+  isDropdownOpen.value = !isDropdownOpen.value;
 }
 
 function logout() {
-    axiosClient.post('/logout').then(() => {
-        window.location.reload();
-    });
+  axiosClient.post('/logout').then(() => {
+    window.location.reload();
+  });
 }
+
+onMounted(async () => {
+  await databaseStore.fetchCurrentUser();
+});
 </script>

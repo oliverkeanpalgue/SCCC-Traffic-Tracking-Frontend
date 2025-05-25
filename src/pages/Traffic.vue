@@ -1,15 +1,9 @@
 <template>
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
-    <Navbar :isLoggedIn="isLoggedIn"/>
+    <Navbar />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
-    <Sidebar 
-      ref="sideBar" 
-      :intersections="normalizedRoads" 
-      :colorMap="COLOR_MAP" 
-      :isLoggedIn="isLoggedIn"
-      @openEditModal="openEditModal" 
-    />
+    <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
       <!-- Loading overlay -->
@@ -31,28 +25,21 @@
       </div>
 
       <!-- Add Road button -->
-      <template v-if="isLoggedIn !== null">
-        <div
-          v-if="isLoggedIn"
-          class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
-          <button 
-            @click="openAddRoadModal" 
-            class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
-            <span class="font-medium">Add Road</span>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd"
-                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                clip-rule="evenodd" />
-            </svg>
-          </button>
-        </div>
-      </template>
+      <div
+        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
+        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
+          <span class="font-medium">Add Road</span>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
 
 
       <!-- Map style selector -->
-      <div 
-        class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 right-4 p-4 rounded-xl"
-        :class="isLoggedIn ? 'mt-[175px]' : 'mt-[120px]'">
+      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] right-4 p-4 rounded-xl">
         <div class="text-sm font-bold mb-2">Map Style</div>
         <div class="relative map-style-dropdown">
           <div @click="toggleStyleDropdown"
@@ -78,13 +65,8 @@
         :map-style="selectedMapStyle" :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady"
         @update="handleRoadUpdate" />
 
-      <TrafficLevelModal 
-        :active-road="activeRoad" 
-        :color-map="COLOR_MAP" 
-        :is-logged-in="isLoggedIn"
-        @closeEditModal="closeEditModal"
-        @changeTrafficLevel="changeTrafficLevel" 
-      />
+      <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
+        @changeTrafficLevel="changeTrafficLevel" />
 
       <!-- Add Road Modal Component -->
       <AddRoadModal :show="showAddRoadModal" @close="closeAddRoadModal" @roadAdded="handleRoadAdded" />
@@ -100,7 +82,6 @@ import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
-import axiosClient from "../axios.js";
 
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
@@ -133,7 +114,6 @@ const activeRoad = ref(null);
 const showStyleDropdown = ref(false);
 const selectedMapStyle = ref(MAP_STYLES.Dark);
 const lastLocalUpdate = ref(null);
-const isLoggedIn = ref(false); // Move this here
 
 const isLoading = computed(() => {
   return (
@@ -174,7 +154,6 @@ const processRoad = (road) => {
     geometry: road.geometry || {},
     properties: {
       ...road.properties,
-      id: road.id, // Make sure ID is included in properties
       name: normalizedRoadName,
       roadName: normalizedRoadName,
       roadType: roadTypeName,
@@ -374,9 +353,6 @@ onMounted(async () => {
   isLoading.value = true;
 
   try {
-    // Check authentication status first
-    await checkAuthStatus();
-    
     // Load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
@@ -459,15 +435,4 @@ onMounted(async () => {
     }
   });
 });
-
-// Check authentication status
-const checkAuthStatus = async () => {
-  try {
-    const response = await axiosClient.get("/api/user");
-    isLoggedIn.value = response.data ? true : false;
-  } catch (error) {
-    console.error("Auth check failed:", error);
-    isLoggedIn.value = false;
-  }
-};
 </script>
