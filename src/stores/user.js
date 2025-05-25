@@ -5,7 +5,6 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 const useUserStore = defineStore("user", {
   state: () => ({
     user: null,
-    inventoryAccess: null,
     loading: false,
   }),
   actions: {
@@ -16,24 +15,9 @@ const useUserStore = defineStore("user", {
           headers: { "x-api-key": API_KEY },
         });
         this.user = data;
-
-        if (this.user && this.user.id) {
-          const accessRes = await axiosClient.get("/api/inventory_access", {
-            headers: { "x-api-key": API_KEY },
-          });
-
-          this.inventoryAccess = accessRes.data.find(
-            (access) => access.user_id === this.user.id
-          );
-
-        } else {
-          this.inventoryAccess = null;
-          router.push("/login");
-        }
       } catch (error) {
         console.warn("⚠️ User not logged in or failed to fetch:", error);
         this.user = null;
-        this.inventoryAccess = null;
       } finally {
         this.loading = false;
       }

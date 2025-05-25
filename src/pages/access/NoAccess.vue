@@ -7,7 +7,7 @@ import { GlGoBack } from '@kalimahapps/vue-icons';
 const router = useRouter();
 
 const goHome = () => {
-    router.push('/');
+    router.push('/login');
 };
 </script>
 
@@ -32,7 +32,7 @@ const goHome = () => {
                 <button @click="goHome"
                     class="mt-6 px-5 py-2 cursor-pointer rounded-lg bg-red-700 hover:bg-green-700 hover:scale-105 text-white font-medium shadow-md transition-all duration-300 flex items-center gap-2">
                     <GlGoBack class="w-5 h-5" />
-                    Back to Dashboard
+                    Back to Login
                 </button>
             </div>
         </div>
