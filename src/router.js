@@ -17,8 +17,22 @@ const routes = [
     path: "/",
     component: Traffic,
     children: [
-      { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
-      { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
+      { 
+        path: '', 
+        name: 'Dashboard', 
+        component: Traffic,
+        meta: { 
+          allowGuest: true // Allow guest access by default
+        }
+      },
+      { 
+        path: '/users', 
+        name: 'Users', 
+        component: Users, 
+        meta: { 
+          requiresAuth: true 
+        }
+      },
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
       {
         path: '/password-reset',
@@ -31,22 +45,28 @@ const routes = [
       },
     ],
     beforeEnter: async (to, from, next) => {
-      try {
-        const userStore = useUserStore();
-        await userStore.fetchUser();
-        if (userStore.user.for_traffic === 0){
-          console.log('userStore.user.for_traffic', userStore.user.for_traffic)
-          // next('/no_inventory_access');
-        } 
-        else if (userStore.user.email_verified_at === null){
-          console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
-          next('/email_not_verified');
-        } 
-        next();
-      } catch (error) {
-        next('/login');
+      const userStore = useUserStore();
+
+      // If route allows guests, continue without auth check
+      if (to.meta.allowGuest) {
+        userStore.setGuestMode();
+        return next();
       }
-    },
+
+      // Only try to fetch user for protected routes
+      if (to.meta.requiresAuth) {
+        try {
+          const isAuthenticated = await userStore.fetchUser(true);
+          if (!isAuthenticated) {
+            return next('/login');
+          }
+        } catch (error) {
+          return next('/login');
+        }
+      }
+
+      next();
+    }
   },
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'Signup', component: Signup },
@@ -63,36 +83,24 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach(async (to, from, next) => {
-  const userStore = useUserStore();
-
-  // No special permission needed, allow
-  if (!to.meta.permission) {
+// Global navigation guard
+router.beforeEach((to, from, next) => {
+  // Allow guest access to public routes
+  if (to.meta.allowGuest) {
     return next();
   }
 
-  try {
-    // Make sure user and access info is loaded
-    if (!userStore.user || !userStore.inventoryAccess) {
-      await userStore.fetchUser();
-      if (!userStore.user) {
-        return next("/login");
-      }
+  // Handle auth pages
+  const authPages = ['/login', '/signup', '/forgotpassword'];
+  if (authPages.includes(to.path)) {
+    const userStore = useUserStore();
+    if (userStore.isLoggedIn) {
+      return next('/');
     }
-
-    const permissionKey = to.meta.permission;
-    const access = userStore.inventoryAccess;
-
-    if (access && access[permissionKey] === 1) {
-      return next();
-    } else {
-      return next({ name: "NoAccess" });
-    }
-  } catch (err) {
-    console.error("Navigation guard error:", err);
-    return next("/login");
+    return next();
   }
-});
 
+  next();
+});
 
 export default router

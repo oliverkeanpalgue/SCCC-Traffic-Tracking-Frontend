@@ -5,39 +5,37 @@ const API_KEY = import.meta.env.VITE_API_KEY;
 const useUserStore = defineStore("user", {
   state: () => ({
     user: null,
-    inventoryAccess: null,
     loading: false,
+    isGuest: true,
   }),
+  
+  getters: {
+    isLoggedIn: (state) => !!state.user && !state.isGuest,
+  },
+
   actions: {
     async fetchUser() {
       try {
         this.loading = true;
-        const { data } = await axiosClient.get("/api/user", {
-          headers: { "x-api-key": API_KEY },
-        });
-        this.user = data;
-
-        if (this.user && this.user.id) {
-          const accessRes = await axiosClient.get("/api/inventory_access", {
-            headers: { "x-api-key": API_KEY },
-          });
-
-          this.inventoryAccess = accessRes.data.find(
-            (access) => access.user_id === this.user.id
-          );
-
-        } else {
-          this.inventoryAccess = null;
-          router.push("/login");
+        const { data } = await axiosClient.get("/api/user");
+        
+        if (data) {
+          this.user = data;
+          this.isGuest = false;
         }
       } catch (error) {
-        console.warn("⚠️ User not logged in or failed to fetch:", error);
+        console.warn("Guest user or failed to fetch:", error);
         this.user = null;
-        this.inventoryAccess = null;
+        this.isGuest = true;
       } finally {
         this.loading = false;
       }
     },
+
+    setGuestMode() {
+      this.user = null;
+      this.isGuest = true;
+    }
   },
 });
 
