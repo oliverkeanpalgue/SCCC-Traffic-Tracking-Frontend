@@ -41,32 +41,24 @@ const resendEmail = () => {
 </script>
 
 <template>
-    <div :style="{
-        backgroundImage: `url(${errorBg})`,
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-    }" class="flex flex-col items-center justify-center min-h-screen w-full">
+    <div class="flex flex-col items-center justify-center min-h-screen w-full bg-dark">
+        <div class="absolute inset-0 bg-dark/50 z-0"></div>
 
-        <div class="absolute inset-0 bg-black/50 z-0"></div>
-
-        <div
-            class="animate-rotate-border rounded-3xl p-1.5 transition-all duration-500 ease-out bg-conic/[from_var(--border-angle)] from-red-900/30 via-red-600 to-red-900/30">
+        <div class="animate-rotate-border rounded-3xl p-1.5 transition-all duration-500 ease-out bg-conic/[from_var(--border-angle)] from-dark/30 via-dark/50 to-dark/30">
             <div
-                class="bg-black/80 backdrop-blur-lg rounded-3xl p-20 flex flex-col items-center justify-center text-white">
-                <FlFilledCalendarQuestionMark class="w-52 h-52 mb-4 text-red-700" />
-                <p class="text-5xl font-bold mb-1">EMAIL NOT VERIFIED</p>
-                <p class="text-xl mt-2">Oops! The page you're looking for doesn't exist.
+                class="bg-dark/80 backdrop-blur-lg rounded-3xl p-12 flex flex-col items-center justify-center text-white">
+                <img src="/img/Logo.png" alt="City of Baguio Logo" class="w-40 mb-6" />
+                <h1 class="text-3xl font-bold mb-4">EMAIL NOT VERIFIED</h1>
+                <p class="text-md">
+                    Please verify your email address before accessing this page.
                 </p>
-                <div class="flex flex-row w-full items-center justify-between gap-2">
-                    <button @click="goLogout()"
-                        class="mt-6 px-5 py-2 w-full text-center cursor-pointer rounded-lg bg-red-700 hover:bg-green-700 hover:scale-105 text-white font-medium shadow-md transition-all duration-300 flex items-center gap-2">
-                        <GlGoBack class="w-5 h-5" />
+                <div class="flex flex-row w-full items-center justify-center gap-2 mt-8">
+                    <button @click="goLogout"
+                        class="h-10 py-2 px-4 text-center cursor-pointer underline text-white hover:text-gray-300 font-medium transition-all duration-300">
                         Back to Login
                     </button>
                     <button @click="resendEmail"
-                        class="mt-6 px-5 py-2 w-full text-center cursor-pointer rounded-lg bg-red-700 hover:bg-green-700 hover:scale-105 text-white font-medium shadow-md transition-all duration-300 flex items-center gap-2">
-                        <GlGoBack class="w-5 h-5" />
+                        class="h-10 py-2 px-4 text-center cursor-pointer rounded-lg bg-primary text-white hover:bg-primary-100 font-medium shadow-md transition-all duration-300 ml-2">
                         Send Verification Email
                     </button>
                 </div>
