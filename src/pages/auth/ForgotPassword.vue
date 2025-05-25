@@ -242,11 +242,11 @@ const phaseOne = () => {
   phaseNum.value = 1
 }
 
-// const phaseTwo = () => {
-//   if (checkEmailExists()) {
-//     phaseNum.value = 2;
-//   }
-// }
+const phaseTwo = () => {
+   if (checkEmailExists()) {
+     phaseNum.value = 2;
+   }
+}
 </script>
 
 <template>
