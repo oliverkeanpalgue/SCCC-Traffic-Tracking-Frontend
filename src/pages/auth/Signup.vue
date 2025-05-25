@@ -41,8 +41,8 @@ const data = ref({
   password: '',
   password_confirmation: '',
   for_911: false,
-  for_inventory: true,
-  for_traffic: false,
+  for_inventory: false,
+  for_traffic: true,
   role: false,
 })
 
