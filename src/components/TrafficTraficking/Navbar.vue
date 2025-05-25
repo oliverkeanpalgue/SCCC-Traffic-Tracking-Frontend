@@ -26,37 +26,22 @@
                             </button>
                         </div>
 
-                        <div v-show="isDropdownOpen"
-                            class="absolute z-50 my-4 border border-1 border-gray-800 text-base list-none bg-[#1b1a1a] divide-y divide-gray-100 right-10 top-10 w-58 rounded-sm shadow-sm"
-                            id="dropdown-user">
-                            <div class="px-4 py-3" role="none">
-                                <p class="text-sm text-gray-900 dark:text-white" role="none">
-                                    {{ currentUserName }}
-                                </p>
-                            </div>
-                            <ul class="py-1" role="none">
-                                <li>
-                                    <button @click="logout"
-                                        class="block w-full cursor-pointer text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
-                                        role="menuitem">Sign out</button>
-                                </li>
-                            </ul>
+                    <div v-show="isDropdownOpen"
+                        class="absolute z-50 my-4 border border-1 border-gray-800 text-base list-none bg-[#1b1a1a] divide-y divide-gray-100 right-10 top-10 w-58 rounded-sm shadow-sm"
+                        id="dropdown-user">
+                        <div class="px-4 py-3" role="none">
+                            <p class="text-sm text-gray-900 dark:text-white" role="none">
+                                Neil Sims
+                            </p>
                         </div>
-                    </template>
-
-                    <!-- New login/register buttons for non-logged in users -->
-                    <template v-else>
-                        <div class="flex gap-4">
-                            <a href="/login"
-                                class="text-white hover:text-underline hover:text-green-500 focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-4 py-2 focus:outline-none">
-                                Login
-                            </a>
-                            <a href="/signup"
-                                class="text-white hover:text-underline hover:text-green-500 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 focus:outline-none">
-                                Register
-                            </a>
-                        </div>
-                    </template>
+                        <ul class="py-1" role="none">
+                            <li>
+                                <button @click="logout"
+                                    class="block w-full cursor-pointer text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white"
+                                    role="menuitem">Sign out</button>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
@@ -64,42 +49,19 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useDatabaseStore } from "../../stores/databaseStore";
-import axiosClient from "../../axios.js";
+import { ref } from "vue";
+import axiosClient from "../../axios.js"; // Adjust the import path as necessary
 
 const isDropdownOpen = ref(false);
-const databaseStore = useDatabaseStore();
 
-const props = defineProps({
-  isLoggedIn: {
-    type: Boolean,
-    default: false
-  }
-});
-
-const currentUserName = computed(() => {
-  const currentUser = databaseStore.getCurrentUser;
-  if (!currentUser) return 'User';
-  
-  return [
-    currentUser.firstName,
-    currentUser.middleName,
-    currentUser.lastName
-  ].filter(Boolean).join(' ');
-});
 
 function toggleDropdown() {
-  isDropdownOpen.value = !isDropdownOpen.value;
+    isDropdownOpen.value = !isDropdownOpen.value;
 }
 
 function logout() {
-  axiosClient.post('/logout').then(() => {
-    window.location.reload();
-  });
+    axiosClient.post('/logout').then(() => {
+        window.location.reload();
+    });
 }
-
-onMounted(async () => {
-  await databaseStore.fetchCurrentUser();
-});
 </script>
