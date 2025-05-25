@@ -169,17 +169,19 @@ const sendResetLink = async () => {
 
 const resetPassword = async () => {
   try {
-    if (!validateForm()) {
+    if (validateForm()) {
       return;
     }
     
     isLoading.value = true;
     const response = await axiosClient.post('/reset-password', {
-      email: data.value.email,
+      email: props.email,
       password: data.value.password,
       password_confirmation: data.value.password_confirmation,
-      token: data.value.token
+      token: props.token
     });
+
+    console.log('Password reset response:', response);
 
     emitter.emit("show-toast", { 
       message: "Password reset successfully!", 
@@ -215,20 +217,16 @@ onMounted(() => {
   const email = urlParams.get('email');
   
   // If we have token and email from URL, go to phase 2
-  if (token && email) {
-    data.value = {
-      ...data.value,
-      token: token,
-      email: email
-    };
+  if (!props.token && props.email) {
+    data.value.token = props.token;
+    data.value.email = props.email;
+    phaseNum.value = 1; // Start with email input phase
+  } else {
     phaseNum.value = 2; // Switch to password reset phase
-  }
+  } 
 
   // Initialize data fetching
   databaseStore.fetchData();
-  refreshInterval = setInterval(() => {
-    databaseStore.fetchData();
-  }, 30000);
 });
 
 const breadcrumbItems = ref([
