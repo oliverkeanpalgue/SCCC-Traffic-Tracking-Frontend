@@ -76,6 +76,29 @@ const handleDelete = () => {
   emit('closeTrafficModal');
   showDeleteModal.value = true;
 };
+
+// Modify the handleDeleteComplete function
+const handleDeleteComplete = (deletedData) => {
+  const updateData = {
+    ...deletedData,
+    __refresh: true,
+    __timestamp: Date.now(),
+    __triggerSource: 'popup',
+    __closeAllPopups: true
+  };
+  
+  // Close both modals and remove the popup
+  emit('closeTrafficModal'); 
+  emit('update', updateData);
+  showDeleteModal.value = false;
+
+  // Find and remove any existing mapboxgl popups
+  const popupElements = document.querySelectorAll('.mapboxgl-popup');
+  popupElements.forEach(elem => {
+    elem.remove();
+  });
+};
+
 const handleCloseModal = () => showEditModal.value = false;
 
 const handleSaveRoad = (updatedRoad) => {
@@ -157,6 +180,7 @@ const handleSaveRoad = (updatedRoad) => {
         :show="showDeleteModal"
         :road="{ roadId, roadName }"
         @close="showDeleteModal = false"
+        @save="handleDeleteComplete"
     />
   </div>
 </template>
