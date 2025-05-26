@@ -197,6 +197,9 @@ const closeEditModal = () => activeRoad.value = null;
 
 // Add Road Modal handlers
 const openAddRoadModal = () => {
+  // Close the traffic level modal first
+  closeEditModal();
+  // Then open the add road modal
   showAddRoadModal.value = true;
 };
 
