@@ -208,12 +208,35 @@ const drawRoute = (road, index) => {
 const updateRoadColor = (roadId, direction, color) => {
   if (!loaded.value || !map.value) return;
 
-  const roadIndex = props.roads.findIndex(r => r.properties.id.toString() === roadId.toString());
-  if (roadIndex === -1) return;
+  // Find the layer that matches this road and direction
+  let targetLayerId = null;
+  for (let i = 0; i < props.roads.length; i++) {
+    const layerId = `route-${i}-${direction}`;
+    if (map.value.getLayer(layerId)) {
+      const source = map.value.getSource(layerId);
+      if (source && String(source._data?.properties?.roadId) === String(roadId)) {
+        targetLayerId = layerId;
+        break;
+      }
+    }
+  }
 
-  const layerId = `route-${roadIndex}-${direction}`;
-  if (map.value.getLayer(layerId)) {
-    map.value.setPaintProperty(layerId, 'line-color', props.colorMap[color]);
+  if (targetLayerId && map.value.getLayer(targetLayerId)) {
+    // Update the color without recreating the layer
+    map.value.setPaintProperty(targetLayerId, 'line-color', props.colorMap[color]);
+    
+    // Update the source data to maintain consistency
+    const source = map.value.getSource(targetLayerId);
+    if (source) {
+      const currentData = source._data;
+      source.setData({
+        ...currentData,
+        properties: {
+          ...currentData.properties,
+          trafficStatus: color
+        }
+      });
+    }
   }
 };
 
@@ -496,6 +519,7 @@ watch(() => props.mapStyle, (newStyle) => {
   createMap(newStyle, viewState);
 });
 
+/*
 watch(() => props.roads, (newRoads) => {
   if (map.value && loaded.value) {
     if (currentPopup.value) {
@@ -504,6 +528,7 @@ watch(() => props.roads, (newRoads) => {
     updateMapData(newRoads);
   }
 }, { deep: true });
+*/
 
 // Expose methods to parent components
 defineExpose({

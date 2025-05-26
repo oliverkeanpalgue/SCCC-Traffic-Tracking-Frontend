@@ -306,28 +306,47 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
       timestamp: updateTimestamp
     };
     
-    // Update local state immediately
-    updateLocalState(roadId, direction, color, statusId);
-    
-    // Update map color synchronously
-    if (mapComponent.value) {
-      mapComponent.value.updateRoadColor(roadId, direction, color);
+    // Update store first
+    const storeRoadIndex = databaseStore.roads.findIndex(r => r.id.toString() === roadId.toString());
+    if (storeRoadIndex !== -1) {
+      databaseStore.roads[storeRoadIndex] = {
+        ...databaseStore.roads[storeRoadIndex],
+        [direction]: {
+          ...databaseStore.roads[storeRoadIndex][direction],
+          status_id: statusId
+        },
+        [`${direction}Color`]: color
+      };
     }
 
-    // Update processed roads to trigger sidebar update
+    // Update processed roads for sidebar
     const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
     if (roadIndex !== -1) {
-      const updatedRoad = {
+      processedRoads.value[roadIndex] = {
         ...processedRoads.value[roadIndex],
         [direction]: {
           ...processedRoads.value[roadIndex][direction],
           status_id: statusId
+        },
+        [`${direction}Color`]: color
+      };
+    }
+
+    // Update active road if being modified
+    if (activeRoad.value?.properties?.id === roadId) {
+      activeRoad.value = {
+        ...activeRoad.value,
+        [`${direction}Color`]: color,
+        [direction]: {
+          ...activeRoad.value[direction],
+          status_id: statusId
         }
       };
-      processedRoads.value[roadIndex] = updatedRoad;
-      
-      // Force sidebar to update by creating a new array reference
-      processedRoads.value = [...processedRoads.value];
+    }
+
+    // Update map color synchronously
+    if (mapComponent.value) {
+      mapComponent.value.updateRoadColor(roadId, direction, color);
     }
 
     // Make API call
@@ -338,20 +357,20 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
     const originalStatus = databaseStore.roads.find(r => r.id.toString() === roadId.toString())?.[direction]?.status_id;
     if (originalStatus) {
       const originalColor = STATUS_MAP[originalStatus];
-      updateLocalState(roadId, direction, originalColor, originalStatus);
+      // Update map color back
       mapComponent.value?.updateRoadColor(roadId, direction, originalColor);
       
-      // Revert processed roads as well
-      const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
-      if (roadIndex !== -1) {
-        processedRoads.value[roadIndex] = {
-          ...processedRoads.value[roadIndex],
+      // Revert store
+      const storeRoadIndex = databaseStore.roads.findIndex(r => r.id.toString() === roadId.toString());
+      if (storeRoadIndex !== -1) {
+        databaseStore.roads[storeRoadIndex] = {
+          ...databaseStore.roads[storeRoadIndex],
           [direction]: {
-            ...processedRoads.value[roadIndex][direction],
+            ...databaseStore.roads[storeRoadIndex][direction],
             status_id: originalStatus
-          }
+          },
+          [`${direction}Color`]: originalColor
         };
-        processedRoads.value = [...processedRoads.value];
       }
     }
     alert("Failed to update traffic status");
