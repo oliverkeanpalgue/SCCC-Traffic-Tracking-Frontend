@@ -189,6 +189,7 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import { useDatabaseStore } from '../../stores/databaseStore'
+import emitter from "../../eventBus";
 
 async function handleImageChange(img) {
   const file = img.target.files[0];
@@ -281,8 +282,19 @@ async function createRoad() {
       __timestamp: Date.now()
     })
 
+    // Add this toast notification
+    emitter.emit('show-toast', {
+      message: `Road "${roadName.value}" has been successfully created`,
+      type: 'success'
+    });
+
     setTimeout(handleClose, RESET_DELAY)
   } catch (error) {
+    // Add error toast
+    emitter.emit('show-toast', {
+      message: error.message || ERROR_MESSAGES.CREATE_FAILED,
+      type: 'error'
+    });
     saveError.value = `Error: ${error.message || ERROR_MESSAGES.CREATE_FAILED}`
   } finally {
     isSaving.value = false

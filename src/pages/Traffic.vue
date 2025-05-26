@@ -208,7 +208,7 @@ const handleRoadAdded = async (newRoad) => {
   if (!newRoad) return;
 
   // Show success message immediately
-  alert("Road added successfully!");
+  
 
   // Mark as loading
   isLoading.value = true;
