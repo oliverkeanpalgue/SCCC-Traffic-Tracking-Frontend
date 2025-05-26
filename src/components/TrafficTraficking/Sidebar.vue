@@ -10,37 +10,45 @@
     <!-- Loading indicator -->
     <div v-if="isLoading" class="text-center text-gray-400 py-4">Loading roads...</div>
 
-    <!-- Roads list -->
+    <!-- Roads list with transition group -->
     <div v-else ref="scrollContainer" class="text-white p-2 overflow-y-auto max-h-[calc(100vh-200px)] scrollbar-custom"
       :class="{ 'pr-2': showScrollbar }">
 
-      <!-- Road items -->
-      <div v-for="road in filteredRoads" :key="road.id"
-        v-memo="[road.id, road.road_name, road.inbound.status_id, road.outbound.status_id]"
-        class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]" @click="handleRoadClick(road)">
+      <TransitionGroup 
+        name="road-list" 
+        tag="div"
+      >
+        <!-- Road items -->
+        <div v-for="road in filteredRoads" 
+          :key="road.id"
+          v-memo="[road.id, road.road_name, road.inbound.status_id, road.outbound.status_id]"
+          class="road-item p-2 rounded-md cursor-pointer hover:bg-[#303030]" 
+          @click="handleRoadClick(road)"
+        >
 
-        <div class="flex justify-between mb-3">
-          <div class="font-bold">{{ road.road_name }}</div>
-          <FeEdit2 v-if="isLoggedIn" class="mt-1" />
-          <FeInfo v-else class="mt-1" />
-        </div>
-
-        <!-- Traffic status indicators -->
-        <div class="flex justify-between">
-          <div class="flex items-center gap-2">
-            <h1 class="text-[14px]">Inbound</h1>
-            <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs" :aria-label="`Inbound traffic status`"></div>
+          <div class="flex justify-between mb-3">
+            <div class="font-bold">{{ road.road_name }}</div>
+            <FeEdit2 v-if="isLoggedIn" class="mt-1" />
+            <FeInfo v-else class="mt-1" />
           </div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-[14px]">Outbound</h1>
-            <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
-              class="w-[15px] h-[15px] rounded-xs" :aria-label="`Outbound traffic status`"></div>
-          </div>
-        </div>
 
-        <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
-      </div>
+          <!-- Traffic status indicators -->
+          <div class="flex justify-between">
+            <div class="flex items-center gap-2">
+              <h1 class="text-[14px]">Inbound</h1>
+              <div :style="{ backgroundColor: getStatusColor(road.inbound.status_id) }"
+                class="w-[15px] h-[15px] rounded-xs" :aria-label="`Inbound traffic status`"></div>
+            </div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-[14px]">Outbound</h1>
+              <div :style="{ backgroundColor: getStatusColor(road.outbound.status_id) }"
+                class="w-[15px] h-[15px] rounded-xs" :aria-label="`Outbound traffic status`"></div>
+            </div>
+          </div>
+
+          <hr class="bg-[#fff] opacity-30 mt-3 mb-4">
+        </div>
+      </TransitionGroup>
 
       <!-- Empty state -->
       <div v-if="!filteredRoads.length" class="text-center text-gray-400 py-4">No roads found</div>
@@ -68,12 +76,13 @@ const emit = defineEmits(["openEditModal"]);
 
 const databaseStore = useDatabaseStore();
 const roads = computed(() => props.intersections || []);
-const isLoading = computed(() => databaseStore.isLoading);
+const isLoading = computed(() => {
+  // Only show loading on initial load, not during updates
+  return databaseStore.isLoading && !roads.value?.length;
+});
 
 // Filter roads based on search
 const filteredRoads = computed(() => {
-  forceUpdate.value; // Trigger reevaluation when forceUpdate changes
-
   if (!roads.value?.length) return [];
 
   const term = searchTerm.value.trim().toLowerCase();
@@ -90,7 +99,6 @@ const searchTerm = ref('');
 const showScrollbar = ref(false);
 const scrollContainer = ref(null);
 const searchTimeout = ref(null);
-const forceUpdate = ref(0);
 
 // Data modification
 // Update scrollbar state based on content
@@ -145,28 +153,30 @@ const handleRoadClick = (road) => {
 };
 
 // Lifecycle
-// Watch for data changes
-watch(() => databaseStore.roads, () => {
-  forceUpdate.value++; // Trigger filteredRoads recomputation
-  nextTick(updateScrollbarVisibility);
-}, { deep: true });
-
-watch(() => props.intersections, () => {
-  forceUpdate.value++;
-  nextTick(updateScrollbarVisibility);
-}, { deep: true, immediate: true });
-
 // Component initialization
 onMounted(() => {
   updateScrollbarVisibility();
   window.addEventListener('resize', handleResize, { passive: true });
-  forceUpdate.value++;
 });
 
 // Component cleanup
 onUnmounted(() => {
   cleanupResources();
 });
+
+// Add a watcher to handle new road data smoothly
+watch(
+  () => props.intersections,
+  (newIntersections) => {
+    if (newIntersections?.length) {
+      // Update without showing loading state
+      nextTick(() => {
+        updateScrollbarVisibility();
+      });
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <style scoped>
@@ -217,5 +227,26 @@ onUnmounted(() => {
 .road-item.active {
   background-color: rgba(255, 255, 255, 0.1);
   border-left: 3px solid #7CFC00;
+}
+
+/* Add these new animation styles */
+.road-list-move,
+.road-list-enter-active,
+.road-list-leave-active {
+  transition: all 0.5s ease;
+}
+
+.road-list-enter-from {
+  opacity: 0;
+  transform: translateX(-30px);
+}
+
+.road-list-leave-to {
+  opacity: 0;
+  transform: translateX(30px);
+}
+
+.road-list-leave-active {
+  position: absolute;
 }
 </style>

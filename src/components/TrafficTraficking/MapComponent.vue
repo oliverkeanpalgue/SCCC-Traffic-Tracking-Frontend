@@ -287,7 +287,7 @@ const reloadMapData = async (roads) => {
 
   closeAllPopups();
 
-  map.value.getContainer().appendChild(loadingElement);
+  map.value.getContainer();
 
   try {
     const viewState = getCurrentViewState();
