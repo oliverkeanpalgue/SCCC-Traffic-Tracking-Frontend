@@ -28,7 +28,6 @@ const routes = [
           console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
           next('/email_not_verified');
         } 
-        next();
       } catch (error) {
         next('/login');
       }
@@ -60,9 +59,34 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 
-  // No special permission needed, allow
-  if (!to.meta.permission) {
+  const publicPages = ['Login', 'Signup', 'ForgotPassword'];
+  const isPublic = publicPages.includes(to.name);
+
+  const isPasswordReset = ['NewPassword', 'ForgotPassword'];
+  const isPasswordResetPage = isPasswordReset.includes(to.name);
+
+  if (isPasswordResetPage) {
     return next();
+  }
+
+  try {
+    if (!userStore.userLoaded) {
+      await userStore.fetchUser();
+    }
+
+    const isLoggedIn = !!userStore.user;
+
+    if (isLoggedIn && ['Login', 'Signup', 'ForgotPassword'].includes(to.name)) {
+      return next({ name: 'Dashboard' });
+    }
+
+    if (isPublic) {
+      return next();
+    }
+
+    return next();
+  } catch (err) {
+    return next(isPublic ? undefined : "/login");
   }
 });
 

@@ -24,9 +24,6 @@ let refreshInterval = null;
 
 onMounted(() => {
   databaseStore.fetchData()
-  refreshInterval = setInterval(() => {
-    databaseStore.fetchData()
-  }, 30000)
 })
 
 const computedProperties = {
@@ -217,7 +214,7 @@ onMounted(() => {
   const email = urlParams.get('email');
   
   // If we have token and email from URL, go to phase 2
-  if (!props.token && props.email) {
+  if (!props.token && !props.email) {
     data.value.token = props.token;
     data.value.email = props.email;
     phaseNum.value = 1; // Start with email input phase
