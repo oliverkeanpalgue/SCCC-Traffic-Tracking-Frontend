@@ -287,7 +287,6 @@ const reloadMapData = async (roads) => {
 
   closeAllPopups();
 
-  const loadingElement = createLoadingOverlay();
   map.value.getContainer().appendChild(loadingElement);
 
   try {
@@ -429,16 +428,6 @@ const createMapboxPopup = (lngLat) => {
   }).setLngLat(lngLat);
 };
 
-const createLoadingOverlay = () => {
-  const loadingElement = document.createElement('div');
-  loadingElement.className = 'map-loading-overlay';
-  loadingElement.innerHTML = `
-    <div class="spinner"></div>
-    <div class="loading-text">Refreshing map data...</div>
-  `;
-  return loadingElement;
-};
-
 // Event handlers and UI interactions
 const showRoadPopup = (feature, lngLat) => {
   const roadId = feature.properties.roadId || "";
@@ -567,71 +556,5 @@ defineExpose({
   align-items: center;
   justify-content: center;
   z-index: 10;
-}
-
-/* Enhanced loading overlay styles */
-.map-loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  border-radius: 0.75rem;
-  backdrop-filter: blur(2px);
-  animation: fadeIn 0.2s ease-in-out;
-}
-
-.map-loading-overlay .spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50%;
-  border-top-color: #7CFC00;
-  animation: spin 0.8s cubic-bezier(0.6, 0.2, 0.4, 0.8) infinite;
-  margin-bottom: 10px;
-}
-
-.map-loading-overlay .loading-text {
-  color: white;
-  font-size: 16px;
-  font-weight: 500;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  animation: pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  0% {
-    opacity: 0.7;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.7;
-  }
 }
 </style>
