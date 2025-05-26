@@ -140,12 +140,12 @@ onUnmounted(() => {
             in</button>
         </form>
 
-        <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
+        <!-- <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
           <span class="text-gray-600">Don't have an account?</span> 
           <RouterLink :to="{ name: 'Signup' }" class="text-md text-primary hover:underline">Sign
             up
           </RouterLink>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>

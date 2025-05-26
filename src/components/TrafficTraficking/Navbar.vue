@@ -15,7 +15,7 @@
 
                 </div>
 
-                <div class="flex items-center relative">
+                <div v-if="isLoggedIn" class="flex items-center relative">
                     <div>
                         <button type="button"
                             class="flex cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
@@ -40,6 +40,12 @@
                             </li>
                         </ul>
                     </div>
+                </div>
+
+                <div v-else class="flex items-center">
+                    <!-- <a href="/admin/login"
+                        class="text-white hover:text-gray-400 underline font-medium rounded-lg text-sm px-5 py-3 mr-2 mb-2"> Login
+                    </a> -->
                 </div>
             </div>
         </div>
