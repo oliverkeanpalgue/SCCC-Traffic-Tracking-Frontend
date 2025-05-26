@@ -16,9 +16,10 @@ axiosClient.interceptors.response.use((response) => {
   return response;
 }, error => {
   if (error.response && error.response.status === 401) {
-    if (router.currentRoute.value.name !== 'Login') {
+    
+    if (router.value.name !== 'Login') {
       router.push({ name: 'Login' });
-    } else if (router.currentRoute.value.name !== 'Guest') {
+    } else if (router.value.name !== 'Guest') {
       router.push({ name: 'Guest' });
     }
   }

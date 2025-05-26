@@ -14,48 +14,49 @@
         </div>
       </div>
 
-      <!-- Map legend -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[10px] right-4 p-4 rounded-xl">
-        <div class="flex flex-col">
-          <div v-for="(color, status) in LEGEND_ITEMS" :key="status" class="flex gap-4 items-center">
-            <div class="w-[15px] h-[15px] rounded-xs" :style="{ backgroundColor: color.hex }"></div>
-            <h1>{{ color.label }}</h1>
+      <!-- Right-side controls: legend, add button, map style -->
+      <div class="absolute right-4 z-10 flex flex-col items-end space-y-4 top-[10px] w-[150px]">
+        <!-- Map legend -->
+        <div class="text-white bg-[#1b1a1a] p-4 rounded-xl w-full">
+          <div class="flex flex-col">
+            <div v-for="(color, status) in LEGEND_ITEMS" :key="status" class="flex gap-4 items-center">
+              <div class="w-[15px] h-[15px] rounded-xs" :style="{ backgroundColor: color.hex }"></div>
+              <h1>{{ color.label }}</h1>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Add Road button -->
-      <div
-        class="absolute text-white w-[150px] bg-[#1b1a1a] hover:bg-green-700 z-10 mt-[120px] right-4 p-1 rounded-xl">
-        <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
-          <span class="font-medium">Add Road</span>
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd"
-              d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-              clip-rule="evenodd" />
-          </svg>
-        </button>
-      </div>
-
-
-      <!-- Map style selector -->
-      <div class="absolute text-white w-[150px] bg-[#1b1a1a] z-10 mt-[175px] right-4 p-4 rounded-xl">
-        <div class="text-sm font-bold mb-2">Map Style</div>
-        <div class="relative map-style-dropdown">
-          <div @click="toggleStyleDropdown"
-            class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-gray-700">
-            <span>{{ currentStyleName }}</span>
-            <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showStyleDropdown }"
-              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
+        <!-- Add Road button -->
+        <div v-if="isLoggedIn"
+          class="text-white bg-[#1b1a1a] hover:bg-green-700 p-1 rounded-xl w-full">
+          <button @click="openAddRoadModal" class="w-full flex cursor-pointer items-center justify-between p-2 rounded">
+            <span class="font-medium">Add Road</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd" />
             </svg>
-          </div>
+          </button>
+        </div>
 
-          <div v-if="showStyleDropdown" class="absolute left-0 right-0 mt-1 bg-[#1b1a1a] rounded shadow-lg z-30 p-2">
-            <div v-for="(url, name) in MAP_STYLES" :key="name" @click="selectMapStyle(url)"
-              class="flex items-center cursor-pointer hover:bg-gray-700 p-2 rounded">
-              <span>{{ name }}</span>
+        <!-- Map style selector -->
+        <div class="text-white bg-[#1b1a1a] p-4 rounded-xl w-full">
+          <div class="text-sm font-bold mb-2">Map Style</div>
+          <div class="relative map-style-dropdown">
+            <div @click="toggleStyleDropdown"
+              class="flex items-center justify-between cursor-pointer p-2 rounded hover:bg-gray-700">
+              <span>{{ currentStyleName }}</span>
+              <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showStyleDropdown }"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+            <div v-if="showStyleDropdown" class="absolute left-0 right-0 mt-1 bg-[#1b1a1a] rounded shadow-lg z-30 p-2">
+              <div v-for="(url, name) in MAP_STYLES" :key="name" @click="selectMapStyle(url)"
+                class="flex items-center cursor-pointer hover:bg-gray-700 p-2 rounded">
+                <span>{{ name }}</span>
+              </div>
             </div>
           </div>
         </div>
