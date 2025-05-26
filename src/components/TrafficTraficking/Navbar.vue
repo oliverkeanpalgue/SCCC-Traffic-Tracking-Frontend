@@ -43,7 +43,7 @@
                 </div>
 
                 <div v-else class="flex items-center">
-                    <!-- <a href="/admin/login"
+                    <!-- <a href="/login"
                         class="text-white hover:text-gray-400 underline font-medium rounded-lg text-sm px-5 py-3 mr-2 mb-2"> Login
                     </a> -->
                 </div>

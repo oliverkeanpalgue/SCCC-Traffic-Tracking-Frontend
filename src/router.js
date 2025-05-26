@@ -30,14 +30,14 @@ const routes = [
         } 
         next(); 
       } catch (error) {
-        next('/admin/login');
+        next('/login');
       }
     },
   },
   { path: '/', name: 'Guest', component: Traffic},
-  { path: '/admin/login', name: 'Login', component: Login },
-  { path: '/admin/signup', name: 'Signup', component: Signup },
-  { path: '/admin/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
+  { path: '/login', name: 'Login', component: Login },
+  { path: '/signup', name: 'Signup', component: Signup },
+  { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
   {
         path: '/password-reset',
         name: 'PasswordReset',
@@ -49,7 +49,7 @@ const routes = [
       },
   { path: '/email_verified', name: 'EmailVerified', component: EmailVerified },
   { path: '/email_not_verified', name: 'EmailNotVerified', component: EmailNotVerified },
-  { path: '/admin/no_access', name: 'NoAccess', component: NoAccess },
+  { path: '/no_access', name: 'NoAccess', component: NoAccess },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage },
 ];
 
