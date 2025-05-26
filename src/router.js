@@ -26,7 +26,7 @@ const routes = [
         await userStore.fetchUser();
         if (userStore.user.email_verified_at === null){
           console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
-          next('/admin/email_not_verified');
+          next('/email_not_verified');
         } 
         next(); 
       } catch (error) {
@@ -47,8 +47,8 @@ const routes = [
           email: route.query.email
         })
       },
-  { path: '/admin/email_verified', name: 'EmailVerified', component: EmailVerified },
-  { path: '/admin/email_not_verified', name: 'EmailNotVerified', component: EmailNotVerified },
+  { path: '/email_verified', name: 'EmailVerified', component: EmailVerified },
+  { path: '/email_not_verified', name: 'EmailNotVerified', component: EmailNotVerified },
   { path: '/admin/no_access', name: 'NoAccess', component: NoAccess },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage },
 ];
