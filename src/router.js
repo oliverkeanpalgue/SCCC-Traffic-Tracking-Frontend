@@ -13,10 +13,10 @@ import Traffic from "./pages/Traffic.vue";
 
 const routes = [
   {
-    path: "/",
+    path: "/admin",
     component: Traffic,
     children: [
-      { path: '/', name: 'Dashboard', component: Traffic},
+      { path: '/admin', name: 'Dashboard', component: Traffic},
       { path: '/users', name: 'Users', component: Users},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
     ],
@@ -34,6 +34,7 @@ const routes = [
       }
     },
   },
+  { path: '/', name: 'Dashboard', component: Traffic},
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
