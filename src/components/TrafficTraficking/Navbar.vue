@@ -18,9 +18,9 @@
                 <div v-if="isLoggedIn" class="flex items-center relative">
                     <div>
                         <button type="button"
-                            class="flex cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
+                            class="flex items-center justify-center cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 hover:bg-gray-700 border-1 border-gray-700 p-2"
                             @click="toggleDropdown" aria-expanded="false">
-                            <img class="w-8 h-8 rounded-full" src="/img/Logo.png" alt="user photo" />
+                            <FeUser class="w-6 h-6 text-white" />
                         </button>
                     </div>
 
@@ -56,6 +56,8 @@
 import { ref, computed, onMounted } from "vue";
 import { useDatabaseStore } from "../../stores/databaseStore";
 import axiosClient from "../../axios.js";
+import { FeUser } from '@kalimahapps/vue-icons';
+
 
 const isDropdownOpen = ref(false);
 const databaseStore = useDatabaseStore();
