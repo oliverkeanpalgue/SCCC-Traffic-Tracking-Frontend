@@ -16,13 +16,13 @@ const DEFAULT_MAP_BEARING = 0;
 const DEFAULT_MAP_PITCH = 0;
 const DIRECTION_TYPES = ['inbound', 'outbound'];
 const POPUP_VERTICAL_OFFSET = 0.25;
-const POPUP_DELAY = 50;
+const POPUP_DELAY = 0; // Reduced from 50
 const MAP_FIT_PADDING = 60;
 const ROAD_FOCUS_PADDING = 100;
-const ROAD_FOCUS_DURATION = 1000;
+const ROAD_FOCUS_DURATION = 500; // Reduced from 1000
 const ROAD_FOCUS_MAX_ZOOM = 17;
-const POPUP_RESTORE_DELAY = 100;
-const MAP_CLEANUP_DELAY = 100;
+const POPUP_RESTORE_DELAY = 0; // Reduced from 100
+const MAP_CLEANUP_DELAY = 0; // Reduced from 100
 const LAYER_PAINT_CONFIG = {
   'line-width': 4,
   'line-opacity': 0.7
@@ -245,21 +245,59 @@ const updateMapData = (roads, initBounds = false) => {
 
   const popupData = capturePopupState();
 
-  try {
-    cleanupMapLayers(roads);
-  } catch (err) {
-    // Continue with adding new data
-  }
+  roads.forEach((road, index) => {
+    DIRECTION_TYPES.forEach(direction => {
+      const layerId = `route-${index}-${direction}`;
+      const labelId = `label-${index}-${direction}`;
 
-  roads.forEach((road, index) => drawRoute(road, index));
+      // Check if layer already exists
+      const layerExists = map.value.getLayer(layerId);
+      const sourceExists = map.value.getSource(layerId);
+
+      if (layerExists && sourceExists) {
+        // Update existing source data instead of recreating
+        const coords = road.geometry?.coordinates?.[direction];
+        if (coords?.length) {
+          const color = props.colorMap[road[direction + 'Color']];
+          map.value.setPaintProperty(layerId, 'line-color', color);
+          
+          const source = map.value.getSource(layerId);
+          source.setData({
+            type: 'Feature',
+            properties: {
+              name: direction.charAt(0).toUpperCase() + direction.slice(1),
+              roadId: road.properties.id,
+              roadName: road.properties.name || road.road_name || "Unknown Road",
+              roadType: road.properties.roadType,
+              trafficStatus: road[direction + 'Color'],
+              direction,
+              lastUpdated: new Date().toISOString()
+            },
+            geometry: {
+              type: Array.isArray(coords[0][0]) ? 'MultiLineString' : 'LineString',
+              coordinates: coords
+            }
+          });
+        }
+      } else {
+        // Only create new layers if they don't exist
+        drawRoute(road, index);
+      }
+    });
+  });
 
   if (initBounds && !boundsInitialized.value) {
     const bounds = getMapBounds(roads);
-    if (!bounds.isEmpty()) map.value.fitBounds(bounds, { padding: MAP_FIT_PADDING });
+    if (!bounds.isEmpty()) {
+      map.value.fitBounds(bounds, { 
+        padding: MAP_FIT_PADDING,
+        duration: 500 // Smoother transition
+      });
+    }
     boundsInitialized.value = true;
   }
 
-  restorePopup(popupData, roads);
+  if (popupData) restorePopup(popupData, roads);
 };
 
 const focusOnRoad = (roadId) => {
@@ -285,28 +323,41 @@ const focusOnRoad = (roadId) => {
 const reloadMapData = async (roads) => {
   if (!loaded.value || !map.value) return;
 
-  closeAllPopups();
+  const viewState = getCurrentViewState();
+  
+  roads.forEach((road, index) => {
+    DIRECTION_TYPES.forEach(direction => {
+      const layerId = `route-${index}-${direction}`;
+      if (map.value.getSource(layerId)) {
+        const coords = road.geometry?.coordinates?.[direction];
+        if (coords?.length) {
+          const color = props.colorMap[road[direction + 'Color']];
+          map.value.setPaintProperty(layerId, 'line-color', color);
+          
+          const source = map.value.getSource(layerId);
+          source.setData({
+            type: 'Feature',
+            properties: {
+              name: direction.charAt(0).toUpperCase() + direction.slice(1),
+              roadId: road.properties.id,
+              roadName: road.properties.name || road.road_name || "Unknown Road",
+              roadType: road.properties.roadType,
+              trafficStatus: road[direction + 'Color'],
+              direction
+            },
+            geometry: {
+              type: Array.isArray(coords[0][0]) ? 'MultiLineString' : 'LineString',
+              coordinates: coords
+            }
+          });
+        }
+      } else {
+        drawRoute(road, index);
+      }
+    });
+  });
 
-  map.value.getContainer();
-
-  try {
-    const viewState = getCurrentViewState();
-
-    try {
-      cleanupMapLayers(roads);
-    } catch (err) {
-      // Continue with adding new data
-    }
-
-    await new Promise(resolve => setTimeout(resolve, MAP_CLEANUP_DELAY));
-
-    roads.forEach((road, index) => drawRoute(road, index));
-
-    map.value.jumpTo(viewState);
-  } finally {
-    const overlay = map.value.getContainer().querySelector('.map-loading-overlay');
-    if (overlay) overlay.remove();
-  }
+  map.value.jumpTo(viewState);
 };
 
 const refreshCurrentPopup = () => {
@@ -508,7 +559,6 @@ watch(() => props.mapStyle, (newStyle) => {
   createMap(newStyle, viewState);
 });
 
-/*
 watch(() => props.roads, (newRoads) => {
   if (map.value && loaded.value) {
     if (currentPopup.value) {
@@ -517,7 +567,6 @@ watch(() => props.roads, (newRoads) => {
     updateMapData(newRoads);
   }
 }, { deep: true });
-*/
 
 // Expose methods to parent components
 defineExpose({
