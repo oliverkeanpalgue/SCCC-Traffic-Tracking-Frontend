@@ -54,14 +54,17 @@ import axiosClient from "../../axios.js";
 const isDropdownOpen = ref(false);
 const databaseStore = useDatabaseStore();
 
+const props = defineProps({
+  isLoggedIn: Boolean,
+  user: Object
+});
+
 const currentUserName = computed(() => {
-  const currentUser = databaseStore.getCurrentUser;
-  if (!currentUser) return 'User';
-  
+  if (!props.user) return 'User';
   return [
-    currentUser.firstName,
-    currentUser.middleName,
-    currentUser.lastName
+    props.user.firstName,
+    props.user.middleName,
+    props.user.lastName
   ].filter(Boolean).join(' ');
 });
 

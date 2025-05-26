@@ -1,6 +1,6 @@
 <template>
   <div class="flex flex-col h-20 bg-[#1b1a1a]">
-    <Navbar />
+    <Navbar :isLoggedIn="isLoggedIn" :user="currentUser" />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
     <Sidebar ref="sideBar" :isLoggedIn="isLoggedIn" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
@@ -88,6 +88,7 @@ import useUserStore from '../stores/user';
 //check if user is logged in
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
+const currentUser = computed(() => userStore.user);
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 const COLOR_MAP = { green: "#7CFC00", yellow: "#FFD700", red: "#FF6347" };
