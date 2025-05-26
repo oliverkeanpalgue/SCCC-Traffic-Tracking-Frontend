@@ -16,7 +16,7 @@ const routes = [
     path: "/admin",
     component: Traffic,
     children: [
-      { path: '/admin', name: 'Dashboard', component: Traffic},
+      { path: '/admin', name: 'Admin', component: Traffic},
       { path: '/users', name: 'Users', component: Users},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
     ],
@@ -34,7 +34,7 @@ const routes = [
       }
     },
   },
-  { path: '/', name: 'Dashboard', component: Traffic},
+  { path: '/', name: 'Guest', component: Traffic},
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
