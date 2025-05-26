@@ -28,6 +28,7 @@ const routes = [
           console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
           next('/email_not_verified');
         } 
+        next(); 
       } catch (error) {
         next('/login');
       }
