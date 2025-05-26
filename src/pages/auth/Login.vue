@@ -54,7 +54,7 @@ function submit() {
     axiosClient.post("/login", data.value)
       .then(response => {
         emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
-        router.push({ name: 'Dashboard' })
+        router.push({ name: 'Admin' })
 
       })
       .catch(error => {

@@ -11,14 +11,20 @@ const axiosClient = axios.create({
 //   config.headers.Authorization = `Bearer ${localStorage.getItem('token')}`
 // })
 
+
 axiosClient.interceptors.response.use((response) => {
   return response;
 }, error => {
   if (error.response && error.response.status === 401) {
-    router.push({name: 'Guest'});
+    if (router.currentRoute.value.name !== 'Login') {
+      router.push({ name: 'Login' });
+    } else if (router.currentRoute.value.name !== 'Guest') {
+      router.push({ name: 'Guest' });
+    }
   }
 
   throw error;
 })
+
 
 export default axiosClient

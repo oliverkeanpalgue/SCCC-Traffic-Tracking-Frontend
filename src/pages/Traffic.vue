@@ -82,7 +82,11 @@ import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
+import useUserStore from '../stores/user';
 
+//check if user is logged in
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 const COLOR_MAP = { green: "#7CFC00", yellow: "#FFD700", red: "#FF6347" };
@@ -352,6 +356,7 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 onMounted(async () => {
   isLoading.value = true;
 
+  console.log(isLoggedIn.value ? "User is logged in" : "User is not logged in");
   try {
     // Load initial data
     await databaseStore.fetchData();

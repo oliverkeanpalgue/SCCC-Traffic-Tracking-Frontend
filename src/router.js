@@ -79,7 +79,7 @@ router.beforeEach(async (to, from, next) => {
     const isLoggedIn = !!userStore.user;
 
     if (isLoggedIn && ['Login', 'Signup', 'ForgotPassword'].includes(to.name)) {
-      return next({ name: 'Dashboard' });
+      return next({ name: 'Admin' });
     }
 
     if (isPublic) {
