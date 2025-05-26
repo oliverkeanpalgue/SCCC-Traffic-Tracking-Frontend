@@ -1,5 +1,5 @@
 <template>
-  <div v-if="activeRoad"
+  <div v-if="activeRoad && isLoggedIn"
     class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-[102px] left-[930px] -translate-x-1/2 p-5 rounded-xl"
     @click.stop>
     <div class="flex flex-col gap-4">
@@ -51,7 +51,8 @@ const TRAFFIC_LABELS = { 'green': 'Light', 'yellow': 'Moderate', 'red': 'Heavy' 
 // Component props definition
 const props = defineProps({ 
   activeRoad: Object, 
-  colorMap: Object 
+  colorMap: Object ,
+  isLoggedIn: Boolean
 });
 
 // Get traffic status color

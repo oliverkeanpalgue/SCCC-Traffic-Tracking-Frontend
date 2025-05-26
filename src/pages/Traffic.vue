@@ -67,7 +67,7 @@
         @update="handleRoadUpdate" />
 
       <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
-        @changeTrafficLevel="changeTrafficLevel" />
+        @changeTrafficLevel="changeTrafficLevel" :isLoggedIn="isLoggedIn" />
 
       <!-- Add Road Modal Component -->
       <AddRoadModal :show="showAddRoadModal" @close="closeAddRoadModal" @roadAdded="handleRoadAdded" />
