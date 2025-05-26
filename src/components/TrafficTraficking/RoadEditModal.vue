@@ -351,7 +351,7 @@ onMounted(() => {
         <!-- Modal header -->
         <div class="bg-[#252424] px-6 py-4 border-b border-gray-700 flex justify-between items-center">
           <h3 class="text-lg font-semibold">Edit Road Information</h3>
-          <button @click="handleClose" class="text-gray-400 hover:text-white transition-colors">
+          <button @click="handleClose" class="cursor-pointer text-gray-400 hover:text-white transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -431,10 +431,10 @@ onMounted(() => {
                     </div>
 
                     <!-- Clickable areas -->
-                    <button type="button" class="absolute left-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
+                    <button type="button" class="cursor-pointer absolute left-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
                       @click="selectedDirection = 'outbound'">
                     </button>
-                    <button type="button" class="absolute right-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
+                    <button type="button" class="cursor-pointer absolute right-0 top-0 w-1/2 h-full opacity-0 z-10 focus:outline-none"
                       @click="selectedDirection = 'inbound'">
                     </button>
 
@@ -498,14 +498,14 @@ onMounted(() => {
             <!-- Action buttons -->
             <div class="flex justify-end space-x-3 mt-6">
               <button type="button" @click="handleClose"
-                class="px-4 py-2 rounded-md border border-gray-600 hover:bg-gray-700 transition-colors">
+                class="cursor-pointer px-4 py-2 rounded-md border border-gray-600 hover:bg-gray-700 transition-colors">
                 Cancel
               </button>
               <button type="submit" :disabled="isSaving || (!coordinatesValid && coordinatesText.trim() !== '')" :class="[
                 'px-4 py-2 rounded-md transition-colors flex items-center',
                 (isSaving || (!coordinatesValid && coordinatesText.trim() !== ''))
                   ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-green-600 hover:bg-green-700'
+                  : 'bg-green-600 hover:bg-green-700 cursor-pointer'
               ]">
                 <span v-if="isSaving"
                   class="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
