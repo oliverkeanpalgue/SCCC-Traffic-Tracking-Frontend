@@ -3,9 +3,11 @@ import { defineProps, defineEmits, ref, watch, computed, onMounted } from 'vue';
 import RoadEditModal from './RoadEditModal.vue';
 import defaultRoadImage from '../../assets/1.png';
 import { useDatabaseStore } from '../../stores/databaseStore';
-
+import useUserStore from '../../stores/user';
 // Get store instance
 const databaseStore = useDatabaseStore();
+const userStore = useUserStore();
+const isLoggedIn = computed(() => userStore.isLoggedIn);
 const VITE_API_BASE_URL = import.meta.env.VITE_API_BASE_URL; 
 
 // Access road types from store instead of hardcoding
@@ -41,7 +43,7 @@ const props = defineProps({
   roadType: {
     type: String,
     default: 'Street'
-  }
+  },
 });
 
 // Events this component can trigger to communicate with parents
@@ -97,8 +99,8 @@ const handleSaveRoad = (updatedRoad) => {
 </script>
 
 <template>
-  <!-- Main popup container with dark theme styling -->
-  <div class="bg-[#1b1a1a] text-white rounded-2xl overflow-hidden shadow-lg w-full max-w-[320px]">
+  <!-- Main popup container with dark theme styling and extra bottom padding -->
+  <div class="bg-[#1b1a1a] text-white rounded-2xl overflow-hidden shadow-lg w-full max-w-[320px] pb-6">
     <!-- Road image display area -->
     <div class="w-full h-[200px] overflow-hidden">
       <img :src="`${VITE_API_BASE_URL}/storage/road_images/${roadImage}`" class="w-full h-full object-cover" />
@@ -111,7 +113,7 @@ const handleSaveRoad = (updatedRoad) => {
     </div>
 
     <!-- Action buttons row with flexbox layout -->
-    <div class="w-full flex py-2">
+    <div class="w-full flex py-2" v-if="isLoggedIn">
       <div class="w-1/2 flex flex-col items-center">
         <button @click="handleEdit"
           class="w-12 h-12 rounded-full cursor-pointer border border-green-500 flex items-center justify-center text-green-500 hover:bg-green-500/20 transition-colors">
@@ -135,15 +137,17 @@ const handleSaveRoad = (updatedRoad) => {
         <span class="text-red-500 text-sm mt-1">Delete</span>
       </div>
     </div>
+    <!-- If not logged in, add a spacer for visual balance -->
+    <div v-else class="pb-1"></div>
 
     <!-- Conditionally rendered modal component with props binding -->
     <RoadEditModal :show="showEditModal" :road="{ roadId, roadName, directionText, trafficStatus, roadType, roadImage }"
         :roadTypes="roadTypes" @close="handleCloseModal" @update="handleSaveRoad" />
 
-        <RoadDeleteModal
-            :show="showDeleteModal"
-            :road="{ roadId, roadName }"
-            @close="showDeleteModal = false"
-        />
+    <RoadDeleteModal
+        :show="showDeleteModal"
+        :road="{ roadId, roadName }"
+        @close="showDeleteModal = false"
+    />
   </div>
 </template>

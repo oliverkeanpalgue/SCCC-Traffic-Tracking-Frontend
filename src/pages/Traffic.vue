@@ -64,7 +64,7 @@
 
       <MapComponent ref="mapComponent" :roads="processedRoads" :color-map="COLOR_MAP" :api-key="MAPBOX_API_KEY"
         :map-style="selectedMapStyle" :active-road-id="activeRoad?.properties?.id?.toString()" v-if="dataReady"
-        @update="handleRoadUpdate" />
+        @update="handleRoadUpdate" :isLoggedIn="isLoggedIn" />
 
       <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
         @changeTrafficLevel="changeTrafficLevel" :isLoggedIn="isLoggedIn" />
