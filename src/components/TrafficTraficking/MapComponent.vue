@@ -3,7 +3,7 @@
 </template>
 
 <script setup>
-import { defineProps, onMounted, watch, ref } from "vue";
+import { defineProps, onMounted, watch, ref, defineEmits } from "vue";
 import { createApp } from "vue";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -54,6 +54,7 @@ const props = defineProps({
     default: "mapbox://styles/mapbox/dark-v11"
   }
 });
+const emit = defineEmits(['closeTrafficModal']);
 
 // Core state
 const map = ref(null);
@@ -431,7 +432,9 @@ const showRoadPopup = (feature, lngLat) => {
     trafficStatus: feature.properties.trafficStatus || "",
     roadType: currentRoadData?.properties?.roadType || feature.properties.roadType || "Street",
     roadImage: currentRoadData?.image_path || feature.image_path,
-
+    onCloseTrafficModal: () => {
+      emit('closeTrafficModal');
+    }
   });
 
   const container = createPopupContainer(roadId, roadNameToUse);

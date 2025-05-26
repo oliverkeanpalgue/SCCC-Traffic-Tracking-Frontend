@@ -47,7 +47,7 @@ const props = defineProps({
 });
 
 // Events this component can trigger to communicate with parents
-const emit = defineEmits(['edit', 'delete', 'update']);
+const emit = defineEmits(['edit', 'delete', 'update', 'closeTrafficModal']);
 
 // Reactive state for modal visibility
 const showEditModal = ref(false);
@@ -68,8 +68,14 @@ const showDeleteModal = ref(false);
 watch(() => props, () => { }, { deep: true });
 
 // Event handler functions
-const handleEdit = () => showEditModal.value = true;
-const handleDelete = () => showDeleteModal.value = true;
+const handleEdit = () => {
+  emit('closeTrafficModal');
+  showEditModal.value = true;
+};
+const handleDelete = () => {
+  emit('closeTrafficModal');
+  showDeleteModal.value = true;
+};
 const handleCloseModal = () => showEditModal.value = false;
 
 const handleSaveRoad = (updatedRoad) => {
