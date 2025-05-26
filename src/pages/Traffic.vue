@@ -299,9 +299,7 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
   try {
     const statusId = COLOR_TO_STATUS[color];
     
-    // Add a timestamp to track local changes
     const updateTimestamp = Date.now();
-    // Store the update info in component
     lastLocalUpdate.value = {
       roadId: roadId.toString(),
       direction,
@@ -316,7 +314,23 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
       mapComponent.value.updateRoadColor(roadId, direction, color);
     }
 
-    // Make API call without affecting UI
+    // Update processed roads to trigger sidebar update
+    const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
+    if (roadIndex !== -1) {
+      const updatedRoad = {
+        ...processedRoads.value[roadIndex],
+        [direction]: {
+          ...processedRoads.value[roadIndex][direction],
+          status_id: statusId
+        }
+      };
+      processedRoads.value[roadIndex] = updatedRoad;
+      
+      // Force sidebar to update by creating a new array reference
+      processedRoads.value = [...processedRoads.value];
+    }
+
+    // Make API call
     await databaseStore.updateTrafficStatus(roadId, direction, statusId);
   } catch (error) {
     console.error("Update failed:", error);
@@ -326,6 +340,19 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
       const originalColor = STATUS_MAP[originalStatus];
       updateLocalState(roadId, direction, originalColor, originalStatus);
       mapComponent.value?.updateRoadColor(roadId, direction, originalColor);
+      
+      // Revert processed roads as well
+      const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
+      if (roadIndex !== -1) {
+        processedRoads.value[roadIndex] = {
+          ...processedRoads.value[roadIndex],
+          [direction]: {
+            ...processedRoads.value[roadIndex][direction],
+            status_id: originalStatus
+          }
+        };
+        processedRoads.value = [...processedRoads.value];
+      }
     }
     alert("Failed to update traffic status");
   }
@@ -338,19 +365,29 @@ const updateLocalState = (roadId, direction, color, statusId) => {
   if (roadIndex !== -1) {
     processedRoads.value[roadIndex] = {
       ...processedRoads.value[roadIndex],
-      [`${direction}Color`]: color
+      [`${direction}Color`]: color,
+      [direction]: {
+        ...processedRoads.value[roadIndex][direction],
+        status_id: statusId
+      }
     };
+    // Create new array reference to trigger reactivity
+    processedRoads.value = [...processedRoads.value];
   }
 
   // Update active road if being modified
   if (activeRoad.value?.properties.id === roadId) {
     activeRoad.value = {
       ...activeRoad.value,
-      [`${direction}Color`]: color
+      [`${direction}Color`]: color,
+      [direction]: {
+        ...activeRoad.value[direction],
+        status_id: statusId
+      }
     };
   }
 
-  // Update store without triggering unnecessary reactivity
+  // Update store
   const storeRoadIndex = databaseStore.roads.findIndex(r => r.id.toString() === roadId.toString());
   if (storeRoadIndex !== -1) {
     databaseStore.roads[storeRoadIndex] = {
