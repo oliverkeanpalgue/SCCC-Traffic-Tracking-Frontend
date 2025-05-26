@@ -9,52 +9,47 @@ import ForgotPassword from "./pages/auth/ForgotPassword.vue";
 import EmailVerified from "./pages/access/EmailVerified.vue";
 import EmailNotVerified from "./pages/access/EmailNotVerified.vue";
 import NoAccess from "./pages/access/NoAccess.vue";
-import NoInventoryAccess from "./pages/access/NoInventoryAccess.vue";
 import Traffic from "./pages/Traffic.vue";
 
 const routes = [
   {
-    path: "/",
+    path: "/admin",
     component: Traffic,
     children: [
-      { path: '/', name: 'Dashboard', component: Traffic, meta: { permission: 'for_dashboard' }},
-      { path: '/users', name: 'Users', component: Users, meta: { permission: 'for_users' }},
+      { path: '/admin', name: 'Admin', component: Traffic},
+      { path: '/users', name: 'Users', component: Users},
       { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword},
-      {
-        path: '/password-reset',
-        name: 'PasswordReset',
-        component: ForgotPassword,
-        props: route => ({
-          token: route.query.token,
-          email: route.query.email
-        })
-      },
     ],
     beforeEnter: async (to, from, next) => {
       try {
         const userStore = useUserStore();
         await userStore.fetchUser();
-        if (userStore.user.for_traffic === 0){
-          console.log('userStore.user.for_traffic', userStore.user.for_traffic)
-          // next('/no_inventory_access');
-        } 
-        else if (userStore.user.email_verified_at === null){
+        if (userStore.user.email_verified_at === null){
           console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
           next('/email_not_verified');
         } 
-        next();
+        next(); 
       } catch (error) {
         next('/login');
       }
     },
   },
+  { path: '/', name: 'Guest', component: Traffic},
   { path: '/login', name: 'Login', component: Login },
   { path: '/signup', name: 'Signup', component: Signup },
   { path: '/forgotpassword', name: 'ForgotPassword', component: ForgotPassword },
+  {
+        path: '/password-reset',
+        name: 'PasswordReset',
+        component: ForgotPassword,
+        props: (route) => ({
+          token: route.query.token,
+          email: route.query.email
+        })
+      },
   { path: '/email_verified', name: 'EmailVerified', component: EmailVerified },
   { path: '/email_not_verified', name: 'EmailNotVerified', component: EmailNotVerified },
   { path: '/no_access', name: 'NoAccess', component: NoAccess },
-  { path: '/no_inventory_access', name: 'NoInventoryAccess', component: NoInventoryAccess },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage },
 ];
 
@@ -66,31 +61,34 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
 
-  // No special permission needed, allow
-  if (!to.meta.permission) {
+  const publicPages = ['Login', 'Signup', 'ForgotPassword'];
+  const isPublic = publicPages.includes(to.name);
+
+  const isPasswordReset = ['NewPassword', 'ForgotPassword'];
+  const isPasswordResetPage = isPasswordReset.includes(to.name);
+
+  if (isPasswordResetPage) {
     return next();
   }
 
   try {
-    // Make sure user and access info is loaded
-    if (!userStore.user || !userStore.inventoryAccess) {
+    if (!userStore.userLoaded) {
       await userStore.fetchUser();
-      if (!userStore.user) {
-        return next("/login");
-      }
     }
 
-    const permissionKey = to.meta.permission;
-    const access = userStore.inventoryAccess;
+    const isLoggedIn = !!userStore.user;
 
-    if (access && access[permissionKey] === 1) {
+    if (isLoggedIn && ['Login', 'Signup', 'ForgotPassword'].includes(to.name)) {
+      return next({ name: 'Admin' });
+    }
+
+    if (isPublic) {
       return next();
-    } else {
-      return next({ name: "NoAccess" });
     }
+
+    return next();
   } catch (err) {
-    console.error("Navigation guard error:", err);
-    return next("/login");
+    return next(isPublic ? undefined : "/login");
   }
 });
 

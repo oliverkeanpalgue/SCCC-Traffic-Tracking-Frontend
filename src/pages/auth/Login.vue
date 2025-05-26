@@ -42,16 +42,7 @@ function submit() {
   if (!data.value.password) {
     errors.value.password = ["Password is required"];
     hasErrors = true;
-  } else {
-    if (!passwordRegex.test(data.value.password)) {
-      errors.value.password = ["Password must contain special characters, letters and numbers"];
-      hasErrors = true;
-    }
-    if (data.value.password.length < 8) {
-      errors.value.password = ["Password must be at least 8 characters long"];
-      hasErrors = true;
-    }
-  }
+  } 
 
   if (hasErrors) {
     return;
@@ -63,7 +54,7 @@ function submit() {
     axiosClient.post("/login", data.value)
       .then(response => {
         emitter.emit("show-toast", { message: "Login successfully!", type: "success" });
-        router.push({ name: 'Dashboard' })
+        router.push({ name: 'Admin' })
 
       })
       .catch(error => {
@@ -149,12 +140,12 @@ onUnmounted(() => {
             in</button>
         </form>
 
-        <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
+        <!-- <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
           <span class="text-gray-600">Don't have an account?</span> 
           <RouterLink :to="{ name: 'Signup' }" class="text-md text-primary hover:underline">Sign
             up
           </RouterLink>
-        </div>
+        </div> -->
       </div>
     </div>
   </div>

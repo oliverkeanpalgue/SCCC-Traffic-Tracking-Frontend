@@ -41,8 +41,8 @@ const data = ref({
   password: '',
   password_confirmation: '',
   for_911: false,
-  for_inventory: true,
-  for_traffic: false,
+  for_inventory: false,
+  for_traffic: true,
   role: false,
 })
 
@@ -191,40 +191,6 @@ function submit() {
 
   isLoading.value = true
 
-  const addAccess = async (userId) => {
-    try {
-      isLoading.value = true
-
-      const addInventoryAccess = {
-        for_dashboard: 1,
-        for_inventory: 0,
-        for_offices: 0,
-        for_categories: 0,
-        for_borrowers: 0,
-        for_users: 0,
-        user_id: userId
-      }
-
-      console.log("Add copy data sent: ", addInventoryAccess)
-
-      const response = await axiosClient.post(
-        `/api/inventory_access/`,
-        addInventoryAccess,
-        {
-          headers: {
-            "x-api-key": API_KEY,
-          },
-        }
-      );
-      console.log('Add Access API response:', response);
-    } catch (error) {
-      console.error('Error adding access:', error);
-      console.error('Error details:', error.response?.data);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-
   axiosClient.get('/sanctum/csrf-cookie')
     .then(() => {
       axiosClient.post("/register", data.value)
@@ -232,9 +198,6 @@ function submit() {
           try {
             // Get the user ID from the response
             const userId = response.data.user.id;
-            
-            // Add access for the new user
-            await addAccess(userId);
             
             emitter.emit("show-toast", { 
               message: "Signed up successfully! Please check your email for verification.", 

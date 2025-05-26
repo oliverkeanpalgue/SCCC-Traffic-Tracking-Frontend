@@ -41,36 +41,25 @@ const resendEmail = () => {
 </script>
 
 <template>
-    <div :style="{
-        backgroundImage: `url(${errorBg})`,
-        backgroundSize: 'cover',
-        backgroundRepeat: 'no-repeat',
-        backgroundPosition: 'center',
-    }" class="flex flex-col items-center justify-center min-h-screen w-full">
+    <div class="bg-dark flex flex-col items-center justify-center min-h-screen w-full relative">
+        <div class="absolute inset-0 bg-black opacity-60 z-0"></div>
 
-        <div class="absolute inset-0 bg-black/50 z-0"></div>
+        <div class="relative z-10 rounded-3xl p-10 bg-black/80 backdrop-blur-md shadow-lg max-w-sm flex items-center justify-center flex-col">
+            <img src="/img/Logo.png" alt="Logo" class="w-24 h-24 mb-6" />
+            <h1 class="text-3xl font-semibold text-white mb-2">Email Not Verified</h1>
+            <p class="text-white text-center mb-6">Oops! Your email is not verified yet. Please verify your email to continue.</p>
+            <div class="flex flex-col space-y-2">
+                <button @click="resendEmail" class="mt-3 cursor-pointer w-full px-6 py-2 bg-primary hover:bg-primary-100 text-white rounded-md shadow transition transform hover:scale-105">
 
-        <div
-            class="animate-rotate-border rounded-3xl p-1.5 transition-all duration-500 ease-out bg-conic/[from_var(--border-angle)] from-red-900/30 via-red-600 to-red-900/30">
-            <div
-                class="bg-black/80 backdrop-blur-lg rounded-3xl p-20 flex flex-col items-center justify-center text-white">
-                <FlFilledCalendarQuestionMark class="w-52 h-52 mb-4 text-red-700" />
-                <p class="text-5xl font-bold mb-1">EMAIL NOT VERIFIED</p>
-                <p class="text-xl mt-2">Oops! The page you're looking for doesn't exist.
-                </p>
-                <div class="flex flex-row w-full items-center justify-between gap-2">
-                    <button @click="goLogout()"
-                        class="mt-6 px-5 py-2 w-full text-center cursor-pointer rounded-lg bg-red-700 hover:bg-green-700 hover:scale-105 text-white font-medium shadow-md transition-all duration-300 flex items-center gap-2">
-                        <GlGoBack class="w-5 h-5" />
-                        Back to Login
-                    </button>
-                    <button @click="resendEmail"
-                        class="mt-6 px-5 py-2 w-full text-center cursor-pointer rounded-lg bg-red-700 hover:bg-green-700 hover:scale-105 text-white font-medium shadow-md transition-all duration-300 flex items-center gap-2">
-                        <GlGoBack class="w-5 h-5" />
-                        Send Verification Email
-                    </button>
-                </div>
-            </div>
+                    Send Verification Email
+                </button>
+                <button @click="goLogout" class="mt-3 w-full cursor-pointer underline text-white rounded-md shadow transition transform hover:scale-105">
+                    Back to Login
+                </button>
+                
+            </div> 
         </div>
     </div>
 </template>
+
+
