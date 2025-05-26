@@ -3,7 +3,7 @@
     <Navbar />
   </div>
   <div class="flex flex-row p-3 gap-2 h-[calc(100vh-80px)] bg-[#1b1a1a]">
-    <Sidebar ref="sideBar" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
+    <Sidebar ref="sideBar" :isLoggedIn="isLoggedIn" :intersections="normalizedRoads" :colorMap="COLOR_MAP" @openEditModal="openEditModal" />
 
     <div class="w-[77%] relative">
       <!-- Loading overlay -->

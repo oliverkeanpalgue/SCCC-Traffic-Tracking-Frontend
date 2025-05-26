@@ -21,7 +21,8 @@
 
         <div class="flex justify-between mb-3">
           <div class="font-bold">{{ road.road_name }}</div>
-          <FeEdit2 class="mt-1" />
+          <FeEdit2 v-if="isLoggedIn" class="mt-1" />
+          <FeInfo v-else class="mt-1" />
         </div>
 
         <!-- Traffic status indicators -->
@@ -50,7 +51,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useDatabaseStore } from '../../stores/databaseStore';
-import { FeEdit2 } from '@kalimahapps/vue-icons';
+import { FeEdit2, FeInfo } from '@kalimahapps/vue-icons';
 
 // Configuration
 const DEBOUNCE_DELAY = 300;
@@ -59,7 +60,8 @@ const STATUS_COLORS = { 1: 'green', 2: 'yellow', 3: 'red' };
 // Data retrieval
 const props = defineProps({
   intersections: Array,
-  colorMap: Object
+  colorMap: Object,
+  isLoggedIn: Boolean
 });
 
 const emit = defineEmits(["openEditModal"]);
