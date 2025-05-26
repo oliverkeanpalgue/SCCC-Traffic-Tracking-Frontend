@@ -5,7 +5,7 @@ import { IoOutlineArrowForward } from '@kalimahapps/vue-icons';
 const router = useRouter();
 
 const goHome = () => {
-    router.push('/');
+    router.push('/admin');
 };
 </script>
 
