@@ -4,6 +4,7 @@ import RoadEditModal from './RoadEditModal.vue';
 import defaultRoadImage from '../../assets/1.png';
 import { useDatabaseStore } from '../../stores/databaseStore';
 import useUserStore from '../../stores/user';
+
 // Get store instance
 const databaseStore = useDatabaseStore();
 const userStore = useUserStore();
@@ -38,7 +39,6 @@ const props = defineProps({
   },
   roadImage: {
     type: String,
-    default: defaultRoadImage
   },
   roadType: {
     type: String,
@@ -103,7 +103,10 @@ const handleSaveRoad = (updatedRoad) => {
   <div class="bg-[#1b1a1a] text-white rounded-2xl overflow-hidden shadow-lg w-full max-w-[320px] pb-6">
     <!-- Road image display area -->
     <div class="w-full h-[200px] overflow-hidden">
-      <img :src="`${VITE_API_BASE_URL}/storage/road_images/${roadImage}`" class="w-full h-full object-cover" />
+      <img 
+        :src="roadImage ? `${VITE_API_BASE_URL}/storage/road_images/${roadImage}` : defaultRoadImage" 
+        class="w-full h-full object-cover" 
+      />
     </div>
 
     <!-- Road details section -->
