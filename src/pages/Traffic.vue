@@ -85,19 +85,23 @@
 </template>
 
 <script setup>
+// Update imports at the top
 import { ref, onMounted, computed, nextTick } from 'vue';
 import { useDatabaseStore } from '../stores/databaseStore';
+import useUserStore from '../stores/user';  // Make sure this import is present
 import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
 import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
-import useUserStore from '../stores/user';
 
 //check if user is logged in
 const userStore = useUserStore();
+
+// These computed properties will now use userStore
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const currentUser = computed(() => userStore.user);
+
 // Configuration constants
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 const COLOR_MAP = { green: "#7CFC00", yellow: "#FFD700", red: "#FF6347" };
@@ -426,9 +430,11 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 onMounted(async () => {
   isLoading.value = true;
 
-  console.log(isLoggedIn.value ? "User is logged in" : "User is not logged in");
   try {
-    // Load initial data
+    // Load user data first
+    await userStore.fetchUser();
+    
+    // Then load initial data
     await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
 

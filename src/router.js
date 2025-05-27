@@ -25,7 +25,6 @@ const routes = [
         const userStore = useUserStore();
         await userStore.fetchUser();
         if (userStore.user.email_verified_at === null){
-          console.log('userStore.user.email_verified_at', userStore.user.email_verified_at)
           next('/email_not_verified');
         } 
         next(); 
