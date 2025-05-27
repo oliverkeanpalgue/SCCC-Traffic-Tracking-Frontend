@@ -17,9 +17,9 @@
                 <div v-if="isLoggedIn" class="flex items-center relative">
                     <div>
                         <button type="button"
-                            class="flex items-center justify-center cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 hover:bg-gray-700 border-1 border-gray-700 p-2"
+                            class="flex items-center justify-center cursor-pointer text-sm bg-dark rounded-full focus:ring-4 focus:ring-gray-300 hover:bg-gray-800 border-1 border-gray-700 p-3 me-6"
                             @click="toggleDropdown" aria-expanded="false">
-                            <FeUser class="w-6 h-6 text-white" />
+                            <FeUser class="w-5 h-5 text-white" />
                         </button>
                     </div>
 
