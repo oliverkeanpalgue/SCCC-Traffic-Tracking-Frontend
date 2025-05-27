@@ -71,11 +71,7 @@ const databaseStore = useDatabaseStore()
 let refreshInterval = null;
 
 onMounted(() => {
-  databaseStore.fetchData()
-  // Optionally, set an interval to auto-refresh:
-  refreshInterval = setInterval(() => {
-    databaseStore.fetchData()
-  }, 30000)
+  databaseStore.fetchData();
 })
 
 onUnmounted(() => {
@@ -140,12 +136,10 @@ onUnmounted(() => {
             in</button>
         </form>
 
-        <!-- <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
-          <span class="text-gray-600">Don't have an account?</span> 
-          <RouterLink :to="{ name: 'Signup' }" class="text-md text-primary hover:underline">Sign
-            up
+        <div class="text-sm text-center mt-4 gap-1 flex justify-center align-center">
+          <RouterLink :to="{ name: 'Guest' }" class="text-md text-primary hover:underline">Continue as Guest
           </RouterLink>
-        </div> -->
+        </div>
       </div>
     </div>
   </div>
