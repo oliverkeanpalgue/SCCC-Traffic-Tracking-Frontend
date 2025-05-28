@@ -12,15 +12,14 @@
                         <span
                             class="self-center flex items-center text-xl font-semibold whitespace-nowrap dark:text-white">Traffic Monitoring System</span>
                     </a>
-
                 </div>
 
                 <div v-if="isLoggedIn" class="flex items-center relative">
                     <div>
                         <button type="button"
-                            class="flex items-center justify-center cursor-pointer text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 hover:bg-gray-700 border-1 border-gray-700 p-2"
+                            class="flex items-center justify-center cursor-pointer text-sm bg-dark rounded-full focus:ring-4 focus:ring-gray-300 hover:bg-gray-800 border-1 border-gray-700 p-3 me-6"
                             @click="toggleDropdown" aria-expanded="false">
-                            <FeUser class="w-6 h-6 text-white" />
+                            <FeUser class="w-5 h-5 text-white" />
                         </button>
                     </div>
 
@@ -43,9 +42,10 @@
                 </div>
 
                 <div v-else class="flex items-center">
-                    <!-- <a href="/login"
-                        class="text-white hover:text-gray-400 underline font-medium rounded-lg text-sm px-5 py-3 mr-2 mb-2"> Login
-                    </a> -->
+                    <a href="/login"
+                        class="text-white hover:text-gray-400 underline font-medium rounded-lg text-sm px-5 py-3 mr-2 mb-2">
+                        Login
+                    </a>
                 </div>
             </div>
         </div>
@@ -54,26 +54,32 @@
 
 <script setup>
 import { ref, computed, onMounted } from "vue";
-import { useDatabaseStore } from "../../stores/databaseStore";
+import useUserStore from "../../stores/user";  
 import axiosClient from "../../axios.js";
 import { FeUser } from '@kalimahapps/vue-icons';
 
-
 const isDropdownOpen = ref(false);
-const databaseStore = useDatabaseStore();
+const userStore = useUserStore();  
 
 const props = defineProps({
-  isLoggedIn: Boolean,
-  user: Object
+  isLoggedIn: {
+    type: Boolean,
+    default: false
+  },
+  user: {
+    type: Object,
+    default: () => null
+  }
 });
 
 const currentUserName = computed(() => {
   if (!props.user) return 'User';
-  return [
+  const names = [
     props.user.firstName,
     props.user.middleName,
     props.user.lastName
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean);
+  return names.length ? names.join(' ') : 'User';
 });
 
 function toggleDropdown() {
@@ -87,6 +93,6 @@ function logout() {
 }
 
 onMounted(async () => {
-  await databaseStore.fetchCurrentUser();
+  await userStore.fetchUser(); 
 });
 </script>

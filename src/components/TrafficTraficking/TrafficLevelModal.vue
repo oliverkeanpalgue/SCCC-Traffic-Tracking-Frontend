@@ -1,6 +1,7 @@
 <template>
   <div v-if="activeRoad && isLoggedIn"
-    class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-[102px] left-[930px] -translate-x-1/2 p-5 rounded-xl"
+    class="fixed text-white w-[500px] bg-[#1b1a1a] z-[1000] top-30 p-5 rounded-xl"
+    :style="{ left: 'calc(50% - 100px)' }"
     @click.stop>
     <div class="flex flex-col gap-4">
       <!-- Header with road name and close button -->
@@ -36,7 +37,9 @@
         </template>
       </div>
     </div>
-  </div>
+</div>
+
+
 </template>
 
 <script setup>

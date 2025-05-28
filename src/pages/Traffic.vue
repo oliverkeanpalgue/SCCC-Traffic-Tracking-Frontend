@@ -78,27 +78,28 @@
       <TrafficLevelModal :active-road="activeRoad" :color-map="COLOR_MAP" @closeEditModal="closeEditModal"
         @changeTrafficLevel="changeTrafficLevel" :isLoggedIn="isLoggedIn" />
 
-      <!-- Add Road Modal Component -->
       <AddRoadModal :show="showAddRoadModal" @close="closeAddRoadModal" @roadAdded="handleRoadAdded" />
     </div>
   </div>
 </template>
 
 <script setup>
+// Update imports at the top
 import { ref, onMounted, computed, nextTick } from 'vue';
 import { useDatabaseStore } from '../stores/databaseStore';
+import useUserStore from '../stores/user'; 
 import Sidebar from '../components/TrafficTraficking/Sidebar.vue';
 import Navbar from '../components/TrafficTraficking/Navbar.vue';
 import MapComponent from '../components/TrafficTraficking/MapComponent.vue';
 import TrafficLevelModal from '../components/TrafficTraficking/TrafficLevelModal.vue';
 import AddRoadModal from '../components/TrafficTraficking/AddRoadModal.vue';
-import useUserStore from '../stores/user';
 
 //check if user is logged in
 const userStore = useUserStore();
 const isLoggedIn = computed(() => userStore.isLoggedIn);
 const currentUser = computed(() => userStore.user);
-// Configuration constants
+
+// Configuration mapbox
 const MAPBOX_API_KEY = "pk.eyJ1IjoiaW1hc2tpc3NpdCIsImEiOiJjbTlyc3pwOHUwNWlpMmpvaXhtMGV5bHgyIn0.RqXu--zmQc6YvT4-EEkAHg";
 const COLOR_MAP = { green: "#7CFC00", yellow: "#FFD700", red: "#FF6347" };
 const STATUS_MAP = { 1: 'green', 2: 'yellow', 3: 'red' };
@@ -120,7 +121,7 @@ const MAP_STYLES = {
   Satellite: "mapbox://styles/mapbox/satellite-v9"
 };
 
-// Core state references
+// states
 const databaseStore = useDatabaseStore();
 const mapComponent = ref(null);
 const dataReady = ref(false);
@@ -135,8 +136,6 @@ const isLoading = computed(() => {
     databaseStore.roads.length === 0
   )
 });
-
-// Computed properties
 const currentStyleName = computed(() =>
   Object.keys(MAP_STYLES).find(key => MAP_STYLES[key] === selectedMapStyle.value) || 'Dark'
 );
@@ -197,9 +196,7 @@ const closeEditModal = () => activeRoad.value = null;
 
 // Add Road Modal handlers
 const openAddRoadModal = () => {
-  // Close the traffic level modal first
   closeEditModal();
-  // Then open the add road modal
   showAddRoadModal.value = true;
 };
 
@@ -210,34 +207,15 @@ const closeAddRoadModal = () => {
 const handleRoadAdded = async (newRoad) => {
   if (!newRoad) return;
 
-  // Show success message immediately
-  
-
-  // Mark as loading
-  isLoading.value = true;
-
   try {
-    // Close the modal first to prevent component unmounting issues
     showAddRoadModal.value = false;
-
-    // Wait a moment before refreshing data
     await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Fetch fresh data with cache busting
     await databaseStore.fetchData(`?_=${Date.now()}`);
-
-    // Set data ready flag if not already set
     if (!dataReady.value) {
       dataReady.value = true;
     }
-
-    // Process the fresh data
     processedRoads.value = databaseStore.roads.map(road => processRoad(road));
-
-    // Update UI after data is processed
     await nextTick();
-
-    // Check if map component is available before updating
     if (mapComponent.value) {
       try {
         mapComponent.value.updateMapData(processedRoads.value);
@@ -249,40 +227,25 @@ const handleRoadAdded = async (newRoad) => {
   } catch (error) {
     console.error("Failed to refresh data after adding road:", error);
 
-  } finally {
-    isLoading.value = false;
   }
 };
 
 // Handle road updates from map component
 const handleRoadUpdate = async (updatedRoad) => {
-  // Close popups if requested
   if (updatedRoad.__closeAllPopups && mapComponent.value) {
     mapComponent.value.closeAllPopups();
   } else if (mapComponent.value) {
     mapComponent.value.refreshCurrentPopup();
   }
-
-  // Close edit modal if open
   if (activeRoad.value) {
     closeEditModal();
   }
 
-  // Refresh data
-  isLoading.value = true;
-
   try {
-    // Fetch fresh data with cache busting
     const timestamp = Date.now();
     await databaseStore.fetchData(`?_=${timestamp}`);
-
-    // Process the fresh data
     processedRoads.value = databaseStore.roads.map(road => processRoad(road));
-
-    // Update UI after data is processed
     await nextTick();
-
-    // Refresh the map data
     if (mapComponent.value) {
       await mapComponent.value.updateMapData(processedRoads.value);
 
@@ -292,8 +255,6 @@ const handleRoadUpdate = async (updatedRoad) => {
     }
   } catch (error) {
     console.error("Failed to refresh data:", error);
-  } finally {
-    isLoading.value = false;
   }
 };
 
@@ -382,7 +343,6 @@ const changeTrafficLevel = async (roadId, direction, color, options = {}) => {
 
 // Update all local state references after a status change
 const updateLocalState = (roadId, direction, color, statusId) => {
-  // Update processed roads list
   const roadIndex = processedRoads.value.findIndex(r => r.properties.id.toString() === roadId.toString());
   if (roadIndex !== -1) {
     processedRoads.value[roadIndex] = {
@@ -393,11 +353,9 @@ const updateLocalState = (roadId, direction, color, statusId) => {
         status_id: statusId
       }
     };
-    // Create new array reference to trigger reactivity
     processedRoads.value = [...processedRoads.value];
   }
 
-  // Update active road if being modified
   if (activeRoad.value?.properties.id === roadId) {
     activeRoad.value = {
       ...activeRoad.value,
@@ -424,24 +382,20 @@ const updateLocalState = (roadId, direction, color, statusId) => {
 
 // Initialize data on component mount
 onMounted(async () => {
-  isLoading.value = true;
 
-  console.log(isLoggedIn.value ? "User is logged in" : "User is not logged in");
   try {
-    // Load initial data
-    await databaseStore.fetchData();
+    await userStore.fetchUser();
+        await databaseStore.fetchData();
     processedRoads.value = databaseStore.roads.map(processRoad);
 
     window.Echo.channel('traffic-update').listen('.direction.status.updated', (event) => {
       if (!event) return;
 
-      // Check if this is a response to our own recent update
       const isLocalUpdate = lastLocalUpdate.value && 
         lastLocalUpdate.value.roadId === event.road_id.toString() &&
         lastLocalUpdate.value.direction === event.direction &&
-        Date.now() - lastLocalUpdate.value.timestamp < 5000; // 5 second window
+        Date.now() - lastLocalUpdate.value.timestamp < 5000;
 
-      // Skip the update if it's our own change
       if (isLocalUpdate) {
         return;
       }
@@ -451,17 +405,12 @@ onMounted(async () => {
                     event.status_id === 3 ? 'red' : '';
       
       if (!color) return;
-    
-      // Update map immediately
       mapComponent.value?.updateRoadColor(event.road_id, event.direction, color);
-      
-      // Update local state without triggering rerenders
       const roadIndex = databaseStore.roads.findIndex(r => 
         r.id.toString() === event.road_id.toString()
       );
     
       if (roadIndex !== -1) {
-        // Update store data
         databaseStore.roads[roadIndex] = {
           ...databaseStore.roads[roadIndex],
           [event.direction]: {
@@ -469,13 +418,9 @@ onMounted(async () => {
             status_id: event.status_id
           }
         };
-    
-        // Update processed roads
         const processedRoad = processRoad(databaseStore.roads[roadIndex]);
         processedRoads.value[roadIndex] = processedRoad;
-    
-        // Update active road if needed
-        if (activeRoad.value?.properties?.id.toString() === event.road_id.toString()) {
+            if (activeRoad.value?.properties?.id.toString() === event.road_id.toString()) {
           activeRoad.value = {
             ...activeRoad.value,
             [`${event.direction}Color`]: color
@@ -498,11 +443,9 @@ onMounted(async () => {
   } catch (error) {
     console.error("Failed to load data:", error);
   } finally {
-    isLoading.value = false;
     dataReady.value = true;
   }
 
-  // Close dropdown when clicking outside
   document.addEventListener('click', (e) => {
     const dropdown = document.querySelector('.map-style-dropdown');
     if (dropdown && !dropdown.contains(e.target)) {

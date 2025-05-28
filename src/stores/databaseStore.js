@@ -207,19 +207,6 @@ export const useDatabaseStore = defineStore("database", {
       return this.getRoadById(roadId);
     },
 
-    // Fetch current user
-    async fetchCurrentUser() {
-      try {
-        const headers = this.getAuthHeaders();
-        const response = await axiosClient.get('/api/user', { headers });
-        this.currentUser = response.data;
-        return response.data;
-      } catch (error) {
-        console.error('Error fetching current user:', error);
-        throw error;
-      }
-    },
-
     // Helper functions
     // Get authorization headers
     getAuthHeaders() {
